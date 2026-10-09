@@ -54,6 +54,7 @@ const Navbar = () => {
     { label: 'Home', to: '/' },
     { label: 'DailyByte', to: '/dailybyte' },
     { label: 'Trending', to: '/trending' },
+    { label: 'Contact', to: '/contact' },
   ];
 
   return (
@@ -61,19 +62,17 @@ const Navbar = () => {
       <div className="navbar-inner">
         <h1 className="nav-title">THE DAILY BYTES</h1>
 
-        {loginCheck && (
-          <nav className="nav-tabs">
-            {tabs.map((tab) => (
-              <Link
-                key={tab.label}
-                to={tab.to}
-                className={`nav-link ${location.pathname === tab.to ? 'active' : ''}`}
-              >
-                {tab.label.toUpperCase()}
-              </Link>
-            ))}
-          </nav>
-        )}
+        <nav className="nav-tabs">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.label}
+              to={tab.to}
+              className={`nav-link ${location.pathname === tab.to ? 'active' : ''}`}
+            >
+              {tab.label.toUpperCase()}
+            </Link>
+          ))}
+        </nav>
 
         <div className="nav-actions">
           {loginCheck ? (
