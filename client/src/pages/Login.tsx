@@ -20,12 +20,13 @@ const Login = () => {
     setError('');
   };
 
-  const finishLogin = async (credentials: UserLogin) => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const data = await login(credentials);
+      const data = await login(loginData);
       if (!data?.token) throw new Error('Unable to create a session.');
       Auth.login(data.token);
     } catch (err) {
@@ -34,14 +35,9 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    await finishLogin(loginData);
-  };
-
-  const handleDemoLogin = async () => {
-    setLoginData({ username: 'demo', password: 'dailybytes' });
-    await finishLogin({ username: 'demo', password: 'dailybytes' });
+  const handleDemoLogin = () => {
+    setError('');
+    Auth.loginDemo();
   };
 
   return (
@@ -51,10 +47,21 @@ const Login = () => {
           <span className="auth-eyebrow">READER ACCESS</span>
           <h1>Welcome back</h1>
           <p>
-            Home, DailyByte, Trending, and Contact stay public. Sign in to unlock
-            the extra category sidebar.
+            The main Daily Bytes experience is public. Sign in only to unlock
+            the extra category sidebar and full reader access.
           </p>
         </div>
+
+        <button
+          className="auth-demo"
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+        >
+          Continue with full demo access
+        </button>
+
+        <div className="auth-divider"><span>or use a local profile</span></div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
@@ -90,20 +97,8 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="auth-divider"><span>or</span></div>
-
-        <button
-          className="auth-demo"
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={loading}
-        >
-          Continue with demo account
-        </button>
-        <p className="auth-demo-copy">Demo: <strong>demo</strong> / <strong>dailybytes</strong></p>
-
         <p className="auth-footer">
-          Need an account? <Link to="/signup">Create a local demo profile</Link>
+          Want your own local profile? <Link to="/signup">Create one here</Link>
         </p>
       </div>
     </section>
