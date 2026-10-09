@@ -1,41 +1,40 @@
-import { type JwtPayload, jwtDecode } from 'jwt-decode';
 import type { UserData } from '../interfaces/UserData';
 
+const TOKEN_KEY = 'daily_bytes_session';
+
 class AuthService {
-  getProfile() {
-    return jwtDecode<UserData>(this.getToken());
+  getProfile(): UserData {
+    const token = this.getToken();
+    const parts = token.split(':');
+    const username = parts.length >= 2 ? decodeURIComponent(parts[1]) : 'reader';
+
+    return {
+      id: null,
+      username,
+      email: null,
+    };
   }
 
   loggedIn() {
-    const token = this.getToken();
-    return !!token && !this.isTokenExpired(token);
+    return Boolean(this.getToken());
   }
 
-  isTokenExpired(token: string) {
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-
-      if (decoded?.exp && decoded?.exp < Date.now() / 1000) {
-        return true;
-      }
-    } catch (err) {
-      return false;
-    }
+  isTokenExpired(_token: string) {
+    return false;
   }
 
   getToken(): string {
-    const loggedUser = localStorage.getItem('id_token') || '';
-    return loggedUser;
+    return localStorage.getItem(TOKEN_KEY) || '';
   }
 
-  login(idToken: string) {
-    localStorage.setItem('id_token', idToken);
+  login(sessionToken: string) {
+    localStorage.setItem(TOKEN_KEY, sessionToken);
     window.location.assign('/');
   }
 
   logout() {
-    localStorage.removeItem('id_token');
-    window.location.assign('/');
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.assign('/login');
   }
 }
 
