@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FiMoon, FiSun } from "react-icons/fi";
-import auth from "../utils/auth";
 import "./Navbar.css";
-
-// =============================================================================
-// TODO: Theme Toggle Component (Used inside Navbar)
-// =============================================================================
 
 interface SliderToggleProps {
   selected: "light" | "dark";
@@ -37,34 +32,18 @@ const SliderToggle = ({ selected, setSelected }: SliderToggleProps) => {
   );
 };
 
-// =============================================================================
-// TODO: Main Navbar Component
-// =============================================================================
-
 const Navbar = () => {
   const location = useLocation();
-
-  // TODO: Track if user is logged in
-  const [loginCheck, setLoginCheck] = useState(false);
-
-  // TODO: Handle theme state (persisted in localStorage)
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("theme");
     return saved === "dark" ? "dark" : "light";
   });
 
-  // NOTE Check login state on first load
-  useEffect(() => {
-    if (auth.loggedIn()) setLoginCheck(true);
-  }, []);
-
-  // NOTE Apply theme to body and store preference
   useEffect(() => {
     document.body.className = theme === "dark" ? "dark" : "";
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // TODO: Define navigation tabs
   const tabs = [
     { label: "Home", to: "/" },
     { label: "DailyByte", to: "/dailybyte" },
@@ -77,7 +56,6 @@ const Navbar = () => {
       <div className="navbar-inner">
         <h1 className="nav-title">THE DAILY BYTES</h1>
 
-        {/* TODO: Render nav tabs with active link highlighting */}
         <nav className="nav-tabs">
           {tabs.map((tab) => (
             <Link
@@ -90,29 +68,7 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* TODO: Login/logout buttons + theme toggle */}
         <div className="nav-actions">
-          {loginCheck ? (
-            <button
-              className="nav-link logout-button"
-              onClick={() => {
-                auth.logout();
-                setLoginCheck(false);
-              }}
-            >
-              LOGOUT
-            </button>
-          ) : (
-            <>
-              <Link to="/login" className="nav-link">
-                LOGIN
-              </Link>
-              <Link to="/signup" className="nav-link signup-button">
-                SIGN UP
-              </Link>
-            </>
-          )}
-
           <SliderToggle selected={theme} setSelected={setTheme} />
         </div>
       </div>
@@ -121,4 +77,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-// NOTE Used globally across all views for navigation and theming...
