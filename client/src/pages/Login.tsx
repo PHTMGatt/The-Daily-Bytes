@@ -1,54 +1,59 @@
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, FormEvent, ChangeEvent } from 'react';
 
-import Auth from '../utils/auth';                              // ✅ Auth utility
-import { login } from "../api/authAPI";                        // ✅ Points to client/src/api/authAPI.tsx
-import { UserLogin } from "../interfaces/UserLogin";           // ✅ Points to client/src/interfaces/UserLogin.tsx
+import Auth from '../utils/auth';
+import { login } from '../api/authAPI';
+import { UserLogin } from '../interfaces/UserLogin';
 
 const Login = () => {
   const [loginData, setLoginData] = useState<UserLogin>({
     username: '',
-    password: ''
+    password: '',
   });
-
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setLoginData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setLoginData((prev) => ({ ...prev, [name]: value }));
+    setError('');
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      const data = await login(loginData); // Sends to /api/auth/login
+      const data = await login(loginData);
       if (data?.token) {
-        Auth.login(data.token);            // Save token in localStorage
-      } else {
-        console.error("No token received.");
+        Auth.login(data.token);
       }
     } catch (err) {
-      console.error('Failed to login', err);
+      setError(err instanceof Error ? err.message : 'Unable to sign in.');
     } finally {
       setLoading(false);
     }
   };
 
+  const useDemoLogin = () => {
+    setLoginData({ username: 'demo', password: 'dailybytes' });
+    setError('');
+  };
+
   return (
-    <div className='form-container'>
-      <form className='form login-form' onSubmit={handleSubmit}>
+    <div className="form-container">
+      <form className="form login-form" onSubmit={handleSubmit}>
         <h1>Login</h1>
+        <p className="contact-subtext">
+          Sign in to unlock the full Daily Bytes experience.
+        </p>
 
         <div className="form-group">
           <label>Username</label>
-          <input 
+          <input
             className="form-input"
-            type='text'
-            name='username'
+            type="text"
+            name="username"
             value={loginData.username ?? ''}
             onChange={handleChange}
             required
@@ -57,15 +62,17 @@ const Login = () => {
 
         <div className="form-group">
           <label>Password</label>
-          <input 
+          <input
             className="form-input"
-            type='password'
-            name='password'
+            type="password"
+            name="password"
             value={loginData.password ?? ''}
             onChange={handleChange}
             required
           />
         </div>
+
+        {error && <p role="alert">{error}</p>}
 
         <div className="form-group">
           <button
@@ -73,24 +80,15 @@ const Login = () => {
             disabled={loading}
             className={`login-button ${loading ? 'loading' : ''}`}
           >
-            {loading ? (
-              <>
-                <svg className="spinner" viewBox="0 0 50 50">
-                  <circle
-                    className="path"
-                    cx="25"
-                    cy="25"
-                    r="20"
-                    fill="none"
-                    strokeWidth="5"
-                  ></circle>
-                </svg>
-                Signing in...
-              </>
-            ) : (
-              'Sign in'
-            )}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
+        </div>
+
+        <div className="form-group">
+          <button type="button" className="btn" onClick={useDemoLogin}>
+            Use demo account
+          </button>
+          <small>Demo credentials: demo / dailybytes</small>
         </div>
       </form>
     </div>
