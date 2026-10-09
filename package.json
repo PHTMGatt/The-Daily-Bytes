@@ -14,7 +14,7 @@
     "client:dev": "cd client && npm run dev",
     "clean": "cd server && rm -rf dist && cd../client && rm -rf dist",
     "build": "cd server && npm run build",
-    "seed": "cd server && npm run seed",
+    "seed": "echo \"Daily Bytes runs without a database seed\"",
     "render-build": "npm install && npm run build"
   },
   "keywords": [],
