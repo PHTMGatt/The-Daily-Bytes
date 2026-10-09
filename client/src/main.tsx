@@ -4,11 +4,12 @@ import './index.css';
 
 import App from './App';
 import ErrorPage from './pages/ErrorPage';
-import Contact from './pages/Contact';
 import Entertainment from './pages/Entertainment';
 import Technology from './pages/Technology';
 import Home from './pages/Home';
 import Horoscope from './pages/Horoscope';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 import Sports from './pages/Sports';
 import Trending from './pages/Trending';
 import Health from './pages/Health';
@@ -21,8 +22,9 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
+      { path: 'login', element: <Login /> },
+      { path: 'signup', element: <SignUp /> },
       { path: 'dailybyte', element: <DailyByte /> },
-      { path: 'contact', element: <Contact /> },
       { path: 'entertainment', element: <Entertainment /> },
       { path: 'sports', element: <Sports /> },
       { path: 'health', element: <Health /> },
