@@ -1,8 +1,10 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 import Auth from '../utils/auth';
 import { login } from '../api/authAPI';
 import { UserLogin } from '../interfaces/UserLogin';
+import './Auth.css';
 
 const Login = () => {
   const [loginData, setLoginData] = useState<UserLogin>({
@@ -18,80 +20,93 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const finishLogin = async (credentials: UserLogin) => {
     setLoading(true);
     setError('');
 
     try {
-      const data = await login(loginData);
-      if (data?.token) {
-        Auth.login(data.token);
-      }
+      const data = await login(credentials);
+      if (!data?.token) throw new Error('Unable to create a session.');
+      Auth.login(data.token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in.');
-    } finally {
       setLoading(false);
     }
   };
 
-  const useDemoLogin = () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await finishLogin(loginData);
+  };
+
+  const handleDemoLogin = async () => {
     setLoginData({ username: 'demo', password: 'dailybytes' });
-    setError('');
+    await finishLogin({ username: 'demo', password: 'dailybytes' });
   };
 
   return (
-    <div className="form-container">
-      <form className="form login-form" onSubmit={handleSubmit}>
-        <h1>Login</h1>
-        <p className="contact-subtext">
-          Sign in to unlock the full Daily Bytes experience.
+    <section className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-heading">
+          <span className="auth-eyebrow">READER ACCESS</span>
+          <h1>Welcome back</h1>
+          <p>
+            Home, DailyByte, Trending, and Contact stay public. Sign in to unlock
+            the extra category sidebar.
+          </p>
+        </div>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label className="auth-field">
+            <span>Username</span>
+            <input
+              type="text"
+              name="username"
+              value={loginData.username ?? ''}
+              onChange={handleChange}
+              autoComplete="username"
+              placeholder="Enter your username"
+              required
+            />
+          </label>
+
+          <label className="auth-field">
+            <span>Password</span>
+            <input
+              type="password"
+              name="password"
+              value={loginData.password ?? ''}
+              onChange={handleChange}
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              required
+            />
+          </label>
+
+          {error && <div className="auth-error" role="alert">{error}</div>}
+
+          <button className="auth-primary" type="submit" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+
+        <div className="auth-divider"><span>or</span></div>
+
+        <button
+          className="auth-demo"
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+        >
+          Continue with demo account
+        </button>
+        <p className="auth-demo-copy">Demo: <strong>demo</strong> / <strong>dailybytes</strong></p>
+
+        <p className="auth-footer">
+          Need an account? <Link to="/signup">Create a local demo profile</Link>
         </p>
-
-        <div className="form-group">
-          <label>Username</label>
-          <input
-            className="form-input"
-            type="text"
-            name="username"
-            value={loginData.username ?? ''}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            className="form-input"
-            type="password"
-            name="password"
-            value={loginData.password ?? ''}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {error && <p role="alert">{error}</p>}
-
-        <div className="form-group">
-          <button
-            type="submit"
-            disabled={loading}
-            className={`login-button ${loading ? 'loading' : ''}`}
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </div>
-
-        <div className="form-group">
-          <button type="button" className="btn" onClick={useDemoLogin}>
-            Use demo account
-          </button>
-          <small>Demo credentials: demo / dailybytes</small>
-        </div>
-      </form>
-    </div>
+      </div>
+    </section>
   );
 };
 
