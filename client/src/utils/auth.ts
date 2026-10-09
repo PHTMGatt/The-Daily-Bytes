@@ -34,7 +34,7 @@ class AuthService {
 
   logout() {
     localStorage.removeItem(TOKEN_KEY);
-    window.location.assign('/login');
+    window.location.assign('/');
   }
 }
 
