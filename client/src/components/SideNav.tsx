@@ -18,7 +18,8 @@ const SideNav = () => {
 
   // TODO: Track current theme (updated dynamically)
   const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const saved = localStorage.getItem("theme");
+    let saved = '';
+    try { saved = localStorage.getItem("theme") || ''; } catch { /* Storage can be disabled. */ }
     return saved === "dark" ? "dark" : "light";
   });
 
@@ -40,33 +41,33 @@ const SideNav = () => {
   return (
     <div className={`sidenav ${isOpen ? "open" : "closed"} ${theme}`}>
       {/* TODO: Sidebar toggle button */}
-      <button className="sidenav-toggle" onClick={toggleSidebar}>
+      <button className="sidenav-toggle" onClick={toggleSidebar} aria-label={isOpen ? 'Collapse categories' : 'Expand categories'} aria-expanded={isOpen}>
         <FaBars className="toggle-icon" />
       </button>
 
       {/* TODO: Navigation links (icons + optional labels) */}
       <div className="sidenav-links">
-        <Link to="/Sports" className="sidenav-link">
+        <Link to="/sports" className="sidenav-link" aria-label="Sports">
           <MdSportsFootball className="sidenav-icon" />
           {isOpen && <span>Sports</span>}
         </Link>
 
-        <Link to="/Health" className="sidenav-link">
+        <Link to="/health" className="sidenav-link" aria-label="Health">
           <MdHealthAndSafety className="sidenav-icon" />
           {isOpen && <span>Health</span>}
         </Link>
 
-        <Link to="/Technology" className="sidenav-link">
+        <Link to="/technology" className="sidenav-link" aria-label="Technology">
           <HiServerStack className="sidenav-icon" />
           {isOpen && <span>Technology</span>}
         </Link>
 
-        <Link to="/Entertainment" className="sidenav-link">
+        <Link to="/entertainment" className="sidenav-link" aria-label="Entertainment">
           <BsFillPlayBtnFill className="sidenav-icon" />
           {isOpen && <span>Entertainment</span>}
         </Link>
 
-        <Link to="/Horoscope" className="sidenav-link">
+        <Link to="/horoscope" className="sidenav-link" aria-label="Horoscope">
           <BsMoonStarsFill className="sidenav-icon" />
           {isOpen && <span>Horoscope</span>}
         </Link>

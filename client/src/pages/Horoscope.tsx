@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Horoscope.css';
+import { API_ORIGIN } from '../api/config';
 
 interface HoroscopeData {
   description: string;
@@ -10,6 +11,8 @@ interface HoroscopeData {
 const Horoscope: React.FC = () => {
   const [selectedSign, setSelectedSign] = useState('aries');
   const [currentDate, setCurrentDate] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<HoroscopeData>({
     description: '',
     lucky_number: '',
@@ -17,6 +20,9 @@ const Horoscope: React.FC = () => {
   });
 
 useEffect(() => {
+  const controller = new AbortController();
+  setError('');
+  setLoading(true);
   const now = new Date();
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -26,8 +32,8 @@ useEffect(() => {
   };
   setCurrentDate(now.toLocaleDateString('en-US', options));
 
-  fetch(`/api/horoscope?zodiacSign=${selectedSign}`)
-    .then(res => res.json())
+  fetch(`${API_ORIGIN}/api/horoscope?zodiacSign=${selectedSign}`, { signal: controller.signal })
+    .then(res => { if (!res.ok) throw new Error('Horoscopes are temporarily unavailable.'); return res.json(); })
     .then(data => {
       const d = data?.data || data; // ✅ fallback for RapidAPI response shape
       setHoroscope({
@@ -36,7 +42,9 @@ useEffect(() => {
         mood: d.mood || 'Unknown'
       });
     })
-    .catch(err => console.error("Horoscope fetch error:", err));
+    .catch(err => { if (!controller.signal.aborted) setError(err.message); })
+    .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+  return () => controller.abort();
 }, [selectedSign]);
 
   const handleSignChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -52,7 +60,9 @@ useEffect(() => {
     <div className="horoscope-container">
       <div className="horoscope-section">
         <div className="horoscope-header">
-          <h2>Daily Horoscope</h2>
+          <h1>Daily Horoscope</h1>
+          {loading && <p role="status">Loading horoscope…</p>}
+          {error && <p role="alert">{error}</p>}
           <div className="date-display">{currentDate}</div>
         </div>
 

@@ -17,7 +17,7 @@
 .navbar {
   background-color: #157ac2;
   padding: 1.25rem 2rem;
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -30,13 +30,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: auto;
 }
 
 .nav-title {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  text-decoration: none;
   font-size: 1.6rem;
   font-weight: 700;
-  color: #000;
+  color: #fff;
   white-space: nowrap;
   transition: transform 0.3s ease;
 }
@@ -46,8 +54,9 @@
 ----------------------------------------------------------------------------- */
 
 .nav-tabs {
+  border: 0;
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
   flex-grow: 1;
   justify-content: center;
   flex-wrap: wrap;
@@ -55,7 +64,7 @@
 
 .nav-actions {
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
   align-items: center;
   white-space: nowrap;
 }
@@ -182,13 +191,18 @@ body.dark {
 ----------------------------------------------------------------------------- */
 
 @media (max-width: 640px) {
+  .navbar { padding: .8rem 1rem; }
+  .navbar-inner { justify-content: center; gap: .65rem; }
+  .nav-tabs { flex: 1 0 100%; gap: .4rem; }
+  .nav-actions { flex-wrap: wrap; justify-content: center; }
   .nav-title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
   }
 
   .nav-link,
   .theme-toggle-button {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
+    font-size: .7rem;
+    padding: .5rem .65rem;
+    min-height: 40px;
   }
 }

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run build && node --test scripts/*.test.mjs",
+    "test:browser": "node scripts/browser-smoke.mjs",
     "start": "npm run client:build && npm run server",
     "start:dev": "concurrently \"npm run server:dev\" \"wait-on tcp:3001 && npm run client:dev\"",
     "server": "cd server && npm start",
@@ -12,7 +13,7 @@
     "install": "cd server && npm i && cd ../client && npm i",
     "client:build": "cd client && npm run build",
     "client:dev": "cd client && npm run dev",
-    "clean": "cd server && rm -rf dist && cd../client && rm -rf dist",
+    "clean": "node -e \"for (const p of ['server/dist','client/dist']) require('fs').rmSync(p,{recursive:true,force:true})\"",
     "build": "cd server && npm run build",
     "seed": "echo \"Daily Bytes runs without a database seed\"",
     "render-build": "npm install && npm run build"
@@ -25,6 +26,7 @@
     "@types/react-icons": "^2.2.7",
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.3",
+    "playwright": "1.59.0",
     "typescript": "^5.8.2",
     "wait-on": "^7.2.0"
   },

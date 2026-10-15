@@ -48,7 +48,8 @@ const Login = () => {
           <h1>Welcome back</h1>
           <p>
             The main Daily Bytes experience is public. Sign in only to unlock
-            the extra category sidebar and full reader access.
+            the extra category sidebar. Profiles stay in this browser only;
+            this is not a secure cloud account. Do not reuse a real password.
           </p>
         </div>
 

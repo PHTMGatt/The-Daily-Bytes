@@ -1,23 +1,114 @@
-import { UserLogin } from "../interfaces/UserLogin";
+import { UserLogin } from '../interfaces/UserLogin';
+// Browser-local demo profiles only; never use this as server authorization.
 
-export const login = async (userData: UserLogin) => {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
+const USERS_KEY = 'daily_bytes_demo_users';
 
-  if (!res.ok) throw new Error('Login failed');
-  return res.json(); // { token: "..." }
+interface StoredUser {
+  username: string;
+  email: string;
+  passwordHash: string;
+}
+
+const demoUser = {
+  username: 'demo',
+  password: 'dailybytes',
 };
 
-export const signUp = async (userData: UserLogin) => {
-  const res = await fetch('/api/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-
-  if (!res.ok) throw new Error('Registration failed');
-  return res.json(); // { token: "..." }
+const fallbackHash = (value: string) => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `fallback-${(hash >>> 0).toString(16)}`;
 };
+
+const hashPassword = async (password: string) => {
+  if (globalThis.crypto?.subtle) {
+    const bytes = new TextEncoder().encode(password);
+    const hash = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hash))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  return fallbackHash(password);
+};
+
+const readUsers = (): StoredUser[] => {
+  try {
+    const stored = localStorage.getItem(USERS_KEY);
+    const value: unknown = stored ? JSON.parse(stored) : [];
+    return Array.isArray(value) ? value.filter((entry): entry is StoredUser =>
+      !!entry && typeof entry.username === 'string' &&
+      typeof entry.email === 'string' && typeof entry.passwordHash === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeUsers = (users: StoredUser[]) => {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+};
+
+const createSessionToken = (username: string) =>
+  `daily-bytes:${encodeURIComponent(username)}:${Date.now()}`;
+
+const login = async (userInfo: UserLogin) => {
+  const username = userInfo.username?.trim() || '';
+  const password = (userInfo.password || '').trim();
+
+  if (
+    username.toLowerCase() === demoUser.username &&
+    password === demoUser.password
+  ) {
+    return { token: createSessionToken(demoUser.username) };
+  }
+
+  if (!username || !password) {
+    throw new Error('Enter your username and password.');
+  }
+
+  const passwordHash = await hashPassword(password);
+  const user = readUsers().find(
+    (entry) =>
+      entry.username.toLowerCase() === username.toLowerCase() &&
+      entry.passwordHash === passwordHash
+  );
+
+  if (!user) {
+    throw new Error('Invalid username or password.');
+  }
+
+  return { token: createSessionToken(user.username) };
+};
+
+const signUp = async (userInfo: UserLogin) => {
+  const username = userInfo.username?.trim() || '';
+  const email = userInfo.email?.trim() || '';
+  const password = (userInfo.password || '').trim();
+
+  if (!username || !email || !password) {
+    throw new Error('Username, email, and password are required.');
+  }
+
+  if (username.toLowerCase() === demoUser.username) {
+    throw new Error('That username is reserved for the demo account.');
+  }
+
+  const users = readUsers();
+  if (users.some((entry) => entry.username.toLowerCase() === username.toLowerCase())) {
+    throw new Error('That username already exists in this browser.');
+  }
+
+  users.push({
+    username,
+    email,
+    passwordHash: await hashPassword(password),
+  });
+  writeUsers(users);
+
+  return { token: createSessionToken(username) };
+};
+
+export { login, signUp };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { retrieveNews } from '../api/mainNewsAPI';
+import { retrieveNews, safeHttpUrl } from '../api/mainNewsAPI';
 import './News.css';
 
 interface NewsSource {
@@ -9,11 +9,11 @@ interface NewsSource {
 
 interface Article {
   source?: NewsSource;
-  author: string | null;
+  author?: string | null;
   title: string;
   description: string;
   url: string;
-  image: string | null;
+  image?: string | null;
   publishedAt?: string;
   published_at?: string;
   content?: string | null;
@@ -32,24 +32,33 @@ const NewsComponent = ({ category }: { category?: string }) => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [totalArticles, setTotalArticles] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const articlesPerPage = 12;
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchNews = async () => {
+      setLoading(true);
+      setArticles([]);
       try {
         setError(null);
-        const data = await retrieveNews(category?.toLowerCase(), page, articlesPerPage);
+        const data = await retrieveNews(category?.toLowerCase(), page, articlesPerPage, controller.signal);
         setArticles(data.articles);
         setTotalArticles(data.totalResults);
+        setHasMore(data.hasMore);
       } catch (fetchError) {
-        console.error('Error fetching news:', fetchError);
-        setError('Failed to load news. Please try again later.');
+        if (!controller.signal.aborted) setError(fetchError instanceof Error ? fetchError.message : 'Failed to load news.');
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchNews();
     window.scrollTo(0, 0);
-  }, [category, page]);
+    return () => controller.abort();
+  }, [category, page, attempt]);
 
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
 
@@ -59,19 +68,22 @@ const NewsComponent = ({ category }: { category?: string }) => {
         {category ? `${category} News` : 'Latest News'}
       </h1>
 
-      {error && <p className="news-error">{error}</p>}
+      {error && <div className="news-error" role="alert"><p>{error}</p><button onClick={() => setAttempt(value => value + 1)}>Try again</button></div>}
+      {loading && <p role="status">Loading stories…</p>}
 
-      {articles.length === 0 ? (
+      {!loading && !error && articles.length === 0 ? (
         <p className="no-news">No news available</p>
       ) : (
         <div className="news-grid">
           {articles.map((article) => (
             <div key={article.url} className="news-card">
-              {article.image && (
+              {safeHttpUrl(article.image) && (
                 <img
                   src={article.image}
                   alt={article.title}
                   className="news-image"
+                  loading="lazy"
+                  onError={event => { event.currentTarget.style.display = 'none'; }}
                 />
               )}
               <div className="news-card-content">
@@ -94,10 +106,10 @@ const NewsComponent = ({ category }: { category?: string }) => {
         </div>
       )}
 
-      <div className="pagination">
+      {!error && <div className="pagination" aria-label="News pagination">
         <button
           onClick={() => setPage(page > 1 ? page - 1 : page)}
-          disabled={page === 1}
+          disabled={page === 1 || loading}
           aria-label="Previous page"
         >
           Previous
@@ -106,13 +118,13 @@ const NewsComponent = ({ category }: { category?: string }) => {
           Page {page} of {totalPages}
         </span>
         <button
-          onClick={() => setPage(page < totalPages ? page + 1 : page)}
-          disabled={page >= totalPages}
+          onClick={() => setPage(page + 1)}
+          disabled={!hasMore || loading}
           aria-label="Next page"
         >
           Next
         </button>
-      </div>
+      </div>}
     </div>
   );
 };
