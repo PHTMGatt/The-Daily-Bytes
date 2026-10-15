@@ -2,6 +2,8 @@
 
 This branch fixes the existing browser-local reader demo. It does not migrate accounts to MongoDB or PostgreSQL.
 
+For subfolder-hosted review previews only, run `VITE_REVIEW_HASH_ROUTER=true npx vite build --base=./` inside `client`. Supply `VITE_API_ORIGIN` separately when the preview backend lives on another origin. Normal production routing is unchanged.
+
 ## Implemented
 - One canonical auth module replaces conflicting `.js`, `.ts` and `.tsx` implementations.
 - Local demo-account behavior and password limitations are disclosed on account screens.

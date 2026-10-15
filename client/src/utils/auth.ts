@@ -69,7 +69,7 @@ class AuthService {
     safeSet(localStorage, TOKEN_KEY, sessionValue);
     safeSet(sessionStorage, TOKEN_KEY, sessionValue);
     document.cookie = `${COOKIE_KEY}=${encodeURIComponent(sessionValue)}; path=/; max-age=604800; SameSite=Lax`;
-    window.location.href = '/';
+    window.location.href = import.meta.env.VITE_REVIEW_HASH_ROUTER === 'true' ? `${window.location.pathname}#/` : '/';
   }
 
   loginDemo() {
@@ -80,7 +80,7 @@ class AuthService {
     safeRemove(localStorage, TOKEN_KEY);
     safeRemove(sessionStorage, TOKEN_KEY);
     document.cookie = `${COOKIE_KEY}=; path=/; max-age=0; SameSite=Lax`;
-    window.location.href = '/';
+    window.location.href = import.meta.env.VITE_REVIEW_HASH_ROUTER === 'true' ? `${window.location.pathname}#/` : '/';
   }
 }
 
