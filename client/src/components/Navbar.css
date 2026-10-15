@@ -124,6 +124,7 @@
 ----------------------------------------------------------------------------- */
 
 .theme-toggle-wrapper {
+  flex: 0 0 auto;
   position: relative;
   display: inline-flex;
   background-color: #4b5563;
@@ -133,6 +134,9 @@
 }
 
 .theme-toggle-button {
+  flex: 1 0 auto;
+  min-width: 76px;
+  justify-content: center;
   background: none;
   border: none;
   font-size: 0.875rem;

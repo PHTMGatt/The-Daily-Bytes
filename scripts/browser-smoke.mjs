@@ -30,6 +30,10 @@ try {
       await page.locator('h1').first().waitFor();
       await page.waitForTimeout(200);
       assert.equal(await page.locator('h1').count(), 1, path);
+      if (path === '/') {
+        const cta = await page.getByRole('link', { name: 'Find your Daily Byte' }).boundingBox();
+        assert(cta && cta.height >= 40 && cta.width >= 100, 'homepage CTA keeps its button styling');
+      }
       if (path !== '/missing') assert(await page.evaluate(() => {
         const heading = document.querySelector('h1')?.getBoundingClientRect();
         const header = document.querySelector('.navbar')?.getBoundingClientRect();

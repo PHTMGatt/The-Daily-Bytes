@@ -5,11 +5,11 @@ export default function Home() {
   return <div className="home-container">
     <div className="home-main">
       <header className="home-header">
-        <h1>Welcome to <span className="title-highlight">The Daily Bytes</span></h1>
+        <h1>Welcome to <span className="highlight">The Daily Bytes</span></h1>
         <p>Follow a topic, explore a category, or find your next story. Start reading without an account.</p>
-        <Link to="/dailybyte" className="start-btn">Find your Daily Byte</Link>
+        <Link to="/dailybyte" className="get-started-btn">Find your Daily Byte</Link>
       </header>
-      <section className="home-featured">
+      <section className="featured-content">
         <h2>Choose your next read</h2>
         <ul>
           <li><Link to="/technology">Technology and innovation</Link></li>

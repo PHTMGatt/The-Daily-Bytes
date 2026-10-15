@@ -69,11 +69,26 @@
 .featured-content ul {
   list-style-type: none;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
 }
 
 .featured-content li {
-  margin: 1rem 0;
+  margin: 0;
   font-size: 1rem;
+}
+.featured-content li a {
+  display: block;
+  padding: 1rem;
+  min-height: 56px;
+  border: 1px solid #64748b55;
+  border-radius: 8px;
+  text-decoration: none;
+}
+@media (max-width: 640px) {
+  .home-container { padding: 1.5rem .5rem; }
+  .featured-content ul { grid-template-columns: 1fr; }
 }
 
 /* =============================================================================
