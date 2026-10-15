@@ -28,7 +28,6 @@ const SliderToggle = ({ selected, setSelected }: SliderToggleProps) => {
         <FiMoon className="icon" />
         Dark
       </button>
-      <div className={`theme-slider ${selected === 'dark' ? 'right' : 'left'}`} />
     </div>
   );
 };

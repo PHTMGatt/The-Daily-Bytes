@@ -37,7 +37,7 @@
 .get-started-btn {
   display: inline-block;
   margin-top: 1rem;
-  background-color: #6dc2ff;
+  background-color: #174a9f;
   color: #fff;
   padding: 0.75rem 1.5rem;
   font-weight: bold;
@@ -47,7 +47,7 @@
 }
 
 .get-started-btn:hover {
-  background-color: #4aa8ff;
+  background-color: #123b80;
 }
 
 /* =============================================================================
@@ -111,7 +111,7 @@ body.dark .home-container {
 }
 
 body.dark .get-started-btn {
-  background-color: #4a90e2;
+  background-color: #174a9f;
 }
 
 body.dark .get-started-btn:hover {

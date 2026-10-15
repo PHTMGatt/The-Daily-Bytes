@@ -124,6 +124,8 @@
 ----------------------------------------------------------------------------- */
 
 .theme-toggle-wrapper {
+  gap: 4px;
+  padding: 4px;
   flex: 0 0 auto;
   position: relative;
   display: inline-flex;
@@ -134,6 +136,7 @@
 }
 
 .theme-toggle-button {
+  border-radius: 8px;
   flex: 1 0 auto;
   min-width: 76px;
   justify-content: center;
@@ -153,7 +156,7 @@
 }
 
 .theme-toggle-button.selected {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: #174a9f;
   color: #fff;
 }
 
