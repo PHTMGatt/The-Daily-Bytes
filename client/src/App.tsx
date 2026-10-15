@@ -2,9 +2,15 @@ import './App.css';
 import Navbar from './components/Navbar';
 import SideNav from './components/SideNav';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 function App() {
+  const [, refreshSession] = useState(0);
+  useEffect(() => {
+    const update = () => refreshSession(value => value + 1);
+    window.addEventListener('daily-bytes-auth', update);
+    return () => window.removeEventListener('daily-bytes-auth', update);
+  }, []);
   const { pathname } = useLocation();
   useEffect(() => {
     const names: Record<string, string> = { '/': 'Home', '/dailybyte': 'Your Daily Byte', '/login': 'Reader access', '/signup': 'Local profile' };

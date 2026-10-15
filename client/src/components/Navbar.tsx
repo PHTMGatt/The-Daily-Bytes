@@ -54,6 +54,9 @@ const Navbar = () => {
 
   useEffect(() => {
     setLoginCheck(auth.loggedIn());
+    const update = () => setLoginCheck(auth.loggedIn());
+    window.addEventListener('daily-bytes-auth', update);
+    return () => window.removeEventListener('daily-bytes-auth', update);
   }, [location.pathname]);
 
   useEffect(() => {

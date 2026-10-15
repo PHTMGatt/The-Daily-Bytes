@@ -7,6 +7,7 @@ For subfolder-hosted review previews only, run `VITE_REVIEW_HASH_ROUTER=true npx
 ## Implemented
 - One canonical auth module replaces conflicting `.js`, `.ts` and `.tsx` implementations.
 - Local demo-account behavior and password limitations are disclosed on account screens.
+- Storage/cookie access is guarded at the property boundary; restricted previews can keep a temporary in-memory demo session.
 - News provider calls move behind a server-only, HTTPS proxy. The client no longer includes the provider key.
 - Search is explicit-submit, cancellable and rendered as text instead of injected HTML.
 - Correct provider pagination, timeouts, input/URL validation, image-optional stories, visible configuration/failure responses and retry controls.

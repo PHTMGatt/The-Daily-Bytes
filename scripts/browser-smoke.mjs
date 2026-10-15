@@ -64,8 +64,14 @@ try {
     await page.waitForURL(base + '/');
     assert(!requests.some(url => url.includes('/auth')), 'local signup must not call a nonexistent API');
     assert(await page.evaluate(() => !!localStorage.getItem('daily_bytes_session')));
+    await page.addInitScript(() => {
+      for (const key of ['localStorage', 'sessionStorage']) Object.defineProperty(window, key, { get() { throw new DOMException('Blocked', 'SecurityError'); } });
+      Object.defineProperty(document, 'cookie', { get() { throw new DOMException('Blocked', 'SecurityError'); }, set() { throw new DOMException('Blocked', 'SecurityError'); } });
+    });
+    await page.goto(base + '/');
+    await page.getByRole('heading', { name: /Welcome to/ }).waitFor();
     assert.deepEqual(errors, []);
-    reports.push({ width, interactions: 'safe search, no per-keypress requests, error/retry, local signup', passed: true });
+    reports.push({ width, interactions: 'safe search, no per-keypress requests, error/retry, local signup, restricted storage', passed: true });
     await context.close();
   }
 } finally { await browser.close(); }
