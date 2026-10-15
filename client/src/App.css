@@ -2,9 +2,12 @@
    Base Layout
 ============================================================================= */
 
+.skip-link { position: fixed; top: .5rem; left: .5rem; z-index: 10000; padding: .75rem; background: #fff; color: #111; transform: translateY(-200%); }
+.skip-link:focus { transform: none; }
+
 /* Fixed Navbar */
 .navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
@@ -14,7 +17,7 @@
 /* Body defaults */
 body {
   margin: 0;
-  padding-top: 82px; /* Match your Navbar height */
+  padding-top: 0;
   background-color: #f9fafb;
   color: #1e293b;
   font-family: 'Segoe UI', sans-serif;
@@ -30,7 +33,7 @@ main.container {
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  width: calc(100% - 200px); /* Default with expanded SideNav */
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   transition: all 0.3s ease;
@@ -39,16 +42,19 @@ main.container {
 /* Adjust width when SideNav is collapsed */
 .sidenav.closed ~ main.container {
   width: calc(100% - 60px);
+  margin-left: 60px;
 }
+.sidenav.open ~ main.container { width: calc(100% - 200px); margin-left: 200px; }
+.sidenav { top: var(--header-height, 82px); height: calc(100vh - var(--header-height, 82px)); }
 
 /* Responsive: On small screens, use full width */
 @media (max-width: 768px) {
-  main.container,
-  .sidenav.closed ~ main.container {
+  main.container {
     width: 100%;
     margin-left: 0;
     padding: 1.25rem;
   }
+  .sidenav.closed ~ main.container { width: calc(100% - 60px); margin-left: 60px; }
 }
 
 /* =============================================================================

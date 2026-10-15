@@ -44,7 +44,8 @@ const SignUp = () => {
           <h1>Create an account</h1>
           <p>
             This portfolio demo stores the profile only in this browser. No remote
-            account or database is created.
+            account or database is created. Use a throwaway password, never one
+            you use for a real account.
           </p>
         </div>
 

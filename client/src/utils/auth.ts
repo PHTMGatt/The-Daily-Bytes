@@ -2,85 +2,64 @@ import type { UserData } from '../interfaces/UserData';
 
 const TOKEN_KEY = 'daily_bytes_session';
 const COOKIE_KEY = 'daily_bytes_access';
+type StorageName = 'localStorage' | 'sessionStorage';
 
-const safeSet = (storage: Storage, key: string, value: string) => {
+function readStorage(storage: StorageName): string {
+  try { return window[storage].getItem(TOKEN_KEY) || ''; } catch { return ''; }
+}
+function writeStorage(storage: StorageName, value: string): void {
   try {
-    storage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
-};
+    if (value) window[storage].setItem(TOKEN_KEY, value);
+    else window[storage].removeItem(TOKEN_KEY);
+  } catch { /* Access to the storage property itself can be blocked. */ }
+}
 
-const safeGet = (storage: Storage, key: string) => {
-  try {
-    return storage.getItem(key) || '';
-  } catch {
-    return '';
-  }
-};
-
-const safeRemove = (storage: Storage, key: string) => {
-  try {
-    storage.removeItem(key);
-  } catch {
-    // Ignore storage cleanup failures in restrictive browser modes.
-  }
-};
-
+// This is a reader-demo identity, never server authentication or authorization.
 class AuthService {
+  private volatileToken = '';
+
   getProfile(): UserData {
     const token = this.getToken();
-    const username = token.startsWith('daily-bytes:')
-      ? decodeURIComponent(token.split(':')[1] || 'reader')
-      : decodeURIComponent(token || 'reader');
-
-    return {
-      id: null,
-      username,
-      email: null,
-    };
+    const value = token.startsWith('daily-bytes:') ? token.split(':')[1] : token;
+    let username = 'reader';
+    try { username = decodeURIComponent(value || 'reader'); } catch { /* Ignore malformed local state. */ }
+    return { id: null, username, email: null };
   }
 
-  loggedIn() {
-    return Boolean(this.getToken());
-  }
-
-  isTokenExpired(_token: string) {
-    return false;
-  }
+  loggedIn() { return Boolean(this.getToken()); }
+  isTokenExpired(_token: string) { return false; }
 
   getToken(): string {
-    const local = safeGet(localStorage, TOKEN_KEY);
-    if (local) return local;
+    const stored = this.volatileToken || readStorage('localStorage') || readStorage('sessionStorage');
+    if (stored) return stored;
+    try {
+      const cookie = document.cookie.split('; ').find(entry => entry.startsWith(`${COOKIE_KEY}=`));
+      return cookie ? decodeURIComponent(cookie.split('=')[1] || '') : '';
+    } catch { return ''; }
+  }
 
-    const session = safeGet(sessionStorage, TOKEN_KEY);
-    if (session) return session;
-
-    const cookie = document.cookie
-      .split('; ')
-      .find((entry) => entry.startsWith(`${COOKIE_KEY}=`));
-
-    return cookie ? decodeURIComponent(cookie.split('=')[1] || '') : '';
+  private redirectHome() {
+    window.dispatchEvent(new Event('daily-bytes-auth'));
+    if (import.meta.env.VITE_REVIEW_HASH_ROUTER === 'true') window.location.hash = '/';
+    else window.location.href = '/';
   }
 
   login(identity: string) {
-    const sessionValue = identity || 'reader';
-    safeSet(localStorage, TOKEN_KEY, sessionValue);
-    safeSet(sessionStorage, TOKEN_KEY, sessionValue);
-    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(sessionValue)}; path=/; max-age=604800; SameSite=Lax`;
-    window.location.href = '/';
+    this.volatileToken = identity || 'reader';
+    writeStorage('localStorage', this.volatileToken);
+    writeStorage('sessionStorage', this.volatileToken);
+    try { document.cookie = `${COOKIE_KEY}=${encodeURIComponent(this.volatileToken)}; path=/; max-age=604800; SameSite=Lax`; } catch { /* Memory-only preview session. */ }
+    this.redirectHome();
   }
 
-  loginDemo() {
-    this.login('demo');
-  }
+  loginDemo() { this.login('demo'); }
 
   logout() {
-    safeRemove(localStorage, TOKEN_KEY);
-    safeRemove(sessionStorage, TOKEN_KEY);
-    document.cookie = `${COOKIE_KEY}=; path=/; max-age=0; SameSite=Lax`;
-    window.location.href = '/';
+    this.volatileToken = '';
+    writeStorage('localStorage', '');
+    writeStorage('sessionStorage', '');
+    try { document.cookie = `${COOKIE_KEY}=; path=/; max-age=0; SameSite=Lax`; } catch { /* Cookies can be blocked. */ }
+    this.redirectHome();
   }
 }
 

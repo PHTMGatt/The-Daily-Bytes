@@ -1,93 +1,61 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { Article } from '../interfaces/news';
+import { FormEvent, useEffect, useState } from 'react';
+import { NewsArticle, retrieveNews } from '../api/mainNewsAPI';
 import './DailyByte.css';
 
-// ==============================
-// TODO: Mediastack API Config
-// ==============================
-const API_KEY = 'afcb3a83e50a4d8d3fdf16023d468eab';
-const BASE_URL = "http://api.mediastack.com/v1/news";
-
-// ==============================
-// TODO: Personalized News Page
-// ==============================
-
-export default function PersonalizedNews() {
-  const [topic, setTopic] = useState("");
-  const [summary, setSummary] = useState("");
+export default function DailyByte() {
+  const [topic, setTopic] = useState(() => { try { return localStorage.getItem('topic') || ''; } catch { return ''; } });
+  const [query, setQuery] = useState('');
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searched, setSearched] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
-  const fetchNews = async () => {
-    if (!topic) return;
+  useEffect(() => {
+    if (!query) return;
+    const controller = new AbortController();
     setLoading(true);
+    setError('');
+    setArticles([]);
+    retrieveNews('', 1, 12, controller.signal, query)
+      .then(data => setArticles(data.articles))
+      .catch(err => { if (!controller.signal.aborted) setError(err instanceof Error ? err.message : 'Search failed.'); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [query, attempt]);
 
-    try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          access_key: API_KEY,
-          keywords: topic,
-          countries: 'us',
-          languages: 'en',
-          sort: 'published_desc',
-          limit: 5,
-        },
-      });
-
-      const articles: Article[] = response.data.data;
-      generateSummary(articles);
-    } catch (error) {
-      console.error("Error fetching news:", error);
-    }
-
-    setLoading(false);
+  const search = (event: FormEvent) => {
+    event.preventDefault();
+    const value = topic.trim();
+    if (!value) return;
+    try { localStorage.setItem('topic', value); } catch { /* Search works without storage. */ }
+    setSearched(true);
+    setQuery(value);
+    setAttempt(current => current + 1);
   };
-
-  const generateSummary = (articles: Article[]) => {
-    const combinedText = articles
-      .map(
-        (article) =>
-          `<a href='${article.url}' target='_blank' class='text-blue-600 hover:underline'>${article.title}</a>: ${article.description || "No description available."}`
-      )
-      .join(" <br /><br /> ");
-
-    setSummary(combinedText);
-  };
-
-  useEffect(() => {
-    const savedTopic = localStorage.getItem("topic");
-    if (savedTopic) {
-      setTopic(savedTopic);
-      fetchNews();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (topic) {
-      localStorage.setItem("topic", topic);
-      fetchNews();
-    }
-  }, [topic]);
-
   return (
-    <div className="container">
-      <div className="search-bar">
-        <input
-          type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="Enter a topic..."
-        />
+    <section className="daily-byte">
+      <h1>Your Daily Byte</h1>
+      <p>Choose a topic and explore recent reporting. Article descriptions come from the publishers, not an AI summary.</p>
+      <form className="daily-byte__search" onSubmit={search}>
+        <label htmlFor="news-topic">What would you like to read about?</label>
+        <div>
+          <input id="news-topic" value={topic} onChange={event => setTopic(event.target.value)} maxLength={120} placeholder="Technology, Michigan, space…" required />
+          <button type="submit" disabled={loading}>{loading ? 'Searching…' : 'Find stories'}</button>
+        </div>
+      </form>
+      <div aria-live="polite" aria-busy={loading}>
+        {loading && <p role="status">Finding stories about {query}…</p>}
+        {error && <p role="alert">{error} Submit your search to retry.</p>}
+        {!loading && !error && searched && articles.length === 0 && <p>No stories found. Try a broader topic.</p>}
+        {!searched && <p>Enter a topic to get started. No search is sent until you select Find stories.</p>}
+        {articles.map(article => (
+          <article className="daily-byte__story" key={article.url}>
+            <h2><a href={article.url} target="_blank" rel="noopener noreferrer">{article.title}</a></h2>
+            <p>{article.description || 'Open the original article to read more.'}</p>
+          </article>
+        ))}
       </div>
-
-      {loading && <p className="loading">Loading news...</p>}
-
-      {summary && (
-        <div
-          className="summary"
-          dangerouslySetInnerHTML={{ __html: summary }}
-        ></div>
-      )}
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, createHashRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 
 import App from './App';
@@ -16,7 +16,8 @@ import Trending from './pages/Trending';
 import Health from './pages/Health';
 import DailyByte from './pages/DailyByte';
 
-const router = createBrowserRouter([
+const createRouter = import.meta.env.VITE_REVIEW_HASH_ROUTER === 'true' ? createHashRouter : createBrowserRouter;
+const router = createRouter([
   {
     path: '/',
     element: <App />,
