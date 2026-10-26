@@ -5,10 +5,10 @@ import { Outlet } from 'react-router-dom';
 
 function App() {
   return (
-    <div>
+    <div className="app-shell">
       <Navbar />
       <SideNav />
-      <main className="container pt-5">
+      <main className="app-main">
         <Outlet />
       </main>
     </div>
