@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FiArrowUpRight, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import ArticleImage from '../components/ArticleImage';
 import { getSavedArticles, removeSavedArticle, SavedArticlePayload } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
 import './Saved.css';
@@ -73,7 +74,7 @@ export default function Saved() {
           {articles.map((article) => (
             <article className="saved-card" key={article.url}>
               <div className="saved-card-media">
-                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div>DAILY BYTES</div>}
+                <ArticleImage src={article.image} fallbackClassName="saved-image-fallback" />
                 <span>{article.topic || 'Saved'}</span>
               </div>
               <div className="saved-card-body">
