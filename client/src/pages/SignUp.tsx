@@ -31,7 +31,7 @@ const SignUp = () => {
       if (!data?.token) throw new Error('Unable to create a session.');
       Auth.login(data.token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to create your profile.');
+      setError(err instanceof Error ? err.message : 'Unable to create your account.');
       setLoading(false);
     }
   };
@@ -40,11 +40,10 @@ const SignUp = () => {
     <section className="auth-shell">
       <div className="auth-card">
         <div className="auth-heading">
-          <span className="auth-eyebrow">LOCAL PROFILE</span>
-          <h1>Create an account</h1>
+          <span className="auth-eyebrow">READER ACCOUNT</span>
+          <h1>Create your account</h1>
           <p>
-            This portfolio demo stores the profile only in this browser. No remote
-            account or database is created.
+            Save one secure Daily Bytes login and use it across browsers instead of relying on a local demo profile.
           </p>
         </div>
 
@@ -71,6 +70,7 @@ const SignUp = () => {
               onChange={handleChange}
               autoComplete="username"
               placeholder="Choose a username"
+              minLength={3}
               required
             />
           </label>
@@ -83,8 +83,8 @@ const SignUp = () => {
               value={signUpData.password ?? ''}
               onChange={handleChange}
               autoComplete="new-password"
-              placeholder="Choose a password"
-              minLength={4}
+              placeholder="8 characters minimum"
+              minLength={8}
               required
             />
           </label>
@@ -92,12 +92,12 @@ const SignUp = () => {
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <button className="auth-primary" type="submit" disabled={loading}>
-            {loading ? 'Creating profile…' : 'Create profile'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
         <p className="auth-footer">
-          Already have a profile? <Link to="/login">Sign in</Link>
+          Already registered? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </section>
