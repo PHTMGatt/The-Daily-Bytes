@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
-import ArticleImage from './ArticleImage';
+import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
+import auth from '../utils/auth';
+import { buildSavedArticlePayload } from '../utils/savedArticlePayload';
 import { getNewsViewState } from '../utils/newsViewState';
+import ArticleImage from './ArticleImage';
 import './News.css';
 
 interface NewsSource {
@@ -40,6 +44,8 @@ const formatPublishedDate = (article: Article) => {
     : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const getPublishedAt = (article: Article) => article.publishedAt || article.published_at || '';
+
 const getSource = (article: Article) => {
   if (typeof article.source === 'string') return article.source;
   return article.source?.name || article.author || 'News source';
@@ -48,12 +54,16 @@ const getSource = (article: Article) => {
 const getImage = (article: Article) => article.image || article.urlToImage || '';
 
 const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentProps) => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
+  const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
+  const [savingUrl, setSavingUrl] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
   const articlesPerPage = 12;
 
   useEffect(() => {
@@ -88,7 +98,67 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
 
   useEffect(() => {
     setPage(1);
+    setSaveNotice('');
   }, [category, keywords]);
+
+  useEffect(() => {
+    if (!auth.loggedIn()) {
+      setSavedUrls(new Set());
+      return;
+    }
+
+    let active = true;
+    getSavedArticles()
+      .then((saved) => {
+        if (active) setSavedUrls(new Set(saved.map((article) => article.url)));
+      })
+      .catch(() => {
+        if (active) setSavedUrls(new Set());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const toggleSaved = async (article: Article) => {
+    if (!auth.loggedIn()) {
+      navigate('/login');
+      return;
+    }
+
+    setSavingUrl(article.url);
+    setSaveNotice('');
+
+    try {
+      if (savedUrls.has(article.url)) {
+        await removeSavedArticle(article.url);
+        setSavedUrls((current) => {
+          const next = new Set(current);
+          next.delete(article.url);
+          return next;
+        });
+        setSaveNotice('Removed from saved articles.');
+      } else {
+        const topic = category || keywords || 'Latest';
+        const payload = buildSavedArticlePayload({
+          title: article.title,
+          url: article.url,
+          description: article.description || '',
+          image: getImage(article),
+          source: getSource(article),
+          publishedAt: getPublishedAt(article),
+        }, topic);
+        const saved = await saveArticle(payload);
+        setSavedUrls((current) => new Set(current).add(saved?.url || article.url));
+        setSaveNotice('Saved to your reading list.');
+      }
+    } catch (saveError) {
+      setSaveNotice(saveError instanceof Error ? saveError.message : 'Unable to update saved articles.');
+    } finally {
+      setSavingUrl('');
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
   const viewState = getNewsViewState({ loading, error, articleCount: articles.length });
@@ -106,6 +176,8 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
         <h1 className="news-heading">{resolvedHeading}</h1>
         <p>{resolvedSubtitle}</p>
       </header>
+
+      {saveNotice && <div className="news-save-notice" role="status">{saveNotice}</div>}
 
       {viewState === 'loading' && (
         <div className="news-state-card" role="status">
@@ -154,14 +226,26 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                   <p className="news-summary">
                     {article.description?.trim() || 'Open the original story for the latest details.'}
                   </p>
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="read-more"
-                  >
-                    Open story <FiArrowUpRight />
-                  </a>
+                  <div className="news-card-actions">
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="read-more"
+                    >
+                      Open story <FiArrowUpRight />
+                    </a>
+                    <button
+                      type="button"
+                      className={savedUrls.has(article.url) ? 'saved' : ''}
+                      disabled={savingUrl === article.url}
+                      onClick={() => toggleSaved(article)}
+                      aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
+                    >
+                      {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
+                      {savedUrls.has(article.url) ? 'Saved' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
