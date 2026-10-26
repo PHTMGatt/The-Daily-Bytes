@@ -4,63 +4,70 @@ import axios from 'axios';
 const router = express.Router();
 
 const MEDIASTACK_API_KEY = process.env.MEDIASTACK_API_KEY;
-const BASE_URL = 'http://api.mediastack.com/v1/news';
+const BASE_URL = 'https://api.mediastack.com/v1/news';
 
 router.get('/:category?', async (req: Request, res: Response) => {
+  if (!MEDIASTACK_API_KEY) {
+    return res.status(503).json({ message: 'News service is not configured.' });
+  }
+
   try {
-    const { category } = req.params;
+    const category = (req.params.category || '').trim().toLowerCase();
+    const keywords = typeof req.query.keywords === 'string'
+      ? req.query.keywords.trim().slice(0, 120)
+      : '';
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-    const PER_PAGE = 12;
-    const FETCH_MULTIPLIER = 3;
-    const fetchLimit = PER_PAGE * FETCH_MULTIPLIER;
+    const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));
+    const fetchLimit = Math.min(100, pageSize * 2);
     const offset = (page - 1) * fetchLimit;
 
-    const params = {
+    const params: Record<string, string | number> = {
       access_key: MEDIASTACK_API_KEY,
-      categories: category || '',
       countries: 'us',
       languages: 'en',
+      sort: 'published_desc',
       limit: fetchLimit,
       offset,
     };
 
+    if (category) params.categories = category;
+    if (keywords) params.keywords = keywords;
+
     console.log('Fetching Mediastack news', {
-      category: category || 'general',
+      category: category || 'all',
+      keywords: keywords || 'none',
       page,
       limit: fetchLimit,
-      offset,
     });
 
-    const response = await axios.get(BASE_URL, { params });
-    const raw = response.data.data as any[];
-    const reportedTotal = response.data.pagination.total;
+    const response = await axios.get(BASE_URL, { params, timeout: 12000 });
+    const raw = Array.isArray(response.data?.data) ? response.data.data : [];
+    const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
 
-    const withValidImage = raw.filter(
-      (article) => typeof article.image === 'string' && /^https?:\/\//.test(article.image)
-    );
+    const unique: any[] = [];
+    const seen = new Set<string>();
 
-    const unique: typeof withValidImage = [];
-    const seenUrls = new Set<string>();
-    for (const article of withValidImage) {
-      if (!seenUrls.has(article.url)) {
-        seenUrls.add(article.url);
-        unique.push(article);
-      }
+    for (const article of raw) {
+      if (!article?.title || !article?.url) continue;
+      const key = String(article.url || article.title).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(article);
     }
 
-    console.log(`After filter & dedupe: ${unique.length}`);
-
-    const pageArticles = unique.slice(0, PER_PAGE);
-
-    res.status(200).json({
-      articles: pageArticles,
+    return res.status(200).json({
+      articles: unique.slice(0, pageSize),
       page,
-      perPage: PER_PAGE,
+      perPage: pageSize,
       totalResults: reportedTotal,
+      query: keywords,
     });
   } catch (error: any) {
-    console.error('Mediastack API error:', error.message);
-    res.status(500).json({ message: 'Failed to fetch news from Mediastack' });
+    const apiMessage = error?.response?.data?.error?.message;
+    console.error('Mediastack API error:', apiMessage || error.message);
+    return res.status(502).json({
+      message: apiMessage || 'News provider is temporarily unavailable.',
+    });
   }
 });
 
