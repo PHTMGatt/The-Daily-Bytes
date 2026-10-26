@@ -49,7 +49,7 @@ const Login = () => {
           <span className="auth-eyebrow">READER ACCESS</span>
           <h1>Welcome back</h1>
           <p>
-            Browse the main feed freely, or sign in to unlock the complete category navigation.
+            Sign in to keep a Mongo-backed reading list of the gaming and hardware stories you want to revisit.
           </p>
         </div>
 
