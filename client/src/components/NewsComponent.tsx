@@ -52,6 +52,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
   const articlesPerPage = 12;
 
@@ -83,7 +84,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
     return () => {
       active = false;
     };
-  }, [category, keywords, page]);
+  }, [category, keywords, page, retryKey]);
 
   useEffect(() => {
     setPage(1);
@@ -108,7 +109,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
 
       {viewState === 'loading' && (
         <div className="news-state-card" role="status">
-          <FiRefreshCw className="spin" aria-hidden="true" />
+          <FiRefreshCw className="news-spin" aria-hidden="true" />
           <h2>Loading stories...</h2>
           <p>Pulling the newest articles for this feed.</p>
         </div>
@@ -118,8 +119,8 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
         <div className="news-state-card news-state-error" role="alert">
           <h2>Feed unavailable</h2>
           <p>{error}</p>
-          <button type="button" onClick={() => setPage((current) => current)}>
-            Refresh this page
+          <button type="button" onClick={() => setRetryKey((current) => current + 1)}>
+            Try again
           </button>
         </div>
       )}
