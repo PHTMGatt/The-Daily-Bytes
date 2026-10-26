@@ -32,16 +32,22 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   const title = normalizeHeadline(article.title);
   const description = normalizeHeadline(article.description);
   const normalizedQuery = normalizeHeadline(query);
+  const titleWords = new Set(title.split(' ').filter(Boolean));
+  const descriptionWords = new Set(description.split(' ').filter(Boolean));
   let score = 0;
 
-  if (normalizedQuery && title.includes(normalizedQuery)) score += 40;
+  const exactTitleMatch = tokens.length === 1
+    ? titleWords.has(tokens[0])
+    : Boolean(normalizedQuery && title.includes(normalizedQuery));
+
+  if (exactTitleMatch) score += 40;
 
   let titleMatches = 0;
   for (const token of tokens) {
-    if (title.includes(token)) {
+    if (titleWords.has(token)) {
       score += 12;
       titleMatches += 1;
-    } else if (description.includes(token)) {
+    } else if (descriptionWords.has(token)) {
       score += 3;
     }
   }
