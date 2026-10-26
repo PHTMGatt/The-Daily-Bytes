@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
+import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
 import { TimedCache } from '../../lib/timedCache.js';
 
 const router = express.Router();
@@ -54,20 +55,10 @@ router.get('/:category?', async (req: Request, res: Response) => {
     const response = await axios.get(BASE_URL, { params, timeout: 12000 });
     const raw = Array.isArray(response.data?.data) ? response.data.data : [];
     const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
-
-    const unique: any[] = [];
-    const seen = new Set<string>();
-
-    for (const article of raw) {
-      if (!article?.title || !article?.url) continue;
-      const key = String(article.url || article.title).toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      unique.push(article);
-    }
+    const ranked = rankAndDedupeArticles(raw, keywords);
 
     const payload: NewsPayload = {
-      articles: unique.slice(0, pageSize),
+      articles: ranked.slice(0, pageSize),
       page,
       perPage: pageSize,
       totalResults: reportedTotal,
