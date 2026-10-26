@@ -2,7 +2,7 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 
 import Auth from '../utils/auth';
-import { login } from '../api/authAPI';
+import { demoLogin, login } from '../api/authAPI';
 import { UserLogin } from '../interfaces/UserLogin';
 import './Auth.css';
 
@@ -20,13 +20,17 @@ const Login = () => {
     setError('');
   };
 
+  const completeLogin = (token?: string) => {
+    if (!token) throw new Error('Unable to create a session.');
+    Auth.login(token);
+  };
+
   const authenticate = async (credentials: UserLogin) => {
     setLoading(true);
     setError('');
     try {
       const data = await login(credentials);
-      if (!data?.token) throw new Error('Unable to create a session.');
-      Auth.login(data.token);
+      completeLogin(data?.token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in.');
       setLoading(false);
@@ -39,7 +43,15 @@ const Login = () => {
   };
 
   const handleDemoLogin = async () => {
-    await authenticate({ username: 'demo', password: 'dailybytes' });
+    setLoading(true);
+    setError('');
+    try {
+      const data = await demoLogin();
+      completeLogin(data?.token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to start demo access.');
+      setLoading(false);
+    }
   };
 
   return (
