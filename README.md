@@ -1,5 +1,7 @@
 # Daily Bytes
 
+![Daily Bytes portfolio artwork](https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/a2c43d8301679dbda14ad06dc225d61e5515e431/src/assets/project-images/Daily%20Bytes.png)
+
 Daily Bytes is a gaming-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA and RTX hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
 
 The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
