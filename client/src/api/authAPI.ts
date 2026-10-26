@@ -1,23 +1,24 @@
-import { UserLogin } from "../interfaces/UserLogin";
+import type { UserLogin } from '../interfaces/UserLogin';
 
-export const login = async (userData: UserLogin) => {
-  const res = await fetch('/api/auth/login', {
+const postAuth = async (path: 'login' | 'register', userInfo: UserLogin) => {
+  const response = await fetch(`/api/auth/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
+    body: JSON.stringify({
+      username: userInfo.username?.trim(),
+      email: userInfo.email?.trim(),
+      password: userInfo.password,
+    }),
   });
 
-  if (!res.ok) throw new Error('Login failed');
-  return res.json(); // { token: "..." }
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Authentication request failed.');
+  }
+
+  return data as { token: string };
 };
 
-export const signUp = async (userData: UserLogin) => {
-  const res = await fetch('/api/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-
-  if (!res.ok) throw new Error('Registration failed');
-  return res.json(); // { token: "..." }
-};
+export const login = (userInfo: UserLogin) => postAuth('login', userInfo);
+export const signUp = (userInfo: UserLogin) => postAuth('register', userInfo);
