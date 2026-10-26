@@ -1,81 +1,59 @@
-import { Link } from "react-router-dom";
-import "./Home.css"; // TODO: Page-specific styling
+import { Link } from 'react-router-dom';
+import './Home.css';
 
-// ==============================
-// TODO: Home Landing Component
-// ==============================
+const categories = [
+  { label: 'Technology', to: '/Technology', copy: 'AI, software, hardware, and the stories shaping what comes next.' },
+  { label: 'Health', to: '/Health', copy: 'Clear headlines and useful health updates without the clutter.' },
+  { label: 'Sports', to: '/Sports', copy: 'Catch the biggest sports stories in a fast, readable feed.' },
+  { label: 'Entertainment', to: '/Entertainment', copy: 'Movies, culture, creators, and entertainment news worth opening.' },
+];
 
 const Home = () => {
   return (
-    <div className="home-container">
-      {/* TODO: Hero Header */}
-      <header className="home-header">
+    <main className="home-container">
+      <section className="home-hero">
+        <span className="home-kicker">YOUR DAILY NEWS DASHBOARD</span>
         <h1>
-          Welcome to <span className="highlight">The Daily Bytes</span>
+          The stories that matter, <span className="highlight">without the noise.</span>
         </h1>
-        <p>
-          Discover personalized insights, the latest news, and trending stories — all in one place.
-          Whether you're into tech, health, entertainment, or daily horoscopes, we've got something
-          just for you.
+        <p className="home-intro">
+          The Daily Bytes brings current headlines, focused category feeds, trending stories,
+          and daily extras into one clean reading experience.
         </p>
-        <Link to="/dailybyte" className="get-started-btn">
-          Start Exploring Now
-        </Link>
-      </header>
-
-      {/* TODO: Featured Article Links */}
-      <section className="featured-content">
-        <h2>Featured Articles</h2>
-        <ul>
-          <li>
-            📝{" "}
-            <a
-              href="https://zapier.com/blog/productivity-tips/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              How to Improve Your Productivity
-            </a>
-          </li>
-          <li>
-            🧠{" "}
-            <a
-              href="https://www.forbes.com/sites/bernardmarr/2024/12/18/the-top-10-tech-trends-in-2025-everyone-must-be-ready-for/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Top 10 Tech Trends in 2025
-            </a>
-          </li>
-          <li>
-            💻{" "}
-            <a
-              href="https://www.freecodecamp.org/news/why-you-should-learn-to-code/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Why Learning to Code is Essential
-            </a>
-          </li>
-        </ul>
+        <div className="home-actions">
+          <Link to="/dailybyte" className="get-started-btn">Browse latest stories</Link>
+          <Link to="/trending" className="secondary-btn">See what&apos;s trending</Link>
+        </div>
       </section>
 
-      {/* TODO: Footer Section */}
-      <footer className="home-footer">
-        <p>Stay connected:</p>
-        <p>
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-            Twitter
-          </a>{" "}
-          |{" "}
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-            Facebook
-          </a>
-        </p>
-      </footer>
-    </div>
+      <section className="home-category-section" aria-labelledby="browse-heading">
+        <div className="section-heading">
+          <span>EXPLORE</span>
+          <h2 id="browse-heading">Pick your feed</h2>
+          <p>Jump straight into the topics you care about.</p>
+        </div>
+
+        <div className="category-grid">
+          {categories.map((category) => (
+            <Link className="category-card" to={category.to} key={category.label}>
+              <span className="category-label">{category.label}</span>
+              <p>{category.copy}</p>
+              <span className="category-arrow" aria-hidden="true">→</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-reader-callout">
+        <div>
+          <span className="home-kicker">READER ACCESS</span>
+          <h2>One account. Your full Daily Bytes experience.</h2>
+          <p>Sign in for complete category navigation, or use the demo account to explore instantly.</p>
+        </div>
+        <Link to="/login" className="reader-link">Open reader access</Link>
+      </section>
+    </main>
   );
 };
 
 export default Home;
-// NOTE Main landing page with featured content and social links
