@@ -1,102 +1,86 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { FiMoon, FiSun } from 'react-icons/fi';
+import { FormEvent, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
 import './Navbar.css';
 
-interface SliderToggleProps {
-  selected: 'light' | 'dark';
-  setSelected: (val: 'light' | 'dark') => void;
-}
-
-const SliderToggle = ({ selected, setSelected }: SliderToggleProps) => {
-  return (
-    <div className="theme-toggle-wrapper" role="radiogroup" aria-label="Theme toggle">
-      <button
-        className={`theme-toggle-button ${selected === 'light' ? 'selected' : ''}`}
-        onClick={() => setSelected('light')}
-        aria-pressed={selected === 'light'}
-      >
-        <FiSun className="icon" />
-        Light
-      </button>
-      <button
-        className={`theme-toggle-button ${selected === 'dark' ? 'selected' : ''}`}
-        onClick={() => setSelected('dark')}
-        aria-pressed={selected === 'dark'}
-      >
-        <FiMoon className="icon" />
-        Dark
-      </button>
-      <div className={`theme-slider ${selected === 'dark' ? 'right' : 'left'}`} />
-    </div>
-  );
-};
-
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [loginCheck, setLoginCheck] = useState(auth.loggedIn());
+  const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark' ? 'dark' : 'light';
+    return saved === 'light' ? 'light' : 'dark';
   });
 
   useEffect(() => {
     setLoginCheck(auth.loggedIn());
-  }, [location.pathname]);
+    const currentQuery = new URLSearchParams(location.search).get('q');
+    if (currentQuery) setSearch(currentQuery);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
-    document.body.className = theme === 'dark' ? 'dark' : '';
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme === 'light');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const tabs = [
-    { label: 'Home', to: '/' },
-    { label: 'DailyByte', to: '/dailybyte' },
-    { label: 'Trending', to: '/trending' },
-    { label: 'Contact', to: '/contact' },
-  ];
+  const handleSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const query = search.trim();
+    if (!query) return;
+    navigate(`/dailybyte?q=${encodeURIComponent(query)}`);
+  };
 
   return (
-    <header className="navbar fade-in">
+    <header className="navbar">
       <div className="navbar-inner">
-        <h1 className="nav-title">THE DAILY BYTES</h1>
+        <Link className="brand-lockup" to="/" aria-label="Daily Bytes home">
+          <span className="brand-name">Daily <strong>Bytes</strong></span>
+          <span className="brand-tagline">Games. Hardware. Tech.</span>
+        </Link>
 
-        <nav className="nav-tabs">
-          {tabs.map((tab) => (
-            <Link
-              key={tab.label}
-              to={tab.to}
-              className={`nav-link ${location.pathname === tab.to ? 'active' : ''}`}
-            >
-              {tab.label.toUpperCase()}
-            </Link>
-          ))}
-        </nav>
+        <form className="nav-search" onSubmit={handleSearch} role="search">
+          <FiSearch className="nav-search-icon" aria-hidden="true" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search games, GPUs, RAM, hardware..."
+            aria-label="Search Daily Bytes"
+          />
+          <button type="submit">Search</button>
+        </form>
 
         <div className="nav-actions">
+          <Link className="nav-text-link" to="/trending">Trending</Link>
+          <button
+            className="theme-icon-button"
+            type="button"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <FiMoon /> : <FiSun />}
+          </button>
+
           {loginCheck ? (
             <button
-              className="nav-link logout-button"
+              className="account-button"
+              type="button"
               onClick={() => {
                 auth.logout();
                 setLoginCheck(false);
               }}
             >
-              LOGOUT
+              <FiLogOut />
+              <span>Logout</span>
             </button>
           ) : (
-            <>
-              <Link to="/login" className="nav-link">
-                LOGIN
-              </Link>
-              <Link to="/signup" className="nav-link signup-button">
-                SIGN UP
-              </Link>
-            </>
+            <Link className="account-button" to="/login">
+              <FiUser />
+              <span>Sign in</span>
+            </Link>
           )}
-
-          <SliderToggle selected={theme} setSelected={setTheme} />
         </div>
       </div>
     </header>

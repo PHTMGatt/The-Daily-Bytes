@@ -1,24 +1,31 @@
-const retrieveNews = async (category?: string, page: number = 1, pageSize: number = 30) => {
-  try {
-    const url = category
-      ? `/api/news/${category}?page=${page}&pageSize=${pageSize}`
-      : `/api/news?page=${page}&pageSize=${pageSize}`;
+const retrieveNews = async (
+  category?: string,
+  page: number = 1,
+  pageSize: number = 12,
+  keywords?: string
+) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
 
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Invalid API response for ${category || 'main news'}`);
-    }
-
-    return await response.json();
-  } catch (err) {
-    console.log(`Error retrieving ${category || 'main'} news:`, err);
-    return { articles: [], totalResults: 0 };
+  if (keywords?.trim()) {
+    params.set('keywords', keywords.trim());
   }
+
+  const path = category ? `/api/news/${encodeURIComponent(category)}` : '/api/news';
+  const response = await fetch(`${path}?${params.toString()}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.message || `Unable to load ${category || 'news'} right now.`);
+  }
+
+  return response.json();
 };
 
 export { retrieveNews };
