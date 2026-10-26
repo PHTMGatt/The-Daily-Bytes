@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
+import { FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
 import './Navbar.css';
 
@@ -53,6 +53,11 @@ const Navbar = () => {
         </form>
 
         <div className="nav-actions">
+          {loginCheck && (
+            <Link className="nav-text-link" to="/saved">
+              <FiBookmark /> Saved
+            </Link>
+          )}
           <Link className="nav-text-link" to="/trending">Trending</Link>
           <button
             className="theme-icon-button"
