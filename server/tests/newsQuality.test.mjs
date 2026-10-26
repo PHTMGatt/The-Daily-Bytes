@@ -94,3 +94,92 @@ test('rankAndDedupeArticles preserves provider order for an empty query', () => 
     'https://example.com/second',
   ]);
 });
+
+test('gaming profile boosts Witcher and PC hardware stories over generic gaming mentions', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Publisher business update',
+      url: 'https://example.com/generic-gaming',
+      description: 'The gaming market remains active this quarter.',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'CD Projekt details the next Witcher update',
+      url: 'https://example.com/witcher-priority',
+      description: 'The studio shared new PC details.',
+      published_at: '2026-10-25T12:00:00Z',
+    }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/witcher-priority');
+});
+
+test('RAM prices profile recognizes DDR5 and memory aliases', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Component market update',
+      url: 'https://example.com/generic-ram',
+      description: 'RAM prices moved again this week.',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'DDR5 memory costs fall for PC builders',
+      url: 'https://example.com/ddr5-priority',
+      published_at: '2026-10-25T12:00:00Z',
+    }),
+  ], 'RAM prices');
+
+  assert.equal(results[0].url, 'https://example.com/ddr5-priority');
+});
+
+test('GPU prices profile recognizes RTX and GeForce aliases', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Component pricing roundup',
+      url: 'https://example.com/generic-gpu',
+      description: 'GPU prices remain volatile.',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'GeForce RTX cards get major retail cuts',
+      url: 'https://example.com/rtx-priority',
+      published_at: '2026-10-25T12:00:00Z',
+    }),
+  ], 'GPU prices');
+
+  assert.equal(results[0].url, 'https://example.com/rtx-priority');
+});
+
+test('exact query title matches outrank profile alias-only matches', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'DDR5 memory costs fall again',
+      url: 'https://example.com/alias-only',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'RAM prices fall ahead of holiday builds',
+      url: 'https://example.com/exact-query',
+      published_at: '2026-10-24T12:00:00Z',
+    }),
+  ], 'RAM prices');
+
+  assert.equal(results[0].url, 'https://example.com/exact-query');
+});
+
+test('unknown queries keep existing relevance behavior without profile bonuses', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'NVIDIA reveals a research demo',
+      url: 'https://example.com/nvidia-unrelated',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'Quantum computing research reaches new milestone',
+      url: 'https://example.com/quantum',
+      published_at: '2026-10-24T12:00:00Z',
+    }),
+  ], 'quantum computing');
+
+  assert.equal(results[0].url, 'https://example.com/quantum');
+});
