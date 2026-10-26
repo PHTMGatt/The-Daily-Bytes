@@ -7,6 +7,26 @@ export interface NewsQualityArticle {
 }
 
 const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'from', 'into', 'this', 'that']);
+const PROFILE_TITLE_BONUS = 6;
+const PROFILE_DESCRIPTION_BONUS = 2;
+const PROFILE_BONUS_CAP = 24;
+
+const QUERY_PROFILES: Record<string, string[]> = {
+  gaming: [
+    'witcher', 'cd projekt', 'cdpr', 'nvidia', 'rtx', 'geforce', 'gpu', 'pc', 'hardware',
+    'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
+  ],
+  'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
+  'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],
+  'gpu prices': ['gpu', 'graphics card', 'rtx', 'geforce', 'radeon'],
+  'ram prices': ['ram', 'ddr5', 'dram', 'memory'],
+  'ram ssd prices': ['ram', 'ddr5', 'dram', 'memory', 'ssd', 'nvme', 'storage'],
+  'pc hardware': [
+    'pc', 'hardware', 'gpu', 'cpu', 'ram', 'ddr5', 'ssd', 'nvme', 'motherboard', 'cooling',
+    'case', 'monitor',
+  ],
+  'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
+};
 
 export const normalizeHeadline = (value: unknown) =>
   String(value || '')
@@ -28,12 +48,44 @@ const getPublishedTime = (article: NewsQualityArticle) => {
   return Number.isFinite(time) ? time : 0;
 };
 
+const matchesTerm = (normalizedText: string, words: Set<string>, term: string) =>
+  term.includes(' ') ? normalizedText.includes(term) : words.has(term);
+
+const profileBonus = (
+  title: string,
+  description: string,
+  normalizedQuery: string,
+  queryTokens: Set<string>,
+) => {
+  const profile = QUERY_PROFILES[normalizedQuery];
+  if (!profile) return 0;
+
+  const titleWords = new Set(title.split(' ').filter(Boolean));
+  const descriptionWords = new Set(description.split(' ').filter(Boolean));
+  let bonus = 0;
+
+  for (const term of profile) {
+    if (term === normalizedQuery || (!term.includes(' ') && queryTokens.has(term))) continue;
+
+    if (matchesTerm(title, titleWords, term)) {
+      bonus += PROFILE_TITLE_BONUS;
+    } else if (matchesTerm(description, descriptionWords, term)) {
+      bonus += PROFILE_DESCRIPTION_BONUS;
+    }
+
+    if (bonus >= PROFILE_BONUS_CAP) return PROFILE_BONUS_CAP;
+  }
+
+  return bonus;
+};
+
 const relevanceScore = (article: NewsQualityArticle, query: string, tokens: string[]) => {
   const title = normalizeHeadline(article.title);
   const description = normalizeHeadline(article.description);
   const normalizedQuery = normalizeHeadline(query);
   const titleWords = new Set(title.split(' ').filter(Boolean));
   const descriptionWords = new Set(description.split(' ').filter(Boolean));
+  const queryTokenSet = new Set(tokens);
   let score = 0;
 
   const exactTitleMatch = tokens.length === 1
@@ -53,6 +105,7 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   }
 
   if (tokens.length > 1 && titleMatches === tokens.length) score += 16;
+  score += profileBonus(title, description, normalizedQuery, queryTokenSet);
   return score;
 };
 
