@@ -4,7 +4,7 @@
   "description": "The Daily Bytes news dashboard",
   "main": "index.js",
   "scripts": {
-    "test": "npm run build && cd server && node --test tests/*.test.mjs",
+    "test": "cd server && npm test",
     "start": "npm run server",
     "start:dev": "concurrently \"npm run server:dev\" \"wait-on tcp:3001 && npm run client:dev\"",
     "server": "cd server && node dist/server.js",
@@ -13,7 +13,7 @@
     "client:build": "cd client && npm run build",
     "client:dev": "cd client && npm run dev",
     "clean": "rm -rf server/dist client/dist",
-    "build": "npm run client:build && cd server && npm run build",
+    "build": "npm run client:build && cd server && npm test",
     "seed": "echo \"Daily Bytes initializes MongoDB on server startup\"",
     "render-build": "npm install && npm run build"
   },
