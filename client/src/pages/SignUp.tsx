@@ -57,6 +57,7 @@ const SignUp = () => {
               onChange={handleChange}
               autoComplete="email"
               placeholder="you@example.com"
+              maxLength={254}
               required
             />
           </label>
@@ -71,6 +72,7 @@ const SignUp = () => {
               autoComplete="username"
               placeholder="Choose a username"
               minLength={3}
+              maxLength={40}
               required
             />
           </label>
@@ -83,8 +85,9 @@ const SignUp = () => {
               value={signUpData.password ?? ''}
               onChange={handleChange}
               autoComplete="new-password"
-              placeholder="8 characters minimum"
+              placeholder="8–128 characters"
               minLength={8}
+              maxLength={128}
               required
             />
           </label>
