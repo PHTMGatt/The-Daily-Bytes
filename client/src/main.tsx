@@ -4,7 +4,6 @@ import './index.css';
 
 import App from './App';
 import ErrorPage from './pages/ErrorPage';
-import Contact from './pages/Contact';
 import Entertainment from './pages/Entertainment';
 import Technology from './pages/Technology';
 import Horoscope from './pages/Horoscope';
@@ -27,7 +26,6 @@ const router = createBrowserRouter([
       { path: 'signup', element: <SignUp /> },
       { path: 'dailybyte', element: <DailyByte /> },
       { path: 'saved', element: <Saved /> },
-      { path: 'contact', element: <Contact /> },
       { path: 'entertainment', element: <Entertainment /> },
       { path: 'sports', element: <Sports /> },
       { path: 'health', element: <Health /> },
