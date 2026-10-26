@@ -1,11 +1,7 @@
-//import React from 'react'
-
-import NewsComponent from "../components/NewsComponent";
+import NewsComponent from '../components/NewsComponent';
 
 const Technology = () => {
-  return (
-   <NewsComponent category="Technology" />
-  )
-}
+  return <NewsComponent category="Technology" />;
+};
 
-export default Technology
+export default Technology;
