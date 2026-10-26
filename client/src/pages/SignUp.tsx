@@ -43,7 +43,7 @@ const SignUp = () => {
           <span className="auth-eyebrow">READER ACCOUNT</span>
           <h1>Create your account</h1>
           <p>
-            Save one secure Daily Bytes login and use it across browsers instead of relying on a local demo profile.
+            Create one secure Daily Bytes account and keep your saved gaming and hardware stories across browsers.
           </p>
         </div>
 
