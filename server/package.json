@@ -9,7 +9,7 @@
     "start": "npm run build && node dist/server.js --ignore client",
     "dev": "npx nodemon",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "seed": "npm run build && node dist/seeds/index.js"
+    "seed": "echo \"Daily Bytes initializes MongoDB on server startup\""
   },
   "nodemonConfig": {
     "watch": ["src"],
@@ -20,15 +20,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.20.0",
-    "pg": "^8.11.5",
-    "sequelize": "^6.37.3",
-    "server": "file:"
+    "mongodb": "^6.20.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
