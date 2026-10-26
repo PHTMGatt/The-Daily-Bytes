@@ -7,8 +7,9 @@ const decodePayload = (token: string): { username?: string; exp?: number } => {
     const payload = token.split('.')[1];
     if (!payload) return {};
     const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
     const json = decodeURIComponent(
-      atob(normalized)
+      atob(padded)
         .split('')
         .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
         .join('')
