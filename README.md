@@ -63,7 +63,7 @@ Through building this project, I strengthened my expertise in React, CSS, JavaSc
 
 ## 📸 Screenshot
 
-![Project Screenshot](./Project.png)
+![The Daily Bytes news feed](./docs/portfolio/cover.webp)
 
 ---
 
