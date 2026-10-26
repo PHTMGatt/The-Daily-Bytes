@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FaGamepad } from 'react-icons/fa';
-import { FiCpu, FiHardDrive, FiHome, FiTrendingUp } from 'react-icons/fi';
+import { FiBookmark, FiCpu, FiHardDrive, FiHome, FiTrendingUp } from 'react-icons/fi';
 import { MdMemory } from 'react-icons/md';
 import { BsController } from 'react-icons/bs';
 import './SideNav.css';
@@ -12,6 +12,7 @@ const navItems = [
   { label: 'NVIDIA', to: '/dailybyte?q=NVIDIA%20GPU', query: 'nvidia gpu', icon: FiCpu },
   { label: 'RAM Prices', to: '/dailybyte?q=RAM%20prices', query: 'ram prices', icon: MdMemory },
   { label: 'PC Hardware', to: '/dailybyte?q=PC%20hardware', query: 'pc hardware', icon: FiHardDrive },
+  { label: 'Saved', to: '/saved', icon: FiBookmark },
   { label: 'Trending', to: '/trending', icon: FiTrendingUp },
 ];
 

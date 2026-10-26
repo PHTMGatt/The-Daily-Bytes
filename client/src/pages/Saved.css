@@ -1,0 +1,247 @@
+.saved-page {
+  width: min(1320px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  color: var(--db-text, #f7f9fc);
+}
+
+.saved-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #173149;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(9, 23, 38, 0.96), rgba(3, 11, 20, 0.98));
+}
+
+.saved-header h1,
+.saved-empty-state h1,
+.saved-empty-state h2 {
+  margin: 0.35rem 0 0;
+  color: #fff;
+  letter-spacing: -0.035em;
+}
+
+.saved-header h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.saved-header p,
+.saved-empty-state p {
+  margin: 0.65rem 0 0;
+  color: #9eafc3;
+}
+
+.saved-header > a,
+.saved-empty-state > a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  background: #ff173c;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.saved-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #ff3858;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.saved-card {
+  overflow: hidden;
+  border: 1px solid #173149;
+  border-radius: 16px;
+  background: #071421;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+.saved-card-media {
+  position: relative;
+  height: 190px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0d2134, #030b14);
+}
+
+.saved-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.saved-card-media > div {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #70849b;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.saved-card-media > span {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 7px;
+  background: #ff173c;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.saved-card-body {
+  padding: 1rem;
+}
+
+.saved-card-body h2 {
+  margin: 0.65rem 0;
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.saved-card-body p {
+  margin: 0;
+  color: #9eafc3;
+  line-height: 1.55;
+}
+
+.saved-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: #74879d;
+  font-size: 0.75rem;
+}
+
+.saved-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.saved-card-actions a,
+.saved-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: #f6f8fb;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.saved-card-actions button {
+  color: #ff5570;
+}
+
+.saved-message,
+.saved-empty-state {
+  padding: 2rem;
+  border: 1px solid #173149;
+  border-radius: 16px;
+  background: #071421;
+  color: #a8b6c7;
+}
+
+.saved-message.error {
+  margin-bottom: 1rem;
+  border-color: rgba(255, 23, 60, 0.45);
+  color: #ff8a9e;
+}
+
+.saved-empty-state {
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  align-content: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
+.saved-empty-state > svg {
+  color: #ff173c;
+  font-size: 2.3rem;
+}
+
+.saved-empty-state.inline {
+  min-height: 320px;
+}
+
+body.light .saved-page {
+  color: #172235;
+}
+
+body.light .saved-header,
+body.light .saved-card,
+body.light .saved-message,
+body.light .saved-empty-state {
+  border-color: #d9e3ed;
+  background: #fff;
+}
+
+body.light .saved-header h1,
+body.light .saved-empty-state h1,
+body.light .saved-empty-state h2,
+body.light .saved-card-body h2 {
+  color: #142033;
+}
+
+body.light .saved-header p,
+body.light .saved-empty-state p,
+body.light .saved-card-body p {
+  color: #607086;
+}
+
+body.light .saved-card-actions a {
+  color: #182338;
+}
+
+@media (max-width: 1050px) {
+  .saved-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .saved-page {
+    width: min(100% - 1rem, 1320px);
+    padding-top: 1rem;
+  }
+
+  .saved-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-grid {
+    grid-template-columns: 1fr;
+  }
+}

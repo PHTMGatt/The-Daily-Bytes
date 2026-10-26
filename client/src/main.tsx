@@ -15,6 +15,7 @@ import Sports from './pages/Sports';
 import Trending from './pages/Trending';
 import Health from './pages/Health';
 import DailyByte from './pages/DailyByte';
+import Saved from './pages/Saved';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       { path: 'signup', element: <SignUp /> },
       { path: 'dailybyte', element: <DailyByte /> },
+      { path: 'saved', element: <Saved /> },
       { path: 'contact', element: <Contact /> },
       { path: 'entertainment', element: <Entertainment /> },
       { path: 'sports', element: <Sports /> },

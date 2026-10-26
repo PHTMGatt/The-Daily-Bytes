@@ -16,6 +16,18 @@ export interface DailyBytesUser {
   createdAt: Date;
 }
 
+export interface DailyBytesSavedArticle {
+  usernameNormalized: string;
+  title: string;
+  url: string;
+  description: string;
+  image: string;
+  source: string;
+  publishedAt: string;
+  topic: string;
+  savedAt: Date;
+}
+
 export const connectMongo = async () => {
   if (database) return database;
 
@@ -28,9 +40,12 @@ export const connectMongo = async () => {
   database = client.db(databaseName);
 
   const users = database.collection<DailyBytesUser>('users');
+  const savedArticles = database.collection<DailyBytesSavedArticle>('saved_articles');
   await Promise.all([
     users.createIndex({ usernameNormalized: 1 }, { unique: true }),
     users.createIndex({ emailNormalized: 1 }, { unique: true }),
+    savedArticles.createIndex({ usernameNormalized: 1, url: 1 }, { unique: true }),
+    savedArticles.createIndex({ usernameNormalized: 1, savedAt: -1 }),
   ]);
 
   const demoUsername = 'demo';
