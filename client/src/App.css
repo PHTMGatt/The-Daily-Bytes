@@ -1,88 +1,120 @@
-/* =============================================================================
-   Base Layout
-============================================================================= */
-
-/* Fixed Navbar */
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+:root {
+  --db-bg: #020812;
+  --db-bg-soft: #05101c;
+  --db-panel: #071421;
+  --db-panel-raised: #0a1929;
+  --db-border: #173149;
+  --db-border-strong: #21415e;
+  --db-text: #f7f9fc;
+  --db-muted: #9dafc2;
+  --db-accent: #ff173c;
+  --db-accent-hover: #ff3657;
+  --db-accent-soft: rgba(255, 23, 60, 0.12);
+  --db-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
 }
 
-/* Body defaults */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--db-bg);
+}
+
 body {
   margin: 0;
-  padding-top: 82px; /* Match your Navbar height */
-  background-color: #f9fafb;
-  color: #1e293b;
-  font-family: 'Segoe UI', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  padding-top: 88px;
+  background:
+    radial-gradient(circle at 42% -10%, rgba(28, 76, 116, 0.22), transparent 34rem),
+    linear-gradient(180deg, #020914 0%, var(--db-bg) 45%, #01060c 100%);
+  color: var(--db-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* =============================================================================
-   Main Layout Container
-============================================================================= */
-
-main.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  width: calc(100% - 200px); /* Default with expanded SideNav */
-  max-width: 1200px;
-  margin: 0 auto;
-  transition: all 0.3s ease;
+body.dark {
+  color-scheme: dark;
 }
 
-/* Adjust width when SideNav is collapsed */
-.sidenav.closed ~ main.container {
-  width: calc(100% - 60px);
+body.light {
+  --db-bg: #edf3f8;
+  --db-bg-soft: #f6f9fc;
+  --db-panel: #ffffff;
+  --db-panel-raised: #f8fbfd;
+  --db-border: #c7d5e2;
+  --db-border-strong: #aabfd1;
+  --db-text: #102033;
+  --db-muted: #5f7184;
+  --db-accent-soft: rgba(255, 23, 60, 0.09);
+  --db-shadow: 0 16px 40px rgba(38, 59, 78, 0.12);
+  color-scheme: light;
+  background: #edf3f8;
 }
 
-/* Responsive: On small screens, use full width */
-@media (max-width: 768px) {
-  main.container,
-  .sidenav.closed ~ main.container {
-    width: 100%;
-    margin-left: 0;
-    padding: 1.25rem;
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.app-shell {
+  min-height: calc(100vh - 88px);
+}
+
+.app-main {
+  width: calc(100% - 224px);
+  min-height: calc(100vh - 88px);
+  margin-left: 224px;
+  padding: 18px 20px 48px;
+}
+
+.app-main > * {
+  width: 100%;
+}
+
+::selection {
+  background: var(--db-accent);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--db-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--db-border-strong);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #315777;
+}
+
+@media (max-width: 1120px) {
+  .app-main {
+    width: calc(100% - 82px);
+    margin-left: 82px;
   }
 }
 
-/* =============================================================================
-   Dark Theme
-============================================================================= */
+@media (max-width: 760px) {
+  body {
+    padding-top: 132px;
+  }
 
-body.dark {
-  background-color: #0f172a;
-  color: #f9fafb;
-}
-
-body.dark main.container {
-  color: #f9fafb;
-}
-
-body.dark h1,
-body.dark h2,
-body.dark h3,
-body.dark .news-heading {
-  color: #ffffff;
-}
-
-body.dark .news-card {
-  background-color: #1e293b;
-  color: #f1f5f9;
-}
-
-body.dark .news-title,
-body.dark .news-summary,
-body.dark .news-date,
-body.dark .read-more {
-  color: #f1f5f9;
-}
-
-body.dark .read-more:hover {
-  color: #60a5fa;
+  .app-main {
+    width: 100%;
+    min-height: calc(100vh - 132px);
+    margin-left: 0;
+    padding: 12px 12px 86px;
+  }
 }
