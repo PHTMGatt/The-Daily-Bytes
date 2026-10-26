@@ -1,5 +1,3 @@
-import type { UserData } from '../interfaces/UserData';
-
 const TOKEN_KEY = 'daily_bytes_session';
 
 const decodePayload = (token: string): { username?: string; exp?: number } => {
@@ -21,15 +19,6 @@ const decodePayload = (token: string): { username?: string; exp?: number } => {
 };
 
 class AuthService {
-  getProfile(): UserData {
-    const payload = decodePayload(this.getToken());
-    return {
-      id: null,
-      username: payload.username || 'reader',
-      email: null,
-    };
-  }
-
   loggedIn() {
     const token = this.getToken();
     if (!token || this.isTokenExpired(token)) {
