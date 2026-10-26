@@ -8,7 +8,7 @@
     "build": "npx tsc",
     "start": "npm run build && node dist/server.js --ignore client",
     "dev": "npx nodemon",
-    "test": "npm run build",
+    "test": "npm run build && node --test tests/*.test.mjs",
     "seed": "npm run build && node dist/seeds/index.js"
   },
   "nodemonConfig": {
