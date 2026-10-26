@@ -20,13 +20,11 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const authenticate = async (credentials: UserLogin) => {
     setLoading(true);
     setError('');
-
     try {
-      const data = await login(loginData);
+      const data = await login(credentials);
       if (!data?.token) throw new Error('Unable to create a session.');
       Auth.login(data.token);
     } catch (err) {
@@ -35,9 +33,13 @@ const Login = () => {
     }
   };
 
-  const handleDemoLogin = () => {
-    setError('');
-    Auth.loginDemo();
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await authenticate(loginData);
+  };
+
+  const handleDemoLogin = async () => {
+    await authenticate({ username: 'demo', password: 'dailybytes' });
   };
 
   return (
@@ -47,8 +49,7 @@ const Login = () => {
           <span className="auth-eyebrow">READER ACCESS</span>
           <h1>Welcome back</h1>
           <p>
-            The main Daily Bytes experience is public. Sign in only to unlock
-            the extra category sidebar and full reader access.
+            Browse the main feed freely, or sign in to unlock the complete category navigation.
           </p>
         </div>
 
@@ -58,10 +59,10 @@ const Login = () => {
           onClick={handleDemoLogin}
           disabled={loading}
         >
-          Continue with full demo access
+          {loading ? 'Connecting…' : 'Continue with demo access'}
         </button>
 
-        <div className="auth-divider"><span>or use a local profile</span></div>
+        <div className="auth-divider"><span>or use your account</span></div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
@@ -98,7 +99,7 @@ const Login = () => {
         </form>
 
         <p className="auth-footer">
-          Want your own local profile? <Link to="/signup">Create one here</Link>
+          New reader? <Link to="/signup">Create an account</Link>
         </p>
       </div>
     </section>
