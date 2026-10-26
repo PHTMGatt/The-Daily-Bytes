@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
+import { getNewsWindow } from '../../lib/newsPagination.js';
 import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
 import { TimedCache } from '../../lib/timedCache.js';
 
@@ -31,8 +32,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
       : '';
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));
-    const fetchLimit = Math.min(100, pageSize * 2);
-    const offset = (page - 1) * fetchLimit;
+    const { fetchLimit, offset } = getNewsWindow(page, pageSize);
     const cacheKey = `${category}|${keywords.toLowerCase()}|${page}|${pageSize}`;
     const cached = newsCache.get(cacheKey);
 
