@@ -1,142 +1,165 @@
-/* =============================================================================
-   TODO: Side Navigation Styles (Container)
-============================================================================ */
-
 .sidenav {
   position: fixed;
-  top: auto;
+  top: 88px;
   left: 0;
-  height: calc(100% - 82px);
-  width: 200px;
-  background-color: #ffffff;
-  padding-top: 1.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  border-top-right-radius: 0.6rem;
-  border-bottom-right-radius: 0.6rem;
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  z-index: 999;
-
+  bottom: 0;
+  z-index: 900;
+  width: 224px;
+  padding: 18px 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(7, 20, 33, 0.98), rgba(4, 13, 23, 0.98));
+  border-right: 1px solid var(--db-border);
 }
 
-/* NOTE Collapsed width when toggled */
-.sidenav.closed {
-  width: 60px;
+body.light .sidenav {
+  background: #f8fbfd;
 }
-
-/* NOTE Dark theme override */
-.sidenav.dark {
-  background-color: #1e293b;
-}
-
-/* =============================================================================
-   TODO: Toggle Button Styles
-============================================================================ */
-
-.sidenav-toggle {
-  background-color: #6dc2ff;
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.sidenav-toggle:hover {
-  transform: scale(1.05);
-}
-
-.toggle-icon {
-  font-size: 1.4rem;
-}
-
-/* =============================================================================
-   TODO: Nav Link Group
-============================================================================ */
 
 .sidenav-links {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  width: 100%;
+  gap: 6px;
 }
 
-/* TODO: Individual Link Styling */
 .sidenav-link {
+  position: relative;
+  min-height: 50px;
+  padding: 0 13px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  color: #000;
+  gap: 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--db-text);
+  font-size: 0.92rem;
+  font-weight: 700;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 1.1rem;
-  padding: 0.4rem;
-  width: 100%;
-  border-radius: 0.4rem;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .sidenav-link:hover {
-  background-color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.035);
+  border-color: var(--db-border);
+  text-decoration: none;
 }
 
-/* NOTE Icon inside link */
+.sidenav-link.active {
+  background: linear-gradient(90deg, rgba(255, 23, 60, 0.24), rgba(255, 23, 60, 0.07));
+  border-color: rgba(255, 23, 60, 0.25);
+}
+
+.sidenav-link.active::before {
+  content: '';
+  position: absolute;
+  inset: 5px auto 5px -13px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--db-accent);
+}
+
 .sidenav-icon {
-  font-size: 1.6rem;
-  margin-bottom: 0.2rem;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  color: #eaf1f7;
 }
 
-/* =============================================================================
-   TODO: Dark Mode Adjustments
-============================================================================ */
-
-.sidenav.dark .sidenav-link {
-  color: #f1f5f9;
+body.light .sidenav-icon {
+  color: #25384b;
 }
 
-.sidenav.dark .sidenav-link:hover {
-  background-color: #2d3b52;
+.sidenav-link.active .sidenav-icon,
+.sidenav-link:hover .sidenav-icon {
+  color: var(--db-accent);
 }
 
-.sidenav.dark .sidenav-icon {
-  color: #f1f5f9;
+.sidenav-note {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  padding: 12px 12px 14px;
+  color: var(--db-muted);
 }
 
-/* =============================================================================
-   TODO: Responsive Behavior (Mobile Menu)
-============================================================================ */
+.sidenav-note > span {
+  width: 3px;
+  border-radius: 999px;
+  background: var(--db-accent);
+}
 
-@media screen and (max-width: 768px) {
+.sidenav-note p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+@media (max-width: 1120px) {
   .sidenav {
-    transform: translateX(-100%);
+    width: 82px;
+    padding: 16px 8px;
   }
 
-  .sidenav.open {
-    transform: translateX(0);
+  .sidenav-link {
+    justify-content: center;
+    padding: 0;
   }
 
-  .sidenav.closed {
-    transform: translateX(-100%);
+  .sidenav-link span,
+  .sidenav-note {
+    display: none;
   }
 
-  .sidenav-toggle {
-    position: fixed;
-    top: 92px;
-    left: 10px;
-    z-index: 1100;
+  .sidenav-link.active::before {
+    left: -8px;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidenav {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 70px;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    border-right: 0;
+    border-top: 1px solid var(--db-border);
+  }
+
+  .sidenav-links {
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .sidenav-link {
+    min-height: 48px;
+    border-radius: 8px;
+  }
+
+  .sidenav-link.active::before {
+    inset: auto 9px -7px 9px;
+    width: auto;
+    height: 3px;
+  }
+
+  .sidenav-icon {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+@media (max-width: 500px) {
+  .sidenav-links {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .sidenav-link:nth-child(3),
+  .sidenav-link:nth-child(6) {
+    display: none;
   }
 }
