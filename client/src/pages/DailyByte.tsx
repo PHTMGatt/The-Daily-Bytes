@@ -1,93 +1,267 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { Article } from '../interfaces/news';
+import { FormEvent, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FiArrowUpRight, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
+import { retrieveNews } from '../api/mainNewsAPI';
 import './DailyByte.css';
 
-// ==============================
-// TODO: Mediastack API Config
-// ==============================
-const API_KEY = 'afcb3a83e50a4d8d3fdf16023d468eab';
-const BASE_URL = "http://api.mediastack.com/v1/news";
+interface SearchArticle {
+  source?: string | { name?: string };
+  author?: string | null;
+  title: string;
+  description?: string | null;
+  url: string;
+  image?: string | null;
+  urlToImage?: string | null;
+  published_at?: string;
+  publishedAt?: string;
+}
 
-// ==============================
-// TODO: Personalized News Page
-// ==============================
+const DEFAULT_TOPIC = 'gaming';
 
-export default function PersonalizedNews() {
-  const [topic, setTopic] = useState("");
-  const [summary, setSummary] = useState("");
-  const [loading, setLoading] = useState(false);
+const priorityTopics = [
+  {
+    label: 'Witcher 3',
+    query: 'The Witcher 3',
+    copy: 'CDPR updates, mods, visuals, and everything around the Continent.',
+  },
+  {
+    label: 'NVIDIA',
+    query: 'NVIDIA GPU',
+    copy: 'GeForce launches, drivers, DLSS, RTX hardware, and GPU moves.',
+  },
+  {
+    label: 'GPU Prices',
+    query: 'GPU prices',
+    copy: 'Graphics card pricing, availability, market shifts, and new deals.',
+  },
+  {
+    label: 'RAM + SSD',
+    query: 'RAM SSD prices',
+    copy: 'Memory, storage, DDR5, SSD pricing, and component market changes.',
+  },
+  {
+    label: 'PC Hardware',
+    query: 'PC hardware',
+    copy: 'CPUs, cooling, cases, displays, builds, and enthusiast hardware.',
+  },
+];
 
-  const fetchNews = async () => {
-    if (!topic) return;
+const quickTopics = [
+  ['Gaming', 'gaming'],
+  ['Witcher 3', 'The Witcher 3'],
+  ['NVIDIA', 'NVIDIA GPU'],
+  ['GPU Prices', 'GPU prices'],
+  ['RAM Prices', 'RAM prices'],
+  ['PC Hardware', 'PC hardware'],
+  ['Game Releases', 'video game releases'],
+];
+
+const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
+
+const getSource = (article: SearchArticle) => {
+  if (typeof article.source === 'string') return article.source;
+  return article.source?.name || article.author || 'News source';
+};
+
+const formatDate = (article: SearchArticle) => {
+  const value = article.published_at || article.publishedAt;
+  if (!value) return 'Recent';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recent';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const articleSummary = (article: SearchArticle) =>
+  article.description?.trim() || 'Open the full story for the latest details.';
+
+export default function DailyByte() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const urlTopic = new URLSearchParams(location.search).get('q')?.trim() || DEFAULT_TOPIC;
+  const [topic, setTopic] = useState(urlTopic);
+  const [activeTopic, setActiveTopic] = useState(urlTopic);
+  const [articles, setArticles] = useState<SearchArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchTopic = async (query: string) => {
     setLoading(true);
+    setError('');
+    setActiveTopic(query);
 
     try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          access_key: API_KEY,
-          keywords: topic,
-          countries: 'us',
-          languages: 'en',
-          sort: 'published_desc',
-          limit: 5,
-        },
-      });
-
-      const articles: Article[] = response.data.data;
-      generateSummary(articles);
-    } catch (error) {
-      console.error("Error fetching news:", error);
+      const data = await retrieveNews(undefined, 1, 12, query);
+      setArticles(Array.isArray(data.articles) ? data.articles : []);
+    } catch (err) {
+      setArticles([]);
+      setError(err instanceof Error ? err.message : 'Unable to load stories right now.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  };
-
-  const generateSummary = (articles: Article[]) => {
-    const combinedText = articles
-      .map(
-        (article) =>
-          `<a href='${article.url}' target='_blank' class='text-blue-600 hover:underline'>${article.title}</a>: ${article.description || "No description available."}`
-      )
-      .join(" <br /><br /> ");
-
-    setSummary(combinedText);
   };
 
   useEffect(() => {
-    const savedTopic = localStorage.getItem("topic");
-    if (savedTopic) {
-      setTopic(savedTopic);
-      fetchNews();
-    }
-  }, []);
+    setTopic(urlTopic);
+    fetchTopic(urlTopic);
+  }, [location.search]);
 
-  useEffect(() => {
-    if (topic) {
-      localStorage.setItem("topic", topic);
-      fetchNews();
-    }
-  }, [topic]);
+  const openTopic = (query: string) => {
+    navigate(`/dailybyte?q=${encodeURIComponent(query)}`);
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const query = topic.trim();
+    if (query) openTopic(query);
+  };
+
+  const featured = articles[0];
+  const latest = articles.slice(1);
 
   return (
-    <div className="container">
-      <div className="search-bar">
-        <input
-          type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="Enter a topic..."
-        />
+    <div className="dailybyte-page">
+      <section className="db-header-panel">
+        <div className="db-heading-copy">
+          <span className="db-kicker"><FiZap /> GAMING + PC HARDWARE</span>
+          <h1>Your gaming and hardware pulse.</h1>
+          <p>
+            Games first, enthusiast hardware close behind. Search anything, or jump straight into
+            the topics worth watching.
+          </p>
+        </div>
+
+        <form className="db-search" onSubmit={handleSubmit} role="search">
+          <FiSearch aria-hidden="true" />
+          <input
+            value={topic}
+            onChange={(event) => setTopic(event.target.value)}
+            placeholder="Try Witcher 3, NVIDIA, RAM prices..."
+            aria-label="Search gaming and hardware news"
+          />
+          <button type="submit">Search</button>
+        </form>
+
+        <div className="db-topic-chips" aria-label="Quick searches">
+          {quickTopics.map(([label, query]) => (
+            <button
+              type="button"
+              key={label}
+              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
+              onClick={() => openTopic(query)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="db-dashboard">
+        <div className="db-feed">
+          {loading && !featured ? (
+            <div className="db-loading-card">
+              <FiRefreshCw className="spin" />
+              <span>Loading the latest {activeTopic} stories...</span>
+            </div>
+          ) : error ? (
+            <div className="db-state-card">
+              <h2>Feed unavailable</h2>
+              <p>{error}</p>
+              <button type="button" onClick={() => fetchTopic(activeTopic)}>Try again</button>
+            </div>
+          ) : !featured ? (
+            <div className="db-state-card">
+              <h2>No stories found</h2>
+              <p>Try another priority topic or a broader search.</p>
+              <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to gaming</button>
+            </div>
+          ) : (
+            <>
+              <article
+                className={`db-feature ${getImage(featured) ? 'has-image' : ''}`}
+                style={getImage(featured) ? { backgroundImage: `url("${getImage(featured)}")` } : undefined}
+              >
+                <div className="db-feature-overlay" />
+                <div className="db-feature-content">
+                  <span className="db-article-tag">{activeTopic}</span>
+                  <h2>{featured.title}</h2>
+                  <p>{articleSummary(featured)}</p>
+                  <div className="db-article-meta">
+                    <span>{getSource(featured)}</span>
+                    <span>•</span>
+                    <span>{formatDate(featured)}</span>
+                  </div>
+                  <a href={featured.url} target="_blank" rel="noopener noreferrer">
+                    Read story <FiArrowUpRight />
+                  </a>
+                </div>
+              </article>
+
+              <div className="db-section-title">
+                <div>
+                  <span>LATEST NEWS</span>
+                  <h2>{activeTopic}</h2>
+                </div>
+                {loading && <FiRefreshCw className="spin" aria-label="Refreshing" />}
+              </div>
+
+              <div className="db-news-grid">
+                {latest.map((article) => (
+                  <article className="db-news-card" key={article.url}>
+                    <div className="db-card-media">
+                      {getImage(article) ? (
+                        <img src={getImage(article)} alt="" loading="lazy" />
+                      ) : (
+                        <div className="db-image-fallback">DAILY BYTES</div>
+                      )}
+                      <span>{activeTopic}</span>
+                    </div>
+                    <div className="db-card-body">
+                      <h3>{article.title}</h3>
+                      <p>{articleSummary(article)}</p>
+                      <div className="db-article-meta">
+                        <span>{getSource(article)}</span>
+                        <span>•</span>
+                        <span>{formatDate(article)}</span>
+                      </div>
+                      <a href={article.url} target="_blank" rel="noopener noreferrer">
+                        Open story <FiArrowUpRight />
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <aside className="db-priority-panel">
+          <div className="db-priority-heading">
+            <FiZap />
+            <div>
+              <span>YOUR DEFAULT BEAT</span>
+              <h2>Priority Watch</h2>
+            </div>
+          </div>
+
+          <div className="db-priority-list">
+            {priorityTopics.map((item, index) => (
+              <button type="button" key={item.label} onClick={() => openTopic(item.query)}>
+                <span className="db-priority-number">{index + 1}</span>
+                <span className="db-priority-copy">
+                  <strong>{item.label}</strong>
+                  <small>{item.copy}</small>
+                </span>
+                <FiArrowUpRight />
+              </button>
+            ))}
+          </div>
+
+          <div className="db-priority-note">
+            <strong>Built around your feed.</strong>
+            <p>Gaming loads first. Hardware and component pricing are always one click away.</p>
+          </div>
+        </aside>
       </div>
-
-      {loading && <p className="loading">Loading news...</p>}
-
-      {summary && (
-        <div
-          className="summary"
-          dangerouslySetInnerHTML={{ __html: summary }}
-        ></div>
-      )}
     </div>
   );
 }
