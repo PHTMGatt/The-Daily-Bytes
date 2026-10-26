@@ -9,7 +9,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loginCheck, setLoginCheck] = useState(auth.loggedIn());
-  const [search, setSearch] = useState(() => getNavigationSearchValue(window.location.search));
+  const [search, setSearch] = useState(() => getNavigationSearchValue(location.search));
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     return saved === 'light' ? 'light' : 'dark';
