@@ -1,90 +1,157 @@
+# Daily Bytes
 
-# The Daily Bites 📰
+Daily Bytes is a gaming-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA and RTX hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
 
-## Description
+The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
 
-The Daily Bites is a sleek and interactive web portfolio showcasing my web development journey and projects. It highlights my skills in HTML, CSS, JavaScript, React, and more.
+## Live App
 
-## 🚀 Motivation
+**https://the-daily-bytes-o4jo.onrender.com**
 
-This project was created to present my work in a visually appealing and user-friendly way, perfect for potential employers or collaborators. The goal was to make it easy for anyone to explore my skills and projects.
+## Highlights
 
-## 🔧 Purpose
+- **Gaming-first home feed** with Witcher 3, NVIDIA/RTX, GPU prices, RAM/SSD, PC hardware, and game-release shortcuts.
+- **One-request default feed expansion** so the homepage can surface gaming and priority PC-hardware stories without multiplying provider calls.
+- **Server-side relevance ranking and deduplication** for stronger keyword matches, duplicate headlines, URL duplicates, and freshness tie-breaking.
+- **Global search** with focused query routes and synchronized navigation state.
+- **MongoDB authentication** with bcrypt password hashing and 12-hour JWT sessions.
+- **Passwordless portfolio demo access** issued server-side without exposing the demo credential in React.
+- **MongoDB saved articles** with per-user unique URL protection.
+- **15-minute bounded news cache** to reduce repeat Mediastack requests.
+- **Resilient article images** that fall back to branded card art instead of browser broken-image icons.
+- **Trending Watch and category feeds** with real loading, error, empty, retry, and pagination states.
+- **Daily Horoscope extra** using a server-side API proxy with validated zodiac input and honest provider-backed fields.
+- **Responsive dark/light presentation** with a compact mobile navigation layout.
 
-A centralized platform to showcase my projects and experience. It provides easy access to live sites and GitHub repositories, enabling employers or clients to see my work firsthand.
+## Stack
 
-## 💡 What I Learned
+### Client
+- React 18
+- TypeScript
+- Vite
+- React Router
+- React Icons
 
-Through building this project, I strengthened my expertise in React, CSS, JavaScript, and responsive design. I also learned how to build a modern, interactive, and user-centric portfolio.
+### Server
+- Node.js
+- Express
+- TypeScript
+- MongoDB Atlas
+- bcrypt
+- JSON Web Tokens
+- Axios
 
-## 📑 Table of Contents
+### External Services
+- Mediastack for news data
+- API Ninjas for horoscope data
+- Render for deployment
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Credits](#credits)
-- [License](#license)
+## Project Structure
 
----
+```text
+The-Daily-Bytes/
+├── client/                 React/Vite application
+│   ├── src/api/            Browser API clients
+│   ├── src/components/     Shared navigation/news UI
+│   ├── src/pages/          Feed, auth, saved, horoscope, category pages
+│   ├── src/utils/          Small testable client utilities
+│   └── tests/              Native Node regression tests
+├── server/                 Express API and production server
+│   ├── src/config/         MongoDB connection and indexes
+│   ├── src/lib/            Ranking, pagination, auth, cache helpers
+│   ├── src/routes/         Auth/news/saved/horoscope endpoints
+│   └── tests/              Native Node regression tests
+└── docs/superpowers/       Design and implementation notes for major passes
+```
 
-## 🛠️ Installation
+## Local Setup
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/n6dd/The-Daily-Bytes.git
-    ```
+### 1. Clone
 
-2. Navigate into the project directory:
-    ```bash
-    cd The-Daily-Bytes
-    ```
+```bash
+git clone https://github.com/PHTMGatt/The-Daily-Bytes.git
+cd The-Daily-Bytes
+```
 
-3. Install the required dependencies:
-    ```bash
-    npm install
-    ```
+### 2. Install
 
-4. Run the app:
-    ```bash
-    npm run start
-    # Or use the following for development:
-    npm run start:dev
-    ```
+The root install script installs both server and client dependencies.
 
-5. Open your browser at `http://localhost:3000` to view the project.
+```bash
+npm install
+```
 
----
+### 3. Configure environment variables
 
-## 💻 Usage
+Create `server/.env` and provide your own values:
 
-- **About**: A brief introduction to who I am.
-- **Resume**: A downloadable PDF of my resume.
-- **Portfolio**: Showcase of my previous web development projects, with links to live sites and GitHub repositories.
-- **Contact**: A form to get in touch with me.
+```env
+MONGODB_URI=
+MONGODB_DB=daily-bytes
+JWT_SECRET_KEY=
+DEMO_PASSWORD=
+MEDIASTACK_API_KEY=
+API_NINJAS_KEY=
+```
 
-## 📸 Screenshot
+Do not commit real credentials.
 
-![The Daily Bytes news feed](./docs/portfolio/cover.webp)
+### 4. Development
 
----
+```bash
+npm run start:dev
+```
 
-## 🎉 Credits
+The Express server defaults to port `3001` when `PORT` is not supplied. Vite runs the client development server separately.
 
-I used the following technologies and libraries:
-- [React](https://reactjs.org/) for the frontend framework.
-- [Vite](https://vitejs.dev/) for development and build tools.
-- [React Icons](https://react-icons.github.io/react-icons/) for modern icons.
+### 5. Production build
 
-## 📜 License
+```bash
+npm run build
+npm start
+```
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+The production build runs the client regression suite, builds the React app, compiles the server, and runs the server regression suite before startup.
 
----
+## API Overview
 
-## 🌐 Live Demo & GitHub
+```text
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/demo
+GET  /api/news/:category?
+GET  /api/saved
+POST /api/saved
+DELETE /api/saved
+GET  /api/horoscope
+GET  /api/health
+```
 
-Check out the live demo and GitHub repositories:
+News provider credentials stay server-side; the React client never receives the Mediastack API key.
 
-## 🌟 [Live Demo](https://the-daily-bytes-o4jo.onrender.com)
-## 💻 [GitHub Repository](https://github.com/n6dd/The-Daily-Bytes)
+## Data
 
----
+MongoDB uses the `daily-bytes` database with:
+
+- `users` — normalized reader accounts and bcrypt password hashes
+- `saved_articles` — authenticated reading-list items with a unique user + URL index
+
+The demo account is seeded during server startup and receives the same ordinary reader session shape as normal accounts.
+
+## Testing
+
+```bash
+npm test
+```
+
+The root test command runs both client and server native Node test suites. Render also runs these tests as part of the production build gate.
+
+## Deployment
+
+Daily Bytes is deployed as a Render web service. The Express server serves the built Vite assets and handles `/api/*` routes from the same service.
+
+**Live:** https://the-daily-bytes-o4jo.onrender.com
+
+## Repository
+
+**GitHub:** https://github.com/PHTMGatt/The-Daily-Bytes
