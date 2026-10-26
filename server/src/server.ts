@@ -3,21 +3,31 @@ dotenv.config();
 
 import express from 'express';
 import path from 'path';
+import { connectMongo } from './config/mongo.js';
 import apiRoutes from './routes/api/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const clientDistPath = path.resolve('../client/dist');
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 app.use(express.static(clientDistPath));
 app.use('/api', apiRoutes);
 
-// Let React Router handle client-side routes after API routes are checked.
 app.get('*', (_req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const start = async () => {
+  try {
+    await connectMongo();
+    app.listen(PORT, () => {
+      console.log(`Daily Bytes running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Daily Bytes failed to start:', error);
+    process.exit(1);
+  }
+};
+
+void start();
