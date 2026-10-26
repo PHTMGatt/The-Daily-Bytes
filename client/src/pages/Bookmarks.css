@@ -1,0 +1,81 @@
+.db-save-notice {
+  margin-top: 12px;
+  color: var(--db-muted);
+  font-size: 0.78rem;
+}
+
+.db-feature-actions,
+.db-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.db-feature-actions > a {
+  margin-top: 0;
+}
+
+.db-feature-actions > button,
+.db-card-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--db-border-strong);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--db-text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.db-feature-actions > button {
+  min-height: 40px;
+  padding: 0 13px;
+  color: #fff;
+}
+
+.db-card-actions {
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.db-card-actions > a {
+  margin-top: 0;
+}
+
+.db-card-actions > button {
+  padding: 6px 8px;
+  color: var(--db-muted);
+}
+
+.db-feature-actions > button:hover,
+.db-card-actions > button:hover,
+.db-feature-actions > button.saved,
+.db-card-actions > button.saved {
+  border-color: var(--db-accent);
+  background: var(--db-accent-soft);
+  color: var(--db-accent);
+}
+
+.db-feature-actions > button:disabled,
+.db-card-actions > button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 560px) {
+  .db-feature-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .db-feature-actions > a,
+  .db-feature-actions > button {
+    width: 100%;
+  }
+}
