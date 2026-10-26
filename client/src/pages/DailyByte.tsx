@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
+import ArticleImage from '../components/ArticleImage';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
@@ -273,11 +274,7 @@ export default function DailyByte() {
                 {latest.map((article) => (
                   <article className="db-news-card" key={article.url}>
                     <div className="db-card-media">
-                      {getImage(article) ? (
-                        <img src={getImage(article)} alt="" loading="lazy" />
-                      ) : (
-                        <div className="db-image-fallback">DAILY BYTES</div>
-                      )}
+                      <ArticleImage src={getImage(article)} />
                       <span>{activeTopic}</span>
                     </div>
                     <div className="db-card-body">
