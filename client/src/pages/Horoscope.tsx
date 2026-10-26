@@ -1,98 +1,165 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { FiRefreshCw, FiStar, FiZap } from 'react-icons/fi';
+import {
+  ZODIAC_SIGNS,
+  getZodiacMeta,
+  normalizeHoroscopeResponse,
+} from '../utils/horoscopeView';
 import './Horoscope.css';
 
 interface HoroscopeData {
-  description: string;
-  lucky_number: string;
-  mood: string;
+  date: string;
+  horoscope: string;
 }
 
-const Horoscope: React.FC = () => {
-  const [selectedSign, setSelectedSign] = useState('aries');
-  const [currentDate, setCurrentDate] = useState('');
-  const [horoscope, setHoroscope] = useState<HoroscopeData>({
-    description: '',
-    lucky_number: '',
-    mood: ''
-  });
+const formatHoroscopeDate = (value: string) => {
+  if (!value) {
+    return new Date().toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
 
-useEffect(() => {
-  const now = new Date();
-  const options: Intl.DateTimeFormatOptions = {
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+
+  return parsed.toLocaleDateString(undefined, {
     weekday: 'long',
-    year: 'numeric',
     month: 'long',
-    day: 'numeric'
-  };
-  setCurrentDate(now.toLocaleDateString('en-US', options));
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 
-  fetch(`/api/horoscope?zodiacSign=${selectedSign}`)
-    .then(res => res.json())
-    .then(data => {
-      const d = data?.data || data; // ✅ fallback for RapidAPI response shape
-      setHoroscope({
-        description: d.horoscope || 'No description',
-        lucky_number: d.lucky_number || 'N/A',
-        mood: d.mood || 'Unknown'
-      });
-    })
-    .catch(err => console.error("Horoscope fetch error:", err));
-}, [selectedSign]);
+const Horoscope = () => {
+  const [selectedSign, setSelectedSign] = useState('aries');
+  const [data, setData] = useState<HoroscopeData>({ date: '', horoscope: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
 
-  const handleSignChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSign(e.target.value);
-  };
+  const selectedMeta = useMemo(() => getZodiacMeta(selectedSign), [selectedSign]);
 
-  const getSignName = () => {
-    const select = document.getElementById('zodiac-sign') as HTMLSelectElement;
-    return select?.options[select.selectedIndex]?.text.split(' ')[0] || '';
-  };
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadHoroscope = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await fetch(
+          `/api/horoscope?zodiacSign=${encodeURIComponent(selectedMeta.value)}`,
+          { signal: controller.signal },
+        );
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const message = typeof payload?.error === 'string'
+            ? payload.error
+            : 'Unable to load today’s horoscope.';
+          throw new Error(message);
+        }
+
+        const normalized = normalizeHoroscopeResponse(payload);
+        if (!normalized.horoscope) {
+          throw new Error('The horoscope provider returned an empty reading.');
+        }
+
+        setData(normalized);
+      } catch (requestError) {
+        if (controller.signal.aborted) return;
+        setData({ date: '', horoscope: '' });
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Unable to load today’s horoscope.',
+        );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    loadHoroscope();
+    return () => controller.abort();
+  }, [selectedMeta.value, retryKey]);
 
   return (
-    <div className="horoscope-container">
-      <div className="horoscope-section">
-        <div className="horoscope-header">
-          <h2>Daily Horoscope</h2>
-          <div className="date-display">{currentDate}</div>
+    <section className="horoscope-page">
+      <header className="horoscope-hero">
+        <div>
+          <span className="horoscope-kicker"><FiZap /> DAILY EXTRA</span>
+          <h1>Daily Horoscope</h1>
+          <p>
+            Pick your sign for a lightweight daily reading alongside your gaming and hardware feed.
+          </p>
         </div>
+        <div className="horoscope-orbit" aria-hidden="true">
+          <FiStar />
+        </div>
+      </header>
 
-        <select
-          className="zodiac-selector"
-          id="zodiac-sign"
-          value={selectedSign}
-          onChange={handleSignChange}
-        >
-          <option value="aries">Aries (Mar 21 - Apr 19)</option>
-          <option value="taurus">Taurus (Apr 20 - May 20)</option>
-          <option value="gemini">Gemini (May 21 - Jun 20)</option>
-          <option value="cancer">Cancer (Jun 21 - Jul 22)</option>
-          <option value="leo">Leo (Jul 23 - Aug 22)</option>
-          <option value="virgo">Virgo (Aug 23 - Sep 22)</option>
-          <option value="libra">Libra (Sep 23 - Oct 22)</option>
-          <option value="scorpio">Scorpio (Oct 23 - Nov 21)</option>
-          <option value="sagittarius">Sagittarius (Nov 22 - Dec 21)</option>
-          <option value="capricorn">Capricorn (Dec 22 - Jan 19)</option>
-          <option value="aquarius">Aquarius (Jan 20 - Feb 18)</option>
-          <option value="pisces">Pisces (Feb 19 - Mar 20)</option>
-        </select>
+      <div className="horoscope-layout">
+        <aside className="horoscope-picker">
+          <label htmlFor="zodiac-sign">Choose your sign</label>
+          <select
+            id="zodiac-sign"
+            value={selectedSign}
+            onChange={(event) => setSelectedSign(event.target.value)}
+          >
+            {ZODIAC_SIGNS.map((sign) => (
+              <option key={sign.value} value={sign.value}>
+                {sign.label} · {sign.range}
+              </option>
+            ))}
+          </select>
 
-        <div className="horoscope-content">
-          <h3 className="horoscope-title">{getSignName()}</h3>
-          <p className="horoscope-text">{horoscope.description}</p>
-
-          <div className="horoscope-details">
-            <div className="lucky-number">
-              Lucky Number<br />
-              <span>{horoscope.lucky_number}</span>
-            </div>
-            <div className="mood">
-              Mood<br />
-              <span>{horoscope.mood}</span>
-            </div>
+          <div className="horoscope-sign-summary">
+            <span>{selectedMeta.label}</span>
+            <strong>{selectedMeta.range}</strong>
+            <small>Daily reading supplied by the connected horoscope provider.</small>
           </div>
-        </div>
+        </aside>
+
+        <article className="horoscope-card" aria-live="polite">
+          <div className="horoscope-card-header">
+            <div>
+              <span>TODAY’S READING</span>
+              <h2>{selectedMeta.label}</h2>
+            </div>
+            {!loading && !error && data.date && (
+              <time dateTime={data.date}>{formatHoroscopeDate(data.date)}</time>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="horoscope-state">
+              <FiRefreshCw className="horoscope-spin" aria-hidden="true" />
+              <strong>Reading the stars...</strong>
+              <p>Loading today’s {selectedMeta.label} horoscope.</p>
+            </div>
+          ) : error ? (
+            <div className="horoscope-state horoscope-error" role="alert">
+              <strong>Reading unavailable</strong>
+              <p>{error}</p>
+              <button type="button" onClick={() => setRetryKey((current) => current + 1)}>
+                Try again
+              </button>
+            </div>
+          ) : (
+            <div className="horoscope-reading">
+              <p>{data.horoscope}</p>
+              <div className="horoscope-date-line">
+                <FiStar aria-hidden="true" />
+                <span>{formatHoroscopeDate(data.date)}</span>
+              </div>
+            </div>
+          )}
+        </article>
       </div>
-    </div>
+    </section>
   );
 };
 
