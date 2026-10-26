@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { getNewsWindow } from '../../lib/newsPagination.js';
 import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
+import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { TimedCache } from '../../lib/timedCache.js';
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
     const keywords = typeof req.query.keywords === 'string'
       ? req.query.keywords.trim().slice(0, 120)
       : '';
+    const providerKeywords = buildProviderKeywords(keywords);
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));
     const { fetchLimit, offset } = getNewsWindow(page, pageSize);
@@ -50,7 +52,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
     };
 
     if (category) params.categories = category;
-    if (keywords) params.keywords = keywords;
+    if (providerKeywords) params.keywords = providerKeywords;
 
     const response = await axios.get(BASE_URL, { params, timeout: 12000 });
     const raw = Array.isArray(response.data?.data) ? response.data.data : [];
