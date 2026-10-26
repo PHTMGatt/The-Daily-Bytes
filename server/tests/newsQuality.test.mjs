@@ -46,6 +46,24 @@ test('rankAndDedupeArticles ranks title matches ahead of description-only matche
   assert.equal(results[0].url, 'https://example.com/title-match');
 });
 
+test('rankAndDedupeArticles matches short hardware terms as whole words', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Programming tools roundup',
+      url: 'https://example.com/programming',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+    article({
+      title: 'DDR5 memory prices fall again',
+      url: 'https://example.com/ram',
+      description: 'RAM prices continue to move lower.',
+      published_at: '2026-10-25T12:00:00Z',
+    }),
+  ], 'RAM');
+
+  assert.equal(results[0].url, 'https://example.com/ram');
+});
+
 test('rankAndDedupeArticles uses freshness when relevance scores are equal', () => {
   const results = rankAndDedupeArticles([
     article({
