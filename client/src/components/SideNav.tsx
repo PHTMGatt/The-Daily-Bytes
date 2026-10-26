@@ -1,79 +1,54 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { FaBars } from "react-icons/fa";
-import { MdSportsFootball, MdHealthAndSafety } from "react-icons/md";
-import { HiServerStack } from "react-icons/hi2";
-import { BsFillPlayBtnFill, BsMoonStarsFill } from "react-icons/bs";
+import { Link, useLocation } from 'react-router-dom';
+import { FaGamepad } from 'react-icons/fa';
+import { FiCpu, FiHardDrive, FiHome, FiTrendingUp } from 'react-icons/fi';
+import { MdMemory } from 'react-icons/md';
+import { BsController } from 'react-icons/bs';
+import './SideNav.css';
 
-import "./SideNav.css";
-import auth from "../utils/auth";
-
-// ==============================
-// TODO: SideNav Component
-// ==============================
+const navItems = [
+  { label: 'Home', to: '/', icon: FiHome },
+  { label: 'Gaming', to: '/dailybyte?q=gaming', query: 'gaming', icon: FaGamepad },
+  { label: 'Witcher 3', to: '/dailybyte?q=The%20Witcher%203', query: 'the witcher 3', icon: BsController },
+  { label: 'NVIDIA', to: '/dailybyte?q=NVIDIA%20GPU', query: 'nvidia gpu', icon: FiCpu },
+  { label: 'RAM Prices', to: '/dailybyte?q=RAM%20prices', query: 'ram prices', icon: MdMemory },
+  { label: 'PC Hardware', to: '/dailybyte?q=PC%20hardware', query: 'pc hardware', icon: FiHardDrive },
+  { label: 'Trending', to: '/trending', icon: FiTrendingUp },
+];
 
 const SideNav = () => {
-  // TODO: Track sidebar open/close state
-  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const currentQuery = (new URLSearchParams(location.search).get('q') || '').toLowerCase();
 
-  // TODO: Track current theme (updated dynamically)
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const saved = localStorage.getItem("theme");
-    return saved === "dark" ? "dark" : "light";
-  });
-
-  // TODO: Toggle sidebar open/closed
-  const toggleSidebar = () => setIsOpen(!isOpen);
-
-  // NOTE Observe changes to body class to sync theme toggle
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.body.classList.contains("dark") ? "dark" : "light");
-    });
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
-
-  // NOTE Hide sidebar if not logged in
-  if (!auth.loggedIn()) return null;
+  const isActive = (to: string, query?: string) => {
+    if (to === '/') return location.pathname === '/';
+    if (query) return location.pathname === '/dailybyte' && currentQuery === query;
+    return location.pathname === to;
+  };
 
   return (
-    <div className={`sidenav ${isOpen ? "open" : "closed"} ${theme}`}>
-      {/* TODO: Sidebar toggle button */}
-      <button className="sidenav-toggle" onClick={toggleSidebar}>
-        <FaBars className="toggle-icon" />
-      </button>
+    <aside className="sidenav" aria-label="Primary navigation">
+      <nav className="sidenav-links">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              to={item.to}
+              key={item.label}
+              className={`sidenav-link ${isActive(item.to, item.query) ? 'active' : ''}`}
+            >
+              <Icon className="sidenav-icon" aria-hidden="true" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* TODO: Navigation links (icons + optional labels) */}
-      <div className="sidenav-links">
-        <Link to="/Sports" className="sidenav-link">
-          <MdSportsFootball className="sidenav-icon" />
-          {isOpen && <span>Sports</span>}
-        </Link>
-
-        <Link to="/Health" className="sidenav-link">
-          <MdHealthAndSafety className="sidenav-icon" />
-          {isOpen && <span>Health</span>}
-        </Link>
-
-        <Link to="/Technology" className="sidenav-link">
-          <HiServerStack className="sidenav-icon" />
-          {isOpen && <span>Technology</span>}
-        </Link>
-
-        <Link to="/Entertainment" className="sidenav-link">
-          <BsFillPlayBtnFill className="sidenav-icon" />
-          {isOpen && <span>Entertainment</span>}
-        </Link>
-
-        <Link to="/Horoscope" className="sidenav-link">
-          <BsMoonStarsFill className="sidenav-icon" />
-          {isOpen && <span>Horoscope</span>}
-        </Link>
+      <div className="sidenav-note">
+        <span />
+        <p>Games. Gear.<br />Zero filler.</p>
       </div>
-    </div>
+    </aside>
   );
 };
 
 export default SideNav;
-// NOTE Visible only when user is authenticated
