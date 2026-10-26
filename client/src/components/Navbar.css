@@ -1,194 +1,231 @@
-/* =============================================================================
-  TODO: Navbar Styles
-============================================================================= */
-
-/* NOTE Focus state for keyboard accessibility */
-.nav-link:focus,
-.logout-button:focus,
-.theme-toggle-button:focus {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
+.navbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1000;
+  height: 88px;
+  background: rgba(2, 8, 18, 0.96);
+  border-bottom: 1px solid var(--db-border);
+  backdrop-filter: blur(18px);
 }
 
-/* -----------------------------------------------------------------------------
-   TODO: Navbar Container + Inner Layout
------------------------------------------------------------------------------ */
-
-.navbar {
-  background-color: #157ac2;
-  padding: 1.25rem 2rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+body.light .navbar {
+  background: rgba(246, 249, 252, 0.96);
 }
 
 .navbar-inner {
-  display: flex;
-  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: minmax(190px, 250px) minmax(320px, 1fr) auto;
   align-items: center;
-  flex-wrap: nowrap;
+  gap: 22px;
 }
 
-.nav-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #000;
-  white-space: nowrap;
-  transition: transform 0.3s ease;
+.brand-lockup {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: fit-content;
+  color: var(--db-text);
+  text-decoration: none;
 }
 
-/* -----------------------------------------------------------------------------
-   TODO: Navigation Tabs and Action Area
------------------------------------------------------------------------------ */
+.brand-lockup:hover {
+  text-decoration: none;
+}
 
-.nav-tabs {
-  display: flex;
-  gap: 1rem;
-  flex-grow: 1;
-  justify-content: center;
-  flex-wrap: wrap;
+.brand-name {
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.brand-name strong {
+  color: var(--db-accent);
+  font-weight: 800;
+}
+
+.brand-tagline {
+  margin-top: 4px;
+  color: var(--db-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.035em;
+}
+
+.nav-search {
+  height: 50px;
+  width: min(760px, 100%);
+  justify-self: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  background: #08172a;
+  border: 1px solid #1a3853;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+body.light .nav-search {
+  background: #fff;
+}
+
+.nav-search-icon {
+  margin-left: 16px;
+  color: var(--db-text);
+  font-size: 1.2rem;
+}
+
+.nav-search input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 14px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--db-text);
+  font-size: 0.95rem;
+}
+
+.nav-search input::placeholder {
+  color: #8298ad;
+}
+
+.nav-search button {
+  align-self: stretch;
+  min-width: 112px;
+  padding: 0 24px;
+  border: 0;
+  background: var(--db-accent);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.nav-search button:hover {
+  background: var(--db-accent-hover);
 }
 
 .nav-actions {
   display: flex;
-  gap: 1rem;
   align-items: center;
-  white-space: nowrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-/* -----------------------------------------------------------------------------
-   TODO: Nav Link + Theme Button (Shared Styles)
------------------------------------------------------------------------------ */
-
-.nav-link,
-.theme-toggle-button {
-  background-color: #4b5563;
-  color: #fff;
-  padding: 0.75rem 1.4rem;
-  border-radius: 0.75rem;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  font-weight: 600;
+.nav-text-link {
+  color: var(--db-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
   text-decoration: none;
-  transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+}
+
+.nav-text-link:hover {
+  color: var(--db-accent);
+  text-decoration: none;
+}
+
+.theme-icon-button,
+.account-button {
+  height: 42px;
+  border: 1px solid var(--db-border);
+  background: var(--db-panel);
+  color: var(--db-text);
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
-/* NOTE Shared Hover State */
-.nav-link:hover,
-.theme-toggle-button:hover {
-  background-color: #5f6b7a;
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+.theme-icon-button {
+  width: 42px;
+  padding: 0;
+  font-size: 1.15rem;
+}
+
+.account-button {
+  padding: 0 13px;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.theme-icon-button:hover,
+.account-button:hover {
+  border-color: var(--db-accent);
+  background: var(--db-accent-soft);
+  color: var(--db-text);
   text-decoration: none;
 }
 
-/* NOTE Active Tab Styling */
-.nav-link.active {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+.nav-search:focus-within,
+.theme-icon-button:focus-visible,
+.account-button:focus-visible,
+.nav-text-link:focus-visible,
+.brand-lockup:focus-visible {
+  outline: 2px solid var(--db-accent);
+  outline-offset: 2px;
 }
 
-/* -----------------------------------------------------------------------------
-   TODO: Sign Up Button (Purple Variation)
------------------------------------------------------------------------------ */
-
-.signup-button {
-  background-color: #6366f1;
-}
-
-.signup-button:hover {
-  background-color: #7c3aed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  transform: translateY(-1px) scale(1.02);
-}
-
-/* -----------------------------------------------------------------------------
-   TODO: Theme Toggle Switch
------------------------------------------------------------------------------ */
-
-.theme-toggle-wrapper {
-  position: relative;
-  display: inline-flex;
-  background-color: #4b5563;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.theme-toggle-button {
-  background: none;
-  border: none;
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 10;
-  color: #fff;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: background-color 0.25s ease;
-}
-
-.theme-toggle-button.selected {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-/* NOTE Animated Background Slider */
-.theme-slider {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: linear-gradient(to right, #6366f1, #7c3aed);
-  border-radius: 0.75rem;
-  z-index: 0;
-  transition: left 0.3s ease, right 0.3s ease;
-}
-
-.theme-slider.left {
-  left: 0;
-}
-
-.theme-slider.right {
-  right: 0;
-}
-
-.icon {
-  font-size: 1rem;
-}
-
-/* -----------------------------------------------------------------------------
-   TODO: Global Dark Theme Override
------------------------------------------------------------------------------ */
-
-body.dark {
-  background-color: #111827;
-  color: #f9fafb;
-}
-
-/* -----------------------------------------------------------------------------
-   TODO: Mobile/Responsive Tweaks
------------------------------------------------------------------------------ */
-
-@media (max-width: 640px) {
-  .nav-title {
-    font-size: 1.5rem;
+@media (max-width: 1060px) {
+  .navbar-inner {
+    grid-template-columns: 180px minmax(260px, 1fr) auto;
+    gap: 12px;
+    padding: 0 14px;
   }
 
-  .nav-link,
-  .theme-toggle-button {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
+  .brand-tagline,
+  .nav-text-link,
+  .account-button span {
+    display: none;
+  }
+
+  .account-button {
+    width: 42px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .navbar {
+    height: 132px;
+  }
+
+  .navbar-inner {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 60px 60px;
+    column-gap: 10px;
+    row-gap: 0;
+    padding: 6px 12px;
+  }
+
+  .brand-lockup {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .nav-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .nav-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    height: 48px;
+  }
+
+  .nav-search button {
+    min-width: 82px;
+    padding: 0 14px;
   }
 }
