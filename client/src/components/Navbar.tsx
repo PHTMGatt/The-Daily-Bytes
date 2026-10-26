@@ -2,13 +2,14 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
+import { getNavigationSearchValue } from '../utils/navigationSearch';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loginCheck, setLoginCheck] = useState(auth.loggedIn());
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => getNavigationSearchValue(location.search));
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     return saved === 'light' ? 'light' : 'dark';
@@ -16,8 +17,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setLoginCheck(auth.loggedIn());
-    const currentQuery = new URLSearchParams(location.search).get('q');
-    if (currentQuery) setSearch(currentQuery);
+    setSearch(getNavigationSearchValue(location.search));
   }, [location.pathname, location.search]);
 
   useEffect(() => {
