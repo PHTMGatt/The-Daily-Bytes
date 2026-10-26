@@ -1,8 +1,11 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
+import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
+import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
+import auth from '../utils/auth';
 import './DailyByte.css';
+import './Bookmarks.css';
 
 interface SearchArticle {
   source?: string | { name?: string };
@@ -63,8 +66,10 @@ const getSource = (article: SearchArticle) => {
   return article.source?.name || article.author || 'News source';
 };
 
+const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
+
 const formatDate = (article: SearchArticle) => {
-  const value = article.published_at || article.publishedAt;
+  const value = getPublishedAt(article);
   if (!value) return 'Recent';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Recent';
@@ -83,6 +88,9 @@ export default function DailyByte() {
   const [articles, setArticles] = useState<SearchArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
+  const [savingUrl, setSavingUrl] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
 
   const fetchTopic = async (query: string) => {
     setLoading(true);
@@ -105,6 +113,13 @@ export default function DailyByte() {
     fetchTopic(urlTopic);
   }, [location.search]);
 
+  useEffect(() => {
+    if (!auth.loggedIn()) return;
+    getSavedArticles()
+      .then((saved) => setSavedUrls(new Set(saved.map((article) => article.url))))
+      .catch(() => setSavedUrls(new Set()));
+  }, []);
+
   const openTopic = (query: string) => {
     navigate(`/dailybyte?q=${encodeURIComponent(query)}`);
   };
@@ -113,6 +128,44 @@ export default function DailyByte() {
     event.preventDefault();
     const query = topic.trim();
     if (query) openTopic(query);
+  };
+
+  const toggleSaved = async (article: SearchArticle) => {
+    if (!auth.loggedIn()) {
+      navigate('/login');
+      return;
+    }
+
+    setSavingUrl(article.url);
+    setSaveNotice('');
+
+    try {
+      if (savedUrls.has(article.url)) {
+        await removeSavedArticle(article.url);
+        setSavedUrls((current) => {
+          const next = new Set(current);
+          next.delete(article.url);
+          return next;
+        });
+        setSaveNotice('Removed from saved articles.');
+      } else {
+        const saved = await saveArticle({
+          title: article.title,
+          url: article.url,
+          description: articleSummary(article),
+          image: getImage(article),
+          source: getSource(article),
+          publishedAt: getPublishedAt(article),
+          topic: activeTopic,
+        });
+        setSavedUrls((current) => new Set(current).add(saved?.url || article.url));
+        setSaveNotice('Saved to your reading list.');
+      }
+    } catch (err) {
+      setSaveNotice(err instanceof Error ? err.message : 'Unable to update saved articles.');
+    } finally {
+      setSavingUrl('');
+    }
   };
 
   const featured = articles[0];
@@ -153,6 +206,7 @@ export default function DailyByte() {
             </button>
           ))}
         </div>
+        {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
       </section>
 
       <div className="db-dashboard">
@@ -190,9 +244,20 @@ export default function DailyByte() {
                     <span>•</span>
                     <span>{formatDate(featured)}</span>
                   </div>
-                  <a href={featured.url} target="_blank" rel="noopener noreferrer">
-                    Read story <FiArrowUpRight />
-                  </a>
+                  <div className="db-feature-actions">
+                    <a href={featured.url} target="_blank" rel="noopener noreferrer">
+                      Read story <FiArrowUpRight />
+                    </a>
+                    <button
+                      type="button"
+                      className={savedUrls.has(featured.url) ? 'saved' : ''}
+                      disabled={savingUrl === featured.url}
+                      onClick={() => toggleSaved(featured)}
+                    >
+                      {savedUrls.has(featured.url) ? <FiCheck /> : <FiBookmark />}
+                      {savedUrls.has(featured.url) ? 'Saved' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               </article>
 
@@ -223,9 +288,21 @@ export default function DailyByte() {
                         <span>•</span>
                         <span>{formatDate(article)}</span>
                       </div>
-                      <a href={article.url} target="_blank" rel="noopener noreferrer">
-                        Open story <FiArrowUpRight />
-                      </a>
+                      <div className="db-card-actions">
+                        <a href={article.url} target="_blank" rel="noopener noreferrer">
+                          Open story <FiArrowUpRight />
+                        </a>
+                        <button
+                          type="button"
+                          className={savedUrls.has(article.url) ? 'saved' : ''}
+                          disabled={savingUrl === article.url}
+                          onClick={() => toggleSaved(article)}
+                          aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
+                        >
+                          {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
+                          {savedUrls.has(article.url) ? 'Saved' : 'Save'}
+                        </button>
+                      </div>
                     </div>
                   </article>
                 ))}
