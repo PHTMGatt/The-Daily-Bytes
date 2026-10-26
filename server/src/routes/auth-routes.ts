@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { Router, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { DailyBytesUser, getDb } from '../config/mongo.js';
 import {
   isValidEmail,
@@ -8,6 +7,7 @@ import {
   normalizeAccountText,
   readPassword,
 } from '../lib/authInputs.js';
+import { createSessionToken, DEMO_USERNAME } from '../lib/authSession.js';
 
 const router = Router();
 
@@ -17,8 +17,23 @@ const getJwtSecret = () => {
   return secret;
 };
 
-const createToken = (username: string) =>
-  jwt.sign({ username }, getJwtSecret(), { expiresIn: '12h' });
+const createToken = (username: string) => createSessionToken(username, getJwtSecret());
+
+router.post('/demo', async (_req: Request, res: Response) => {
+  try {
+    const users = getDb().collection<DailyBytesUser>('users');
+    const user = await users.findOne({ usernameNormalized: DEMO_USERNAME });
+
+    if (!user) {
+      return res.status(503).json({ message: 'Demo access is temporarily unavailable.' });
+    }
+
+    return res.json({ token: createToken(user.username) });
+  } catch (error) {
+    console.error('Daily Bytes demo session failed:', error instanceof Error ? error.message : 'unknown error');
+    return res.status(500).json({ message: 'Unable to start demo access right now.' });
+  }
+});
 
 router.post('/login', async (req: Request, res: Response) => {
   const username = normalizeAccountText(req.body?.username);
@@ -64,7 +79,7 @@ router.post('/register', async (req: Request, res: Response) => {
     });
   }
 
-  if (normalizeAccountKey(username) === 'demo') {
+  if (normalizeAccountKey(username) === DEMO_USERNAME) {
     return res.status(409).json({ message: 'That username is reserved for the demo account.' });
   }
 
