@@ -6,7 +6,22 @@ import { buildProviderKeywords } from '../dist/lib/providerKeywords.js';
 test('gaming expands to the priority gaming and PC hardware candidate set', () => {
   const value = buildProviderKeywords('gaming');
 
-  for (const term of ['gaming', 'witcher', 'cd projekt', 'nvidia', 'rtx', 'gpu', 'ram', 'ddr5', 'ssd', 'pc hardware']) {
+  for (const term of [
+    'gaming',
+    'video games',
+    'witcher',
+    'cd projekt',
+    'nvidia',
+    'geforce',
+    'rtx',
+    'gpu',
+    'amd',
+    'radeon',
+    'ram',
+    'ddr5',
+    'ssd',
+    'pc hardware',
+  ]) {
     assert.ok(value.toLowerCase().split(',').includes(term));
   }
 });
