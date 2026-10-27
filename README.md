@@ -5,7 +5,7 @@ Daily Bytes is a gaming-first news dashboard built around the topics I actually 
 The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
 
 <p align="center">
-  <img src="docs/portfolio/cover.webp" alt="Daily Bytes gaming news dashboard" width="900" />
+  <img src="https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/main/src/assets/photos/Daily%20Bytes.png" alt="Daily Bytes gaming news dashboard" width="900" />
 </p>
 
 ## Live App
