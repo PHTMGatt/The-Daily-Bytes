@@ -220,3 +220,23 @@ test('rankAndDedupeArticles keeps distinct short headlines that share a few word
 
   assert.equal(results.length, 2);
 });
+
+test('rankAndDedupeArticles lets fresh stories edge out equally relevant stale ones', () => {
+  const now = new Date('2026-10-28T12:00:00Z').getTime();
+  const results = rankAndDedupeArticles([
+    article({ title: 'NVIDIA GPU supply outlook for the holidays', url: 'https://a.example/old', published_at: '2026-09-01T12:00:00Z' }),
+    article({ title: 'NVIDIA GPU stock levels this week at retailers', url: 'https://b.example/new', published_at: '2026-10-28T06:00:00Z' }),
+  ], 'NVIDIA GPU', now);
+
+  assert.equal(results[0].url, 'https://b.example/new');
+});
+
+test('rankAndDedupeArticles freshness never outweighs a clear title match', () => {
+  const now = new Date('2026-10-28T12:00:00Z').getTime();
+  const results = rankAndDedupeArticles([
+    article({ title: 'Unrelated celebrity news', url: 'https://a.example/fresh', published_at: '2026-10-28T11:00:00Z' }),
+    article({ title: 'NVIDIA GPU roadmap leaks', url: 'https://b.example/relevant', published_at: '2026-09-01T12:00:00Z' }),
+  ], 'NVIDIA GPU', now);
+
+  assert.equal(results[0].url, 'https://b.example/relevant');
+});
