@@ -193,12 +193,16 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   if (!tokens.length) return dropNearDuplicates(unique.map(({ article }) => article));
 
   return dropNearDuplicates(unique
-    .map(({ article, index }) => ({
-      article,
-      index,
-      score: relevanceScore(article, query, tokens) + freshnessBonus(getPublishedTime(article), now),
-      publishedTime: getPublishedTime(article),
-    }))
+    .map(({ article, index }) => {
+      const relevance = relevanceScore(article, query, tokens);
+      return {
+        article,
+        index,
+        // Freshness only breaks ties among matching stories; it must not lift unrelated ones.
+        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article), now) : 0,
+        publishedTime: getPublishedTime(article),
+      };
+    })
     .sort((a, b) =>
       b.score - a.score ||
       b.publishedTime - a.publishedTime ||
