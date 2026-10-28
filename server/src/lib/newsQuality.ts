@@ -14,7 +14,7 @@ const PROFILE_BONUS_CAP = 24;
 const QUERY_PROFILES: Record<string, string[]> = {
   gaming: [
     'witcher', 'cd projekt', 'cdpr', 'nvidia', 'rtx', 'geforce', 'gpu', 'pc', 'hardware',
-    'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
+    'amd', 'radeon', 'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
   ],
   'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
   'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],

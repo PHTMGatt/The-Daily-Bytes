@@ -240,3 +240,20 @@ test('rankAndDedupeArticles freshness never outweighs a clear title match', () =
 
   assert.equal(results[0].url, 'https://b.example/relevant');
 });
+
+test('gaming profile ranks AMD Radeon hardware stories above generic gaming mentions', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Gaming industry sees steady quarter',
+      url: 'https://example.com/generic-gaming-quarter',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'AMD Radeon refresh targets midrange gaming',
+      url: 'https://example.com/amd-radeon',
+      published_at: '2026-10-20T12:00:00Z',
+    }),
+  ], 'gaming', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/amd-radeon');
+});
