@@ -22,3 +22,10 @@ test('ready displays when articles are available', () => {
 test('loading still wins if stale articles are present during refresh', () => {
   assert.equal(getNewsViewState({ loading: true, error: '', articleCount: 3 }), 'loading');
 });
+
+test('stale flag is only honored when the server explicitly sets it', async () => {
+  const { isStaleFeed } = await import('../src/utils/newsViewState.js');
+  assert.equal(isStaleFeed({ stale: true }), true);
+  assert.equal(isStaleFeed({ cached: true }), false);
+  assert.equal(isStaleFeed(null), false);
+});

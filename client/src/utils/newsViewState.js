@@ -4,3 +4,5 @@ export const getNewsViewState = ({ loading, error, articleCount }) => {
   if (articleCount === 0) return 'empty';
   return 'ready';
 };
+
+export const isStaleFeed = (payload) => payload?.stale === true;
