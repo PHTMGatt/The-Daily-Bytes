@@ -112,6 +112,21 @@ const profileBonus = (
   return bonus;
 };
 
+const HOUR_MS = 60 * 60 * 1000;
+const FRESHNESS_TIERS: Array<[number, number]> = [
+  [24 * HOUR_MS, 10],
+  [72 * HOUR_MS, 6],
+  [7 * 24 * HOUR_MS, 3],
+];
+
+const freshnessBonus = (publishedTime: number, now: number) => {
+  if (!publishedTime) return 0;
+  const age = now - publishedTime;
+  if (age < 0) return 0;
+  for (const [maxAge, bonus] of FRESHNESS_TIERS) if (age <= maxAge) return bonus;
+  return 0;
+};
+
 const relevanceScore = (article: NewsQualityArticle, query: string, tokens: string[]) => {
   const title = normalizeHeadline(article.title);
   const description = normalizeHeadline(article.description);
@@ -142,7 +157,11 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   return score;
 };
 
-export const rankAndDedupeArticles = <T extends NewsQualityArticle>(articles: T[], query: string): T[] => {
+export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
+  articles: T[],
+  query: string,
+  now: number = Date.now(),
+): T[] => {
   const unique: Array<{ article: T; index: number }> = [];
   const seenUrls = new Set<string>();
   const seenHeadlines = new Set<string>();
@@ -177,7 +196,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(articles: T[
     .map(({ article, index }) => ({
       article,
       index,
-      score: relevanceScore(article, query, tokens),
+      score: relevanceScore(article, query, tokens) + freshnessBonus(getPublishedTime(article), now),
       publishedTime: getPublishedTime(article),
     }))
     .sort((a, b) =>
