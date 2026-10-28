@@ -36,6 +36,39 @@ export const normalizeHeadline = (value: unknown) =>
     .trim()
     .replace(/\s+/g, ' ');
 
+const TRACKING_PARAM = /^(utm_|fbclid$|gclid$|mc_|ref$|ref_src$)/;
+const NEAR_DUPLICATE_THRESHOLD = 0.75;
+const NEAR_DUPLICATE_MIN_TOKENS = 4;
+
+export const canonicalizeUrl = (value: unknown) => {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  try {
+    const url = new URL(raw);
+    url.hash = '';
+    url.hostname = url.hostname.replace(/^www\./, '');
+    for (const key of [...url.searchParams.keys()]) {
+      if (TRACKING_PARAM.test(key.toLowerCase())) url.searchParams.delete(key);
+    }
+    url.searchParams.sort();
+    if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/+$/, '');
+    return url.toString().replace(/\/$/, '').toLowerCase();
+  } catch {
+    return raw.toLowerCase();
+  }
+};
+
+const headlineTokens = (headline: string) =>
+  new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
+
+const isNearDuplicate = (a: Set<string>, b: Set<string>) => {
+  if (a.size < NEAR_DUPLICATE_MIN_TOKENS || b.size < NEAR_DUPLICATE_MIN_TOKENS) return false;
+  let shared = 0;
+  for (const token of a) if (b.has(token)) shared += 1;
+  return shared / (a.size + b.size - shared) >= NEAR_DUPLICATE_THRESHOLD;
+};
+
 const getQueryTokens = (query: string) =>
   normalizeHeadline(query)
     .split(' ')
@@ -115,7 +148,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(articles: T[
   const seenHeadlines = new Set<string>();
 
   articles.forEach((article, index) => {
-    const url = String(article.url || '').trim().toLowerCase();
+    const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(article.title);
 
     if (!headline || !url || seenUrls.has(url) || seenHeadlines.has(headline)) return;
@@ -125,10 +158,22 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(articles: T[
     unique.push({ article, index });
   });
 
-  const tokens = getQueryTokens(query);
-  if (!tokens.length) return unique.map(({ article }) => article);
+  const dropNearDuplicates = (items: T[]) => {
+    const kept: T[] = [];
+    const keptTokens: Array<Set<string>> = [];
+    for (const item of items) {
+      const tokens = headlineTokens(normalizeHeadline(item.title));
+      if (keptTokens.some((existing) => isNearDuplicate(existing, tokens))) continue;
+      kept.push(item);
+      keptTokens.push(tokens);
+    }
+    return kept;
+  };
 
-  return unique
+  const tokens = getQueryTokens(query);
+  if (!tokens.length) return dropNearDuplicates(unique.map(({ article }) => article));
+
+  return dropNearDuplicates(unique
     .map(({ article, index }) => ({
       article,
       index,
@@ -140,5 +185,5 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(articles: T[
       b.publishedTime - a.publishedTime ||
       a.index - b.index
     )
-    .map(({ article }) => article);
+    .map(({ article }) => article));
 };

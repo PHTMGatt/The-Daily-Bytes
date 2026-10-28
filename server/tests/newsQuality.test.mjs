@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
+import { canonicalizeUrl, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
 
 const article = (overrides = {}) => ({
   title: 'Story',
@@ -182,4 +182,41 @@ test('unknown queries keep existing relevance behavior without profile bonuses',
   ], 'quantum computing');
 
   assert.equal(results[0].url, 'https://example.com/quantum');
+});
+
+test('canonicalizeUrl strips tracking params, fragments, www, and trailing slashes', () => {
+  assert.equal(
+    canonicalizeUrl('https://www.Example.com/story/?utm_source=x&id=2&fbclid=abc#top'),
+    'https://example.com/story?id=2',
+  );
+  assert.equal(canonicalizeUrl('not a url'), 'not a url');
+  assert.equal(canonicalizeUrl(undefined), '');
+});
+
+test('rankAndDedupeArticles treats tracking-param url variants as one article', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'First headline', url: 'https://example.com/a?utm_source=rss' }),
+    article({ title: 'Second headline', url: 'https://www.example.com/a/' }),
+  ], '');
+
+  assert.equal(results.length, 1);
+});
+
+test('rankAndDedupeArticles collapses reworded copies of the same story, keeping the best ranked', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Nvidia RTX 5090 price drops to $1,999 at retailers', url: 'https://a.example/1', published_at: '2026-10-26T10:00:00Z' }),
+    article({ title: 'RTX 5090 price drops to $1,999 at major retailers', url: 'https://b.example/2', published_at: '2026-10-26T11:00:00Z' }),
+    article({ title: 'Steam Deck 2 rumors point to OLED upgrade', url: 'https://c.example/3' }),
+  ], '');
+
+  assert.deepEqual(results.map((item) => item.url), ['https://a.example/1', 'https://c.example/3']);
+});
+
+test('rankAndDedupeArticles keeps distinct short headlines that share a few words', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX 5090 review', url: 'https://a.example/1' }),
+    article({ title: 'RTX 5080 review', url: 'https://b.example/2' }),
+  ], '');
+
+  assert.equal(results.length, 2);
 });
