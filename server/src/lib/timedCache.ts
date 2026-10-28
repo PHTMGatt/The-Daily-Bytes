@@ -16,7 +16,17 @@ export class TimedCache<T> {
     const entry = this.store.get(key);
     if (!entry) return undefined;
 
-    if (entry.expiresAt <= now) {
+    if (entry.expiresAt <= now) return undefined;
+
+    return entry.value;
+  }
+
+  /** Returns an expired entry still younger than maxStaleMs, for serving when the source is down. */
+  getStale(key: string, maxStaleMs: number, now = Date.now()): T | undefined {
+    const entry = this.store.get(key);
+    if (!entry) return undefined;
+
+    if (entry.expiresAt + maxStaleMs <= now) {
       this.store.delete(key);
       return undefined;
     }

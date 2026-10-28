@@ -10,6 +10,7 @@ const router = express.Router();
 const MEDIASTACK_API_KEY = process.env.MEDIASTACK_API_KEY;
 const BASE_URL = 'https://api.mediastack.com/v1/news';
 const NEWS_CACHE_TTL_MS = 15 * 60 * 1000;
+const NEWS_STALE_MAX_MS = 6 * 60 * 60 * 1000;
 
 interface NewsPayload {
   articles: any[];
@@ -26,6 +27,8 @@ router.get('/:category?', async (req: Request, res: Response) => {
     return res.status(503).json({ message: 'News service is not configured.' });
   }
 
+  let cacheKey = '';
+
   try {
     const category = (req.params.category || '').trim().toLowerCase();
     const keywords = typeof req.query.keywords === 'string'
@@ -35,7 +38,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));
     const { fetchLimit, offset } = getNewsWindow(page, pageSize);
-    const cacheKey = `${category}|${keywords.toLowerCase()}|${page}|${pageSize}`;
+    cacheKey = `${category}|${keywords.toLowerCase()}|${page}|${pageSize}`;
     const cached = newsCache.get(cacheKey);
 
     if (cached) {
@@ -72,6 +75,12 @@ router.get('/:category?', async (req: Request, res: Response) => {
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
     console.error('Mediastack API error:', apiMessage || error.message);
+
+    const stale = cacheKey ? newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS) : undefined;
+    if (stale) {
+      return res.status(200).json({ ...stale, cached: true, stale: true });
+    }
+
     return res.status(502).json({
       message: apiMessage || 'News provider is temporarily unavailable.',
     });
