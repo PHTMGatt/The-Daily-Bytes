@@ -13,6 +13,10 @@ const DEFAULT_GAMING_PROVIDER_KEYWORDS = [
   'ddr5',
   'ssd',
   'pc hardware',
+  'xbox',
+  'playstation',
+  'nintendo',
+  'steam',
 ].join(',');
 
 export const buildProviderKeywords = (keywords: string) => {

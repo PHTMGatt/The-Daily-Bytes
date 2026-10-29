@@ -23,3 +23,12 @@ test('TimedCache evicts the oldest entry when capacity is exceeded', () => {
   assert.equal(cache.get('b', 1003), 2);
   assert.equal(cache.get('c', 1003), 3);
 });
+
+test('TimedCache getStale serves expired values within the stale window only', () => {
+  const cache = new TimedCache(1000, 10);
+  cache.set('gaming', { articles: [1] }, 1000);
+  assert.equal(cache.get('gaming', 2500), undefined);
+  assert.deepEqual(cache.getStale('gaming', 5000, 2500), { articles: [1] });
+  assert.equal(cache.getStale('gaming', 5000, 7001), undefined);
+  assert.equal(cache.getStale('gaming', 5000, 2500), undefined);
+});

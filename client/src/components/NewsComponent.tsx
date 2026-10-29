@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
 import ArticleImage from './ArticleImage';
-import { getNewsViewState } from '../utils/newsViewState';
+import { getNewsViewState, isStaleFeed } from '../utils/newsViewState';
 import './News.css';
 
 interface NewsSource {
@@ -54,6 +54,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [page, setPage] = useState(1);
   const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
+  const [stale, setStale] = useState(false);
   const articlesPerPage = 12;
 
   useEffect(() => {
@@ -68,10 +69,12 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
         if (!active) return;
         setArticles(Array.isArray(data.articles) ? data.articles : []);
         setTotalArticles(Number(data.totalResults) || 0);
+        setStale(isStaleFeed(data));
       } catch (fetchError) {
         if (!active) return;
         setArticles([]);
         setTotalArticles(0);
+        setStale(false);
         setError(fetchError instanceof Error ? fetchError.message : 'Unable to load stories right now.');
       } finally {
         if (active) setLoading(false);
@@ -134,6 +137,11 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
 
       {viewState === 'ready' && (
         <>
+          {stale && (
+            <p className="news-stale-notice" role="status">
+              The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
+            </p>
+          )}
           <div className="news-grid">
             {articles.map((article) => (
               <article key={article.url} className="news-card">

@@ -4,6 +4,7 @@ export interface NewsQualityArticle {
   description?: unknown;
   published_at?: unknown;
   publishedAt?: unknown;
+  source?: unknown;
 }
 
 const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'from', 'into', 'this', 'that']);
@@ -14,7 +15,9 @@ const PROFILE_BONUS_CAP = 24;
 const QUERY_PROFILES: Record<string, string[]> = {
   gaming: [
     'witcher', 'cd projekt', 'cdpr', 'nvidia', 'rtx', 'geforce', 'gpu', 'pc', 'hardware',
-    'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
+    'amd', 'radeon', 'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
+    'intel', 'ryzen', 'dlss', 'ps5', 'steam deck', 'epic games', 'game pass', 'switch 2',
+    'graphics card', 'dram', 'handheld',
   ],
   'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
   'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],
@@ -26,6 +29,21 @@ const QUERY_PROFILES: Record<string, string[]> = {
     'case', 'monitor',
   ],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
+};
+
+// Common typed spellings that should reuse a curated profile.
+const PROFILE_ALIASES: Record<string, string> = {
+  nvidia: 'nvidia gpu',
+  rtx: 'nvidia gpu',
+  geforce: 'nvidia gpu',
+  witcher: 'the witcher 3',
+  'witcher 3': 'the witcher 3',
+  'gpu price': 'gpu prices',
+  'graphics card prices': 'gpu prices',
+  'ram price': 'ram prices',
+  'ssd prices': 'ram ssd prices',
+  'game releases': 'video game releases',
+  'video games': 'gaming',
 };
 
 export const normalizeHeadline = (value: unknown) =>
@@ -90,7 +108,7 @@ const profileBonus = (
   normalizedQuery: string,
   queryTokens: Set<string>,
 ) => {
-  const profile = QUERY_PROFILES[normalizedQuery];
+  const profile = QUERY_PROFILES[PROFILE_ALIASES[normalizedQuery] ?? normalizedQuery];
   if (!profile) return 0;
 
   const titleWords = new Set(title.split(' ').filter(Boolean));
@@ -157,6 +175,36 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   return score;
 };
 
+const MAX_CONSECUTIVE_PER_SOURCE = 2;
+
+// Stable reorder: defer a story when its source already filled the last slots,
+// so one outlet cannot take over the top of the feed. Nothing is dropped.
+export const diversifySources = <T extends NewsQualityArticle>(
+  articles: T[],
+  maxRun: number = MAX_CONSECUTIVE_PER_SOURCE,
+): T[] => {
+  const sourceOf = (article: T) => String(article.source || '').trim().toLowerCase();
+  const pending = [...articles];
+  const result: T[] = [];
+  let runSource = '';
+  let runLength = 0;
+
+  while (pending.length) {
+    let pick = pending.findIndex((article) => {
+      const source = sourceOf(article);
+      return !source || source !== runSource || runLength < maxRun;
+    });
+    if (pick === -1) pick = 0;
+    const [article] = pending.splice(pick, 1);
+    const source = sourceOf(article);
+    runLength = source && source === runSource ? runLength + 1 : 1;
+    runSource = source;
+    result.push(article);
+  }
+
+  return result;
+};
+
 export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   articles: T[],
   query: string,
@@ -190,19 +238,23 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   };
 
   const tokens = getQueryTokens(query);
-  if (!tokens.length) return dropNearDuplicates(unique.map(({ article }) => article));
+  if (!tokens.length) return diversifySources(dropNearDuplicates(unique.map(({ article }) => article)));
 
-  return dropNearDuplicates(unique
-    .map(({ article, index }) => ({
-      article,
-      index,
-      score: relevanceScore(article, query, tokens) + freshnessBonus(getPublishedTime(article), now),
-      publishedTime: getPublishedTime(article),
-    }))
+  return diversifySources(dropNearDuplicates(unique
+    .map(({ article, index }) => {
+      const relevance = relevanceScore(article, query, tokens);
+      return {
+        article,
+        index,
+        // Freshness only breaks ties among matching stories; it must not lift unrelated ones.
+        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article), now) : 0,
+        publishedTime: getPublishedTime(article),
+      };
+    })
     .sort((a, b) =>
       b.score - a.score ||
       b.publishedTime - a.publishedTime ||
       a.index - b.index
     )
-    .map(({ article }) => article));
+    .map(({ article }) => article)));
 };

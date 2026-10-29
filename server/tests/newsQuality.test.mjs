@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { canonicalizeUrl, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
+import { canonicalizeUrl, diversifySources, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
 
 const article = (overrides = {}) => ({
   title: 'Story',
@@ -239,4 +239,99 @@ test('rankAndDedupeArticles freshness never outweighs a clear title match', () =
   ], 'NVIDIA GPU', now);
 
   assert.equal(results[0].url, 'https://b.example/relevant');
+});
+
+test('gaming profile ranks AMD Radeon hardware stories above generic gaming mentions', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Gaming industry sees steady quarter',
+      url: 'https://example.com/generic-gaming-quarter',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'AMD Radeon refresh targets midrange gaming',
+      url: 'https://example.com/amd-radeon',
+      published_at: '2026-10-20T12:00:00Z',
+    }),
+  ], 'gaming', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/amd-radeon');
+});
+
+test('typed aliases reuse the curated profile ("nvidia" ranks GeForce hardware above finance mentions)', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'NVIDIA shares move after earnings call',
+      url: 'https://example.com/nvidia-finance',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'NVIDIA GeForce RTX driver adds DLSS support',
+      url: 'https://example.com/nvidia-geforce',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+  ], 'NVIDIA', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/nvidia-geforce');
+});
+
+test('gaming profile recognizes Intel and Ryzen CPU stories', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Gaming market remains active this quarter',
+      url: 'https://example.com/generic',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'Ryzen gaming chip tops Intel in new benchmarks',
+      url: 'https://example.com/ryzen',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+  ], 'gaming', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/ryzen');
+});
+
+test('diversifySources limits consecutive stories from one source without dropping any', () => {
+  const stories = ['A', 'A', 'A', 'A', 'B', 'C'].map((source, i) => ({ title: `s${i}`, source }));
+  const result = diversifySources(stories);
+
+  assert.equal(result.length, stories.length);
+  assert.deepEqual(result.map((s) => s.title), ['s0', 's1', 's4', 's2', 's3', 's5'].slice(0, 0).concat(['s0', 's1', 's4', 's2', 's3', 's5']));
+  assert.deepEqual(result.map((s) => s.source), ['A', 'A', 'B', 'A', 'A', 'C']);
+});
+
+test('diversifySources keeps order when sources are unknown or already varied', () => {
+  const stories = [{ title: 'x' }, { title: 'y' }, { title: 'z', source: 'A' }, { title: 'w', source: 'B' }];
+  assert.deepEqual(diversifySources(stories).map((s) => s.title), ['x', 'y', 'z', 'w']);
+});
+
+test('diversifySources falls back to original order when only one source exists', () => {
+  const stories = [1, 2, 3, 4].map((n) => ({ title: `t${n}`, source: 'Only' }));
+  assert.deepEqual(diversifySources(stories).map((s) => s.title), ['t1', 't2', 't3', 't4']);
+});
+
+test('rankAndDedupeArticles interleaves a dominant source after ranking', () => {
+  const stories = [1, 2, 3, 4].map((n) => article({ title: `Nvidia story number ${n} alpha${n}`, url: `https://a.com/${n}`, source: 'Same' }))
+    .concat(article({ title: 'Nvidia other outlet beta', url: 'https://b.com/1', source: 'Other', description: '' }));
+  const result = rankAndDedupeArticles(stories, 'nvidia', Date.parse('2026-10-26T13:00:00Z'));
+  assert.equal(result.length, 5);
+  assert.notEqual(result[2].source, 'Same');
+});
+
+test('gaming profile recognizes console and handheld coverage such as Game Pass and Switch 2', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Quarterly retail earnings beat estimates',
+      url: 'https://example.com/earnings',
+      description: 'Retailers report strong holiday outlook.',
+    }),
+    article({
+      title: 'Game Pass adds new titles as Switch 2 handheld sales climb',
+      url: 'https://example.com/console',
+      description: 'Console makers see growth.',
+    }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/console');
 });

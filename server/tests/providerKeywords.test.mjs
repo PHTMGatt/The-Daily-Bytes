@@ -21,6 +21,10 @@ test('gaming expands to the priority gaming and PC hardware candidate set', () =
     'ddr5',
     'ssd',
     'pc hardware',
+    'xbox',
+    'playstation',
+    'nintendo',
+    'steam',
   ]) {
     assert.ok(value.toLowerCase().split(',').includes(term));
   }
