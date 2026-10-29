@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getNewsWindow } from '../../lib/newsPagination.js';
 import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
+import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
 
 const router = express.Router();
@@ -18,6 +19,7 @@ interface NewsBlock {
 }
 
 const newsCache = new TimedCache<NewsBlock>(NEWS_CACHE_TTL_MS, 100);
+const inflightFetches = new InflightRequests<NewsBlock>();
 
 router.get('/:category?', async (req: Request, res: Response) => {
   if (!MEDIASTACK_API_KEY) {
@@ -61,14 +63,18 @@ router.get('/:category?', async (req: Request, res: Response) => {
     if (category) params.categories = category;
     if (providerKeywords) params.keywords = providerKeywords;
 
-    const response = await axios.get(BASE_URL, { params, timeout: 12000 });
-    const raw = Array.isArray(response.data?.data) ? response.data.data : [];
-    const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
-    const ranked = rankAndDedupeArticles(raw, keywords);
+    const block = await inflightFetches.run(cacheKey, async () => {
+      const response = await axios.get(BASE_URL, { params, timeout: 12000 });
+      const raw = Array.isArray(response.data?.data) ? response.data.data : [];
+      const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
+      const fetched: NewsBlock = {
+        articles: rankAndDedupeArticles(raw, keywords),
+        totalResults: reportedTotal,
+      };
+      newsCache.set(cacheKey, fetched);
+      return fetched;
+    });
 
-    const block: NewsBlock = { articles: ranked, totalResults: reportedTotal };
-
-    newsCache.set(cacheKey, block);
     return respond(block, { cached: false });
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
