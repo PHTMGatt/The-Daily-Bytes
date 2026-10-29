@@ -318,3 +318,20 @@ test('rankAndDedupeArticles interleaves a dominant source after ranking', () => 
   assert.equal(result.length, 5);
   assert.notEqual(result[2].source, 'Same');
 });
+
+test('gaming profile recognizes console and handheld coverage such as Game Pass and Switch 2', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Quarterly retail earnings beat estimates',
+      url: 'https://example.com/earnings',
+      description: 'Retailers report strong holiday outlook.',
+    }),
+    article({
+      title: 'Game Pass adds new titles as Switch 2 handheld sales climb',
+      url: 'https://example.com/console',
+      description: 'Console makers see growth.',
+    }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/console');
+});
