@@ -335,3 +335,13 @@ test('gaming profile recognizes console and handheld coverage such as Game Pass 
 
   assert.equal(results[0].url, 'https://example.com/console');
 });
+
+test('future-dated stories do not outrank equally relevant, genuinely dated ones', () => {
+  const now = Date.parse('2026-10-29T12:00:00Z');
+  const results = rankAndDedupeArticles([
+    article({ title: 'Nvidia scheduled teaser', url: 'https://a.example/future', published_at: '2027-01-01T00:00:00Z' }),
+    article({ title: 'Nvidia older driver news', url: 'https://b.example/recent', published_at: '2026-09-29T08:00:00Z' }),
+  ], 'nvidia', now);
+
+  assert.deepEqual(results.map((item) => item.url), ['https://b.example/recent', 'https://a.example/future']);
+});

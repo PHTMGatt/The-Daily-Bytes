@@ -92,11 +92,15 @@ const getQueryTokens = (query: string) =>
     .split(' ')
     .filter((token) => token && !STOP_WORDS.has(token));
 
-const getPublishedTime = (article: NewsQualityArticle) => {
+// Providers occasionally emit future-dated stories (bad timezone, scheduled posts);
+// beyond a small clock-skew allowance the timestamp is untrustworthy, so ignore it.
+const FUTURE_SKEW_MS = 60 * 60 * 1000;
+
+const getPublishedTime = (article: NewsQualityArticle, now: number) => {
   const value = article.published_at || article.publishedAt;
   if (!value) return 0;
   const time = new Date(String(value)).getTime();
-  return Number.isFinite(time) ? time : 0;
+  return Number.isFinite(time) && time <= now + FUTURE_SKEW_MS ? time : 0;
 };
 
 const matchesTerm = (normalizedText: string, words: Set<string>, term: string) =>
@@ -247,8 +251,8 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
         article,
         index,
         // Freshness only breaks ties among matching stories; it must not lift unrelated ones.
-        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article), now) : 0,
-        publishedTime: getPublishedTime(article),
+        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article, now), now) : 0,
+        publishedTime: getPublishedTime(article, now),
       };
     })
     .sort((a, b) =>
