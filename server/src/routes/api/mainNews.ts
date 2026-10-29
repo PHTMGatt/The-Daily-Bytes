@@ -12,15 +12,12 @@ const BASE_URL = 'https://api.mediastack.com/v1/news';
 const NEWS_CACHE_TTL_MS = 15 * 60 * 1000;
 const NEWS_STALE_MAX_MS = 6 * 60 * 60 * 1000;
 
-interface NewsPayload {
+interface NewsBlock {
   articles: any[];
-  page: number;
-  perPage: number;
   totalResults: number;
-  query: string;
 }
 
-const newsCache = new TimedCache<NewsPayload>(NEWS_CACHE_TTL_MS, 100);
+const newsCache = new TimedCache<NewsBlock>(NEWS_CACHE_TTL_MS, 100);
 
 router.get('/:category?', async (req: Request, res: Response) => {
   if (!MEDIASTACK_API_KEY) {
@@ -28,6 +25,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
   }
 
   let cacheKey = '';
+  let respond: ((block: NewsBlock, extra: Record<string, boolean>) => Response) | undefined;
 
   try {
     const category = (req.params.category || '').trim().toLowerCase();
@@ -37,13 +35,19 @@ router.get('/:category?', async (req: Request, res: Response) => {
     const providerKeywords = buildProviderKeywords(keywords);
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));
-    const { fetchLimit, offset } = getNewsWindow(page, pageSize);
-    cacheKey = `${category}|${keywords.toLowerCase()}|${page}|${pageSize}`;
+    const { fetchLimit, offset, sliceStart } = getNewsWindow(page, pageSize);
+    cacheKey = `${category}|${keywords.toLowerCase()}|${offset}|${fetchLimit}`;
+    respond = (block: NewsBlock, extra: Record<string, boolean>) => res.status(200).json({
+      articles: block.articles.slice(sliceStart, sliceStart + pageSize),
+      page,
+      perPage: pageSize,
+      totalResults: block.totalResults,
+      query: keywords,
+      ...extra,
+    });
     const cached = newsCache.get(cacheKey);
 
-    if (cached) {
-      return res.status(200).json({ ...cached, cached: true });
-    }
+    if (cached) return respond(cached, { cached: true });
 
     const params: Record<string, string | number> = {
       access_key: MEDIASTACK_API_KEY,
@@ -62,23 +66,17 @@ router.get('/:category?', async (req: Request, res: Response) => {
     const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
     const ranked = rankAndDedupeArticles(raw, keywords);
 
-    const payload: NewsPayload = {
-      articles: ranked.slice(0, pageSize),
-      page,
-      perPage: pageSize,
-      totalResults: reportedTotal,
-      query: keywords,
-    };
+    const block: NewsBlock = { articles: ranked, totalResults: reportedTotal };
 
-    newsCache.set(cacheKey, payload);
-    return res.status(200).json({ ...payload, cached: false });
+    newsCache.set(cacheKey, block);
+    return respond(block, { cached: false });
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
     console.error('Mediastack API error:', apiMessage || error.message);
 
     const stale = cacheKey ? newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS) : undefined;
-    if (stale) {
-      return res.status(200).json({ ...stale, cached: true, stale: true });
+    if (stale && respond) {
+      return respond(stale, { cached: true, stale: true });
     }
 
     return res.status(502).json({
