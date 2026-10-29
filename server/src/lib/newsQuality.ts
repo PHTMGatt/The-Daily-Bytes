@@ -4,6 +4,7 @@ export interface NewsQualityArticle {
   description?: unknown;
   published_at?: unknown;
   publishedAt?: unknown;
+  source?: unknown;
 }
 
 const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'from', 'into', 'this', 'that']);
@@ -173,6 +174,36 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   return score;
 };
 
+const MAX_CONSECUTIVE_PER_SOURCE = 2;
+
+// Stable reorder: defer a story when its source already filled the last slots,
+// so one outlet cannot take over the top of the feed. Nothing is dropped.
+export const diversifySources = <T extends NewsQualityArticle>(
+  articles: T[],
+  maxRun: number = MAX_CONSECUTIVE_PER_SOURCE,
+): T[] => {
+  const sourceOf = (article: T) => String(article.source || '').trim().toLowerCase();
+  const pending = [...articles];
+  const result: T[] = [];
+  let runSource = '';
+  let runLength = 0;
+
+  while (pending.length) {
+    let pick = pending.findIndex((article) => {
+      const source = sourceOf(article);
+      return !source || source !== runSource || runLength < maxRun;
+    });
+    if (pick === -1) pick = 0;
+    const [article] = pending.splice(pick, 1);
+    const source = sourceOf(article);
+    runLength = source && source === runSource ? runLength + 1 : 1;
+    runSource = source;
+    result.push(article);
+  }
+
+  return result;
+};
+
 export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   articles: T[],
   query: string,
@@ -206,9 +237,9 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   };
 
   const tokens = getQueryTokens(query);
-  if (!tokens.length) return dropNearDuplicates(unique.map(({ article }) => article));
+  if (!tokens.length) return diversifySources(dropNearDuplicates(unique.map(({ article }) => article)));
 
-  return dropNearDuplicates(unique
+  return diversifySources(dropNearDuplicates(unique
     .map(({ article, index }) => {
       const relevance = relevanceScore(article, query, tokens);
       return {
@@ -224,5 +255,5 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
       b.publishedTime - a.publishedTime ||
       a.index - b.index
     )
-    .map(({ article }) => article));
+    .map(({ article }) => article)));
 };
