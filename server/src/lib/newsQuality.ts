@@ -15,6 +15,7 @@ const QUERY_PROFILES: Record<string, string[]> = {
   gaming: [
     'witcher', 'cd projekt', 'cdpr', 'nvidia', 'rtx', 'geforce', 'gpu', 'pc', 'hardware',
     'amd', 'radeon', 'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
+    'intel', 'ryzen', 'dlss', 'ps5', 'steam deck', 'epic games',
   ],
   'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
   'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],
@@ -26,6 +27,21 @@ const QUERY_PROFILES: Record<string, string[]> = {
     'case', 'monitor',
   ],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
+};
+
+// Common typed spellings that should reuse a curated profile.
+const PROFILE_ALIASES: Record<string, string> = {
+  nvidia: 'nvidia gpu',
+  rtx: 'nvidia gpu',
+  geforce: 'nvidia gpu',
+  witcher: 'the witcher 3',
+  'witcher 3': 'the witcher 3',
+  'gpu price': 'gpu prices',
+  'graphics card prices': 'gpu prices',
+  'ram price': 'ram prices',
+  'ssd prices': 'ram ssd prices',
+  'game releases': 'video game releases',
+  'video games': 'gaming',
 };
 
 export const normalizeHeadline = (value: unknown) =>
@@ -90,7 +106,7 @@ const profileBonus = (
   normalizedQuery: string,
   queryTokens: Set<string>,
 ) => {
-  const profile = QUERY_PROFILES[normalizedQuery];
+  const profile = QUERY_PROFILES[PROFILE_ALIASES[normalizedQuery] ?? normalizedQuery];
   if (!profile) return 0;
 
   const titleWords = new Set(title.split(' ').filter(Boolean));

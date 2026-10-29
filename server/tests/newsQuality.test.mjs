@@ -257,3 +257,37 @@ test('gaming profile ranks AMD Radeon hardware stories above generic gaming ment
 
   assert.equal(results[0].url, 'https://example.com/amd-radeon');
 });
+
+test('typed aliases reuse the curated profile ("nvidia" ranks GeForce hardware above finance mentions)', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'NVIDIA shares move after earnings call',
+      url: 'https://example.com/nvidia-finance',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'NVIDIA GeForce RTX driver adds DLSS support',
+      url: 'https://example.com/nvidia-geforce',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+  ], 'NVIDIA', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/nvidia-geforce');
+});
+
+test('gaming profile recognizes Intel and Ryzen CPU stories', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Gaming market remains active this quarter',
+      url: 'https://example.com/generic',
+      published_at: '2026-10-27T12:00:00Z',
+    }),
+    article({
+      title: 'Ryzen gaming chip tops Intel in new benchmarks',
+      url: 'https://example.com/ryzen',
+      published_at: '2026-10-26T12:00:00Z',
+    }),
+  ], 'gaming', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/ryzen');
+});
