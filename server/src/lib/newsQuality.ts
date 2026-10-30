@@ -103,8 +103,14 @@ const getPublishedTime = (article: NewsQualityArticle, now: number) => {
   return Number.isFinite(time) && time <= now + FUTURE_SKEW_MS ? time : 0;
 };
 
+// Treat simple plurals as the same word so "GPUs" matches "gpu" and "console" matches "consoles".
+const hasWord = (words: Set<string>, word: string) =>
+  words.has(word) ||
+  words.has(`${word}s`) ||
+  (word.length > 3 && word.endsWith('s') && words.has(word.slice(0, -1)));
+
 const matchesTerm = (normalizedText: string, words: Set<string>, term: string) =>
-  term.includes(' ') ? normalizedText.includes(term) : words.has(term);
+  term.includes(' ') ? normalizedText.includes(term) : hasWord(words, term);
 
 const profileBonus = (
   title: string,
@@ -159,17 +165,17 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   let score = 0;
 
   const exactTitleMatch = tokens.length === 1
-    ? titleWords.has(tokens[0])
+    ? hasWord(titleWords, tokens[0])
     : Boolean(normalizedQuery && title.includes(normalizedQuery));
 
   if (exactTitleMatch) score += 40;
 
   let titleMatches = 0;
   for (const token of tokens) {
-    if (titleWords.has(token)) {
+    if (hasWord(titleWords, token)) {
       score += 12;
       titleMatches += 1;
-    } else if (descriptionWords.has(token)) {
+    } else if (hasWord(descriptionWords, token)) {
       score += 3;
     }
   }

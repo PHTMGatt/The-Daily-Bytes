@@ -345,3 +345,12 @@ test('future-dated stories do not outrank equally relevant, genuinely dated ones
 
   assert.deepEqual(results.map((item) => item.url), ['https://b.example/recent', 'https://a.example/future']);
 });
+
+test('plural and singular forms count as the same keyword when ranking', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Quarterly retail earnings beat estimates', url: 'https://example.com/earnings' }),
+    article({ title: 'New GPUs head to market this quarter', url: 'https://example.com/hardware' }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/hardware');
+});
