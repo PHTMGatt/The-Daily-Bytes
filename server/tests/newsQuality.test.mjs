@@ -354,3 +354,20 @@ test('plural and singular forms count as the same keyword when ranking', () => {
 
   assert.equal(results[0].url, 'https://example.com/hardware');
 });
+
+test('gaming profile recognizes GPU memory and architecture coverage such as VRAM, GDDR7 and RDNA', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Quarterly retail earnings beat estimates',
+      url: 'https://example.com/earnings-2',
+      description: 'Retailers report strong holiday outlook.',
+    }),
+    article({
+      title: 'Next RDNA card pairs GDDR7 with more VRAM',
+      url: 'https://example.com/gpu-memory',
+      description: 'Graphics roadmap leaks.',
+    }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/gpu-memory');
+});

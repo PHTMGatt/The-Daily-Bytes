@@ -20,6 +20,8 @@ const QUERY_PROFILES: Record<string, string[]> = {
     'amd', 'radeon', 'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
     'intel', 'ryzen', 'dlss', 'ps5', 'steam deck', 'epic games', 'game pass', 'switch 2',
     'graphics card', 'dram', 'handheld',
+    'vram', 'gddr7', 'blackwell', 'rdna', 'fsr', 'ray tracing', 'nvme', 'rog ally',
+    'legion go', 'steam machine', 'xbox series',
   ],
   'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
   'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],
