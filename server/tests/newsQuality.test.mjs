@@ -371,3 +371,15 @@ test('gaming profile recognizes GPU memory and architecture coverage such as VRA
 
   assert.equal(results[0].url, 'https://example.com/gpu-memory');
 });
+
+test('drops articles whose url is not a plain http(s) link', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Script link story', url: 'javascript:alert(1)' }),
+    article({ title: 'Data link story', url: 'data:text/html,hi' }),
+    article({ title: 'Relative link story', url: '/relative/path' }),
+    article({ title: 'Good plain story', url: 'http://example.com/ok' }),
+    article({ title: 'Good secure story', url: 'https://example.com/ok2' }),
+  ], '');
+
+  assert.deepEqual(results.map((item) => item.title), ['Good plain story', 'Good secure story']);
+});

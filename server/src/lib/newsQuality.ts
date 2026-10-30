@@ -81,6 +81,16 @@ export const canonicalizeUrl = (value: unknown) => {
   }
 };
 
+// Article URLs are rendered as links, so only plain web URLs are acceptable.
+export const isHttpUrl = (value: unknown) => {
+  try {
+    const { protocol } = new URL(String(value || '').trim());
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -239,7 +249,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(article.title);
 
-    if (!headline || !url || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);
