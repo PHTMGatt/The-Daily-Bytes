@@ -1,3 +1,5 @@
+import { cleanProviderText } from './textCleanup.js';
+
 export interface NewsQualityArticle {
   title?: unknown;
   url?: unknown;
@@ -220,11 +222,18 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   query: string,
   now: number = Date.now(),
 ): T[] => {
+  const cleaned = articles.map((article) => ({
+    ...article,
+    title: typeof article.title === 'string' ? cleanProviderText(article.title) : article.title,
+    description: typeof article.description === 'string'
+      ? cleanProviderText(article.description)
+      : article.description,
+  }));
   const unique: Array<{ article: T; index: number }> = [];
   const seenUrls = new Set<string>();
   const seenHeadlines = new Set<string>();
 
-  articles.forEach((article, index) => {
+  cleaned.forEach((article, index) => {
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(article.title);
 
