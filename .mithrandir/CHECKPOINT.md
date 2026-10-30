@@ -32,7 +32,7 @@ Owned by the scheduled Claude worker (`claude-forge`) under Mithrandir. Pick the
 
 ## Open problems
 - CI (`validate.yml`) runs on PRs to `main` and `chatgpt-forge` pushes only. `claude-forge` commits are verified only while a PR is open. (A Mithrandir change adds `claude-forge` pushes.)
-- Security-relevant surface (auth routes, JWT, demo session, saved-articles ownership, CORS, rate limiting) has **no security gate yet**. This is the first Phase B/C target.
+- Security gate partly done: saved-articles audited (all queries scoped to JWT username, body whitelisted; no IDOR), JWT pinned to HS256, login/register rate-limited (30/15min/IP, in-memory, per instance). Still open: demo endpoint rate limit, CORS review, security headers, lockout per account.
 - MongoDB not exercised by recent worker runs (ranking-only changes).
 
 ## Verification (last known)
