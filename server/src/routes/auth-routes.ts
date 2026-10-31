@@ -22,6 +22,16 @@ router.use(
   })
 );
 
+// Demo sessions skip bcrypt but still hit MongoDB and mint a token, so cap them separately and more loosely.
+router.use(
+  '/demo',
+  createRateLimitMiddleware({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    message: 'Too many demo requests. Please wait a few minutes and try again.',
+  })
+);
+
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_KEY;
   if (!secret) throw new Error('JWT_SECRET_KEY is required');
