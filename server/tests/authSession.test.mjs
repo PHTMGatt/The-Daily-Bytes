@@ -27,3 +27,17 @@ test('createSessionToken uses a twelve-hour expiry window', () => {
 test('demo username is stable and normalized', () => {
   assert.equal(DEMO_USERNAME, 'demo');
 });
+
+test('verifySessionToken accepts tokens it issued', async () => {
+  const { verifySessionToken } = await import('../dist/lib/authSession.js');
+  const payload = verifySessionToken(createSessionToken('reader', TEST_SECRET), TEST_SECRET);
+  assert.equal(payload.username, 'reader');
+});
+
+test('verifySessionToken rejects unsigned and non-HS256 tokens', async () => {
+  const { verifySessionToken } = await import('../dist/lib/authSession.js');
+  const unsigned = jwt.sign({ username: 'demo' }, '', { algorithm: 'none' });
+  assert.throws(() => verifySessionToken(unsigned, TEST_SECRET));
+  const hs512 = jwt.sign({ username: 'demo' }, TEST_SECRET, { algorithm: 'HS512' });
+  assert.throws(() => verifySessionToken(hs512, TEST_SECRET));
+});

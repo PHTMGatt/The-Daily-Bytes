@@ -10,6 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const clientDistPath = path.resolve('../client/dist');
 
+// Render terminates TLS at one proxy hop; trust it so req.ip is the real client.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(clientDistPath));
 app.use('/api', apiRoutes);

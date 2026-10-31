@@ -1,3 +1,5 @@
+import { cleanProviderText } from './textCleanup.js';
+
 export interface NewsQualityArticle {
   title?: unknown;
   url?: unknown;
@@ -18,9 +20,12 @@ const QUERY_PROFILES: Record<string, string[]> = {
     'amd', 'radeon', 'steam', 'xbox', 'playstation', 'nintendo', 'ram', 'ddr5', 'ssd',
     'intel', 'ryzen', 'dlss', 'ps5', 'steam deck', 'epic games', 'game pass', 'switch 2',
     'graphics card', 'dram', 'handheld',
+    'vram', 'gddr7', 'blackwell', 'rdna', 'fsr', 'ray tracing', 'nvme', 'rog ally',
+    'legion go', 'steam machine', 'xbox series',
   ],
   'the witcher 3': ['witcher', 'wild hunt', 'geralt', 'cd projekt', 'cdpr'],
   'nvidia gpu': ['nvidia', 'geforce', 'rtx', 'gpu', 'dlss'],
+  'amd gpu': ['amd', 'radeon', 'rdna', 'fsr', 'ryzen', 'gpu', 'graphics card'],
   'gpu prices': ['gpu', 'graphics card', 'rtx', 'geforce', 'radeon'],
   'ram prices': ['ram', 'ddr5', 'dram', 'memory'],
   'ram ssd prices': ['ram', 'ddr5', 'dram', 'memory', 'ssd', 'nvme', 'storage'],
@@ -38,7 +43,20 @@ const PROFILE_ALIASES: Record<string, string> = {
   geforce: 'nvidia gpu',
   witcher: 'the witcher 3',
   'witcher 3': 'the witcher 3',
+  amd: 'amd gpu',
+  radeon: 'amd gpu',
+  ryzen: 'amd gpu',
   'gpu price': 'gpu prices',
+  gpu: 'gpu prices',
+  gpus: 'gpu prices',
+  'graphics cards': 'gpu prices',
+  'graphics card': 'gpu prices',
+  'memory prices': 'ram prices',
+  'dram prices': 'ram prices',
+  'ddr5 prices': 'ram prices',
+  'ssd price': 'ram ssd prices',
+  hardware: 'pc hardware',
+  'pc gaming': 'gaming',
   'graphics card prices': 'gpu prices',
   'ram price': 'ram prices',
   'ssd prices': 'ram ssd prices',
@@ -77,6 +95,26 @@ export const canonicalizeUrl = (value: unknown) => {
   }
 };
 
+// Article URLs are rendered as links, so only plain web URLs are acceptable.
+export const isHttpUrl = (value: unknown) => {
+  try {
+    const { protocol } = new URL(String(value || '').trim());
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+// Syndicated titles often end with " - Outlet"; drop it only when it names the article's own
+// source, so genuine subtitles ("Elden Ring - Shadow of the Erdtree") are never altered.
+const stripSourceSuffix = (title: unknown, source: unknown) => {
+  const text = String(title || '');
+  const outlet = normalizeHeadline(source);
+  if (!outlet) return text;
+  const match = text.match(/^(.*\S)\s+[-–—|:]\s+([^-–—|:]+)$/);
+  return match && normalizeHeadline(match[2]) === outlet ? match[1] : text;
+};
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -92,15 +130,25 @@ const getQueryTokens = (query: string) =>
     .split(' ')
     .filter((token) => token && !STOP_WORDS.has(token));
 
-const getPublishedTime = (article: NewsQualityArticle) => {
+// Providers occasionally emit future-dated stories (bad timezone, scheduled posts);
+// beyond a small clock-skew allowance the timestamp is untrustworthy, so ignore it.
+const FUTURE_SKEW_MS = 60 * 60 * 1000;
+
+const getPublishedTime = (article: NewsQualityArticle, now: number) => {
   const value = article.published_at || article.publishedAt;
   if (!value) return 0;
   const time = new Date(String(value)).getTime();
-  return Number.isFinite(time) ? time : 0;
+  return Number.isFinite(time) && time <= now + FUTURE_SKEW_MS ? time : 0;
 };
 
+// Treat simple plurals as the same word so "GPUs" matches "gpu" and "console" matches "consoles".
+const hasWord = (words: Set<string>, word: string) =>
+  words.has(word) ||
+  words.has(`${word}s`) ||
+  (word.length > 3 && word.endsWith('s') && words.has(word.slice(0, -1)));
+
 const matchesTerm = (normalizedText: string, words: Set<string>, term: string) =>
-  term.includes(' ') ? normalizedText.includes(term) : words.has(term);
+  term.includes(' ') ? normalizedText.includes(term) : hasWord(words, term);
 
 const profileBonus = (
   title: string,
@@ -155,17 +203,17 @@ const relevanceScore = (article: NewsQualityArticle, query: string, tokens: stri
   let score = 0;
 
   const exactTitleMatch = tokens.length === 1
-    ? titleWords.has(tokens[0])
+    ? hasWord(titleWords, tokens[0])
     : Boolean(normalizedQuery && title.includes(normalizedQuery));
 
   if (exactTitleMatch) score += 40;
 
   let titleMatches = 0;
   for (const token of tokens) {
-    if (titleWords.has(token)) {
+    if (hasWord(titleWords, token)) {
       score += 12;
       titleMatches += 1;
-    } else if (descriptionWords.has(token)) {
+    } else if (hasWord(descriptionWords, token)) {
       score += 3;
     }
   }
@@ -210,15 +258,22 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
   query: string,
   now: number = Date.now(),
 ): T[] => {
+  const cleaned = articles.map((article) => ({
+    ...article,
+    title: typeof article.title === 'string' ? cleanProviderText(article.title) : article.title,
+    description: typeof article.description === 'string'
+      ? cleanProviderText(article.description)
+      : article.description,
+  }));
   const unique: Array<{ article: T; index: number }> = [];
   const seenUrls = new Set<string>();
   const seenHeadlines = new Set<string>();
 
-  articles.forEach((article, index) => {
+  cleaned.forEach((article, index) => {
     const url = canonicalizeUrl(article.url);
-    const headline = normalizeHeadline(article.title);
+    const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);
@@ -229,7 +284,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const kept: T[] = [];
     const keptTokens: Array<Set<string>> = [];
     for (const item of items) {
-      const tokens = headlineTokens(normalizeHeadline(item.title));
+      const tokens = headlineTokens(normalizeHeadline(stripSourceSuffix(item.title, item.source)));
       if (keptTokens.some((existing) => isNearDuplicate(existing, tokens))) continue;
       kept.push(item);
       keptTokens.push(tokens);
@@ -247,8 +302,8 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
         article,
         index,
         // Freshness only breaks ties among matching stories; it must not lift unrelated ones.
-        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article), now) : 0,
-        publishedTime: getPublishedTime(article),
+        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article, now), now) : 0,
+        publishedTime: getPublishedTime(article, now),
       };
     })
     .sort((a, b) =>
@@ -257,4 +312,11 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
       a.index - b.index
     )
     .map(({ article }) => article)));
+};
+
+// The Technology feed has no typed query, so ranking would be purely chronological. Rank it with the
+// gaming/hardware profile as a soft boost; it only reorders and never filters what the provider returned.
+export const getRankingQuery = (category: string, keywords: string) => {
+  if (keywords.trim()) return keywords;
+  return category.trim().toLowerCase() === 'technology' ? 'gaming' : '';
 };

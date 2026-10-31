@@ -292,6 +292,18 @@ test('gaming profile recognizes Intel and Ryzen CPU stories', () => {
   assert.equal(results[0].url, 'https://example.com/ryzen');
 });
 
+test('typed AMD, GPU and memory spellings reuse curated profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('AMD', 'Radeon RDNA 4 card undercuts rivals on price', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('graphics cards', 'GeForce RTX card prices fall at retail', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('DRAM prices', 'DDR5 memory kits climb again', 'Retail chain names new chairman'), 'https://example.com/on');
+});
+
 test('diversifySources limits consecutive stories from one source without dropping any', () => {
   const stories = ['A', 'A', 'A', 'A', 'B', 'C'].map((source, i) => ({ title: `s${i}`, source }));
   const result = diversifySources(stories);
@@ -334,4 +346,88 @@ test('gaming profile recognizes console and handheld coverage such as Game Pass 
   ], 'gaming');
 
   assert.equal(results[0].url, 'https://example.com/console');
+});
+
+test('future-dated stories do not outrank equally relevant, genuinely dated ones', () => {
+  const now = Date.parse('2026-10-29T12:00:00Z');
+  const results = rankAndDedupeArticles([
+    article({ title: 'Nvidia scheduled teaser', url: 'https://a.example/future', published_at: '2027-01-01T00:00:00Z' }),
+    article({ title: 'Nvidia older driver news', url: 'https://b.example/recent', published_at: '2026-09-29T08:00:00Z' }),
+  ], 'nvidia', now);
+
+  assert.deepEqual(results.map((item) => item.url), ['https://b.example/recent', 'https://a.example/future']);
+});
+
+test('plural and singular forms count as the same keyword when ranking', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Quarterly retail earnings beat estimates', url: 'https://example.com/earnings' }),
+    article({ title: 'New GPUs head to market this quarter', url: 'https://example.com/hardware' }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/hardware');
+});
+
+test('gaming profile recognizes GPU memory and architecture coverage such as VRAM, GDDR7 and RDNA', () => {
+  const results = rankAndDedupeArticles([
+    article({
+      title: 'Quarterly retail earnings beat estimates',
+      url: 'https://example.com/earnings-2',
+      description: 'Retailers report strong holiday outlook.',
+    }),
+    article({
+      title: 'Next RDNA card pairs GDDR7 with more VRAM',
+      url: 'https://example.com/gpu-memory',
+      description: 'Graphics roadmap leaks.',
+    }),
+  ], 'gaming');
+
+  assert.equal(results[0].url, 'https://example.com/gpu-memory');
+});
+
+test('drops articles whose url is not a plain http(s) link', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Script link story', url: 'javascript:alert(1)' }),
+    article({ title: 'Data link story', url: 'data:text/html,hi' }),
+    article({ title: 'Relative link story', url: '/relative/path' }),
+    article({ title: 'Good plain story', url: 'http://example.com/ok' }),
+    article({ title: 'Good secure story', url: 'https://example.com/ok2' }),
+  ], '');
+
+  assert.deepEqual(results.map((item) => item.title), ['Good plain story', 'Good secure story']);
+});
+
+test('rankAndDedupeArticles collapses a title that only differs by its own source suffix', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX 5090 price drops again - IGN', url: 'https://a.example/1', source: 'IGN' }),
+    article({ title: 'RTX 5090 price drops again', url: 'https://b.example/2', source: 'IGN' }),
+  ], '');
+  assert.equal(results.length, 1);
+});
+
+test('rankAndDedupeArticles keeps subtitles that are not the article source', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Elden Ring - Shadow of the Erdtree', url: 'https://a.example/1', source: 'IGN' }),
+    article({ title: 'Elden Ring', url: 'https://b.example/2', source: 'PC Gamer' }),
+  ], '');
+  assert.equal(results.length, 2);
+});
+
+test('getRankingQuery gives the technology category a gaming-hardware boost only when no keywords are typed', async () => {
+  const { getRankingQuery } = await import('../dist/lib/newsQuality.js');
+  assert.equal(getRankingQuery('technology', ''), 'gaming');
+  assert.equal(getRankingQuery('Technology', '   '), 'gaming');
+  assert.equal(getRankingQuery('technology', 'rust'), 'rust');
+  assert.equal(getRankingQuery('sports', ''), '');
+  assert.equal(getRankingQuery('', ''), '');
+});
+
+test('technology boost lifts gaming hardware stories without dropping other stories', async () => {
+  const { getRankingQuery } = await import('../dist/lib/newsQuality.js');
+  const now = Date.parse('2026-10-31T12:00:00Z');
+  const results = rankAndDedupeArticles([
+    article({ title: 'Quarterly cloud software earnings beat estimates', url: 'https://a.com/1', published_at: '2026-10-31T11:00:00Z' }),
+    article({ title: 'NVIDIA RTX GPU prices climb as GDDR7 supply tightens', url: 'https://b.com/2', published_at: '2026-10-30T11:00:00Z' }),
+  ], getRankingQuery('technology', ''), now);
+  assert.equal(results.length, 2);
+  assert.match(results[0].title, /NVIDIA/);
 });

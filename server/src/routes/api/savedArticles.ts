@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { DailyBytesSavedArticle, getDb } from '../../config/mongo.js';
+import { verifySessionToken } from '../../lib/authSession.js';
 import { normalizeSavedArticle } from '../../lib/savedArticles.js';
 
 const router = Router();
@@ -16,7 +16,7 @@ const getUsernameFromRequest = (req: Request) => {
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) throw new Error('AUTH_REQUIRED');
 
-  const payload = jwt.verify(token, getJwtSecret());
+  const payload = verifySessionToken(token, getJwtSecret());
   if (typeof payload === 'string' || typeof payload.username !== 'string' || !payload.username.trim()) {
     throw new Error('AUTH_REQUIRED');
   }
