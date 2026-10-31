@@ -383,3 +383,19 @@ test('drops articles whose url is not a plain http(s) link', () => {
 
   assert.deepEqual(results.map((item) => item.title), ['Good plain story', 'Good secure story']);
 });
+
+test('rankAndDedupeArticles collapses a title that only differs by its own source suffix', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX 5090 price drops again - IGN', url: 'https://a.example/1', source: 'IGN' }),
+    article({ title: 'RTX 5090 price drops again', url: 'https://b.example/2', source: 'IGN' }),
+  ], '');
+  assert.equal(results.length, 1);
+});
+
+test('rankAndDedupeArticles keeps subtitles that are not the article source', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Elden Ring - Shadow of the Erdtree', url: 'https://a.example/1', source: 'IGN' }),
+    article({ title: 'Elden Ring', url: 'https://b.example/2', source: 'PC Gamer' }),
+  ], '');
+  assert.equal(results.length, 2);
+});

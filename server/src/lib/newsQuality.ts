@@ -91,6 +91,16 @@ export const isHttpUrl = (value: unknown) => {
   }
 };
 
+// Syndicated titles often end with " - Outlet"; drop it only when it names the article's own
+// source, so genuine subtitles ("Elden Ring - Shadow of the Erdtree") are never altered.
+const stripSourceSuffix = (title: unknown, source: unknown) => {
+  const text = String(title || '');
+  const outlet = normalizeHeadline(source);
+  if (!outlet) return text;
+  const match = text.match(/^(.*\S)\s+[-–—|:]\s+([^-–—|:]+)$/);
+  return match && normalizeHeadline(match[2]) === outlet ? match[1] : text;
+};
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -247,7 +257,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
 
   cleaned.forEach((article, index) => {
     const url = canonicalizeUrl(article.url);
-    const headline = normalizeHeadline(article.title);
+    const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
     if (!headline || !url || !isHttpUrl(article.url) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
@@ -260,7 +270,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const kept: T[] = [];
     const keptTokens: Array<Set<string>> = [];
     for (const item of items) {
-      const tokens = headlineTokens(normalizeHeadline(item.title));
+      const tokens = headlineTokens(normalizeHeadline(stripSourceSuffix(item.title, item.source)));
       if (keptTokens.some((existing) => isNearDuplicate(existing, tokens))) continue;
       kept.push(item);
       keptTokens.push(tokens);
