@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
 import ArticleImage from './ArticleImage';
+import { formatPublishedLabel } from '../utils/articleTime';
 import { getNewsViewState, isStaleFeed } from '../utils/newsViewState';
 import './News.css';
 
@@ -30,15 +31,8 @@ interface NewsComponentProps {
   keywords?: string;
 }
 
-const formatPublishedDate = (article: Article) => {
-  const value = article.publishedAt || article.published_at;
-  if (!value) return 'Recent';
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? 'Recent'
-    : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const formatPublishedDate = (article: Article) =>
+  formatPublishedLabel(article.publishedAt || article.published_at);
 
 const getSource = (article: Article) => {
   if (typeof article.source === 'string') return article.source;

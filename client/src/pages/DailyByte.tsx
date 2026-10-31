@@ -5,6 +5,7 @@ import ArticleImage from '../components/ArticleImage';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
+import { formatPublishedLabel } from '../utils/articleTime';
 import './DailyByte.css';
 import './Bookmarks.css';
 
@@ -69,13 +70,7 @@ const getSource = (article: SearchArticle) => {
 
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
 
-const formatDate = (article: SearchArticle) => {
-  const value = getPublishedAt(article);
-  if (!value) return 'Recent';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Recent';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const formatDate = (article: SearchArticle) => formatPublishedLabel(getPublishedAt(article));
 
 const articleSummary = (article: SearchArticle) =>
   article.description?.trim() || 'Open the full story for the latest details.';
