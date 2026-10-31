@@ -313,3 +313,10 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     )
     .map(({ article }) => article)));
 };
+
+// The Technology feed has no typed query, so ranking would be purely chronological. Rank it with the
+// gaming/hardware profile as a soft boost; it only reorders and never filters what the provider returned.
+export const getRankingQuery = (category: string, keywords: string) => {
+  if (keywords.trim()) return keywords;
+  return category.trim().toLowerCase() === 'technology' ? 'gaming' : '';
+};

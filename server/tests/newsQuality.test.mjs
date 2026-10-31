@@ -411,3 +411,23 @@ test('rankAndDedupeArticles keeps subtitles that are not the article source', ()
   ], '');
   assert.equal(results.length, 2);
 });
+
+test('getRankingQuery gives the technology category a gaming-hardware boost only when no keywords are typed', async () => {
+  const { getRankingQuery } = await import('../dist/lib/newsQuality.js');
+  assert.equal(getRankingQuery('technology', ''), 'gaming');
+  assert.equal(getRankingQuery('Technology', '   '), 'gaming');
+  assert.equal(getRankingQuery('technology', 'rust'), 'rust');
+  assert.equal(getRankingQuery('sports', ''), '');
+  assert.equal(getRankingQuery('', ''), '');
+});
+
+test('technology boost lifts gaming hardware stories without dropping other stories', async () => {
+  const { getRankingQuery } = await import('../dist/lib/newsQuality.js');
+  const now = Date.parse('2026-10-31T12:00:00Z');
+  const results = rankAndDedupeArticles([
+    article({ title: 'Quarterly cloud software earnings beat estimates', url: 'https://a.com/1', published_at: '2026-10-31T11:00:00Z' }),
+    article({ title: 'NVIDIA RTX GPU prices climb as GDDR7 supply tightens', url: 'https://b.com/2', published_at: '2026-10-30T11:00:00Z' }),
+  ], getRankingQuery('technology', ''), now);
+  assert.equal(results.length, 2);
+  assert.match(results[0].title, /NVIDIA/);
+});

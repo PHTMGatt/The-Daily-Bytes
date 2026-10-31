@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { getNewsWindow } from '../../lib/newsPagination.js';
-import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
+import { getRankingQuery, rankAndDedupeArticles } from '../../lib/newsQuality.js';
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
@@ -68,7 +68,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
       const raw = Array.isArray(response.data?.data) ? response.data.data : [];
       const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
       const fetched: NewsBlock = {
-        articles: rankAndDedupeArticles(raw, keywords),
+        articles: rankAndDedupeArticles(raw, getRankingQuery(category, keywords)),
         totalResults: reportedTotal,
       };
       newsCache.set(cacheKey, fetched);
