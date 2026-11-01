@@ -304,6 +304,20 @@ test('typed AMD, GPU and memory spellings reuse curated profiles', () => {
   assert.equal(pick('DRAM prices', 'DDR5 memory kits climb again', 'Retail chain names new chairman'), 'https://example.com/on');
 });
 
+test('typed platform queries (Xbox, PlayStation, Nintendo, Steam, Intel) reuse curated profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('Xbox', 'Game Pass adds Series X day-one titles', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('PlayStation', 'PS5 Pro price cut arrives before holidays', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Nintendo', 'Switch 2 sales top forecasts', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Steam', 'Valve ships Steam Deck update with Proton fixes', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Intel', 'Core Ultra desktop chips cut CPU prices', 'Retail chain names new chairman'), 'https://example.com/on');
+});
+
 test('diversifySources limits consecutive stories from one source without dropping any', () => {
   const stories = ['A', 'A', 'A', 'A', 'B', 'C'].map((source, i) => ({ title: `s${i}`, source }));
   const result = diversifySources(stories);
