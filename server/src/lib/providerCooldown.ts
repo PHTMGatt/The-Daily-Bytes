@@ -33,3 +33,14 @@ export class ProviderCooldown {
     this.openUntil = 0;
   }
 }
+
+/**
+ * Whether an upstream error means the provider itself is unhealthy (network failure,
+ * timeout, rate limit, 5xx). Other 4xx responses are caused by one request's input
+ * (e.g. an unsupported search query) and must not pause the feed for everyone.
+ */
+export const shouldCooldownOnError = (error: any): boolean => {
+  const status = Number(error?.response?.status);
+  if (!Number.isFinite(status) || status === 0) return true;
+  return status === 429 || status >= 500;
+};

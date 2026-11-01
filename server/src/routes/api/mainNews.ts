@@ -5,7 +5,7 @@ import { getRankingQuery, rankAndDedupeArticles } from '../../lib/newsQuality.js
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
-import { ProviderCooldown } from '../../lib/providerCooldown.js';
+import { ProviderCooldown, shouldCooldownOnError } from '../../lib/providerCooldown.js';
 
 const router = express.Router();
 
@@ -76,7 +76,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
       try {
         response = await axios.get(BASE_URL, { params, timeout: 12000 });
       } catch (fetchError) {
-        providerCooldown.recordFailure();
+        if (shouldCooldownOnError(fetchError)) providerCooldown.recordFailure();
         throw fetchError;
       }
       providerCooldown.recordSuccess();
@@ -103,7 +103,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
     }
 
     return res.status(502).json({
-      message: apiMessage || 'News provider is temporarily unavailable.',
+      message: PROVIDER_COOLDOWN_MESSAGE,
     });
   }
 });

@@ -32,3 +32,14 @@ test('ProviderCooldown resets after a success', () => {
   assert.equal(cooldown.isOpen(1), false);
   assert.equal(cooldown.recordFailure(10), 1000);
 });
+
+test('shouldCooldownOnError trips only for provider-wide failures', async () => {
+  const { shouldCooldownOnError } = await import('../dist/lib/providerCooldown.js');
+  assert.equal(shouldCooldownOnError({ code: 'ECONNABORTED' }), true, 'timeout / no response');
+  assert.equal(shouldCooldownOnError(new Error('network down')), true);
+  assert.equal(shouldCooldownOnError({ response: { status: 429 } }), true);
+  assert.equal(shouldCooldownOnError({ response: { status: 503 } }), true);
+  assert.equal(shouldCooldownOnError({ response: { status: 422 } }), false, 'bad user query');
+  assert.equal(shouldCooldownOnError({ response: { status: 400 } }), false);
+  assert.equal(shouldCooldownOnError(undefined), true);
+});
