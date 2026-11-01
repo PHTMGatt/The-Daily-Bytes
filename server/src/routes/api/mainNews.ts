@@ -5,6 +5,7 @@ import { getRankingQuery, rankAndDedupeArticles } from '../../lib/newsQuality.js
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
+import { ProviderCooldown } from '../../lib/providerCooldown.js';
 
 const router = express.Router();
 
@@ -20,6 +21,12 @@ interface NewsBlock {
 
 const newsCache = new TimedCache<NewsBlock>(NEWS_CACHE_TTL_MS, 100);
 const inflightFetches = new InflightRequests<NewsBlock>();
+// After a provider failure (e.g. Mediastack rate limiting) stop calling it for a while
+// and serve stale cache instead of retrying on every request.
+const providerCooldown = new ProviderCooldown(30 * 1000, 10 * 60 * 1000);
+const PROVIDER_COOLDOWN_MESSAGE = 'News provider is temporarily unavailable.';
+
+class ProviderCooldownError extends Error {}
 
 router.get('/:category?', async (req: Request, res: Response) => {
   if (!MEDIASTACK_API_KEY) {
@@ -64,7 +71,15 @@ router.get('/:category?', async (req: Request, res: Response) => {
     if (providerKeywords) params.keywords = providerKeywords;
 
     const block = await inflightFetches.run(cacheKey, async () => {
-      const response = await axios.get(BASE_URL, { params, timeout: 12000 });
+      if (providerCooldown.isOpen()) throw new ProviderCooldownError(PROVIDER_COOLDOWN_MESSAGE);
+      let response;
+      try {
+        response = await axios.get(BASE_URL, { params, timeout: 12000 });
+      } catch (fetchError) {
+        providerCooldown.recordFailure();
+        throw fetchError;
+      }
+      providerCooldown.recordSuccess();
       const raw = Array.isArray(response.data?.data) ? response.data.data : [];
       const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
       const fetched: NewsBlock = {
@@ -78,7 +93,9 @@ router.get('/:category?', async (req: Request, res: Response) => {
     return respond(block, { cached: false });
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
-    console.error('Mediastack API error:', apiMessage || error.message);
+    if (!(error instanceof ProviderCooldownError)) {
+      console.error('Mediastack API error:', apiMessage || error.message);
+    }
 
     const stale = cacheKey ? newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS) : undefined;
     if (stale && respond) {
