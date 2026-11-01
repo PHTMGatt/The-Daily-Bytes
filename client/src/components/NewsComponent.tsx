@@ -7,7 +7,7 @@ import auth from '../utils/auth';
 import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
-import { getNewsViewState, isStaleFeed } from '../utils/newsViewState';
+import { feedKeyFor, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
 interface NewsSource {
@@ -49,7 +49,11 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const feedKey = feedKeyFor(category, keywords);
+  const [pageState, setPageState] = useState({ feedKey, page: 1 });
+  const page = resolvePage(pageState, feedKey);
+  const setPage = (update: (current: number) => number) =>
+    setPageState({ feedKey, page: update(page) });
   const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
   const [stale, setStale] = useState(false);
@@ -129,8 +133,8 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   };
 
   useEffect(() => {
-    setPage(1);
-  }, [category, keywords]);
+    setSaveNotice('');
+  }, [feedKey]);
 
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
   const viewState = getNewsViewState({ loading, error, articleCount: articles.length });

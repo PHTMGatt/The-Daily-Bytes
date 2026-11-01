@@ -29,3 +29,14 @@ test('stale flag is only honored when the server explicitly sets it', async () =
   assert.equal(isStaleFeed({ cached: true }), false);
   assert.equal(isStaleFeed(null), false);
 });
+
+test('page resets to 1 as soon as the feed changes', async () => {
+  const { feedKeyFor, resolvePage } = await import('../src/utils/newsViewState.js');
+  const gaming = feedKeyFor('Technology', undefined);
+  const state = { feedKey: gaming, page: 3 };
+  assert.equal(resolvePage(state, gaming), 3);
+  assert.equal(resolvePage(state, feedKeyFor('Sports', undefined)), 1);
+  assert.equal(resolvePage(state, feedKeyFor(undefined, 'nvidia')), 1);
+  assert.equal(resolvePage(null, gaming), 1);
+  assert.equal(resolvePage({ feedKey: gaming, page: 0 }, gaming), 1);
+});
