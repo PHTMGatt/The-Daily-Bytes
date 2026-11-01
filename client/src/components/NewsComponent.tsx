@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
-import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
+import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
+import auth from '../utils/auth';
+import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
 import { getNewsViewState, isStaleFeed } from '../utils/newsViewState';
@@ -49,6 +53,10 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
   const [stale, setStale] = useState(false);
+  const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
+  const [savingUrl, setSavingUrl] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
+  const navigate = useNavigate();
   const articlesPerPage = 12;
 
   useEffect(() => {
@@ -82,6 +90,43 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
       active = false;
     };
   }, [category, keywords, page, retryKey]);
+
+  useEffect(() => {
+    if (!auth.loggedIn()) return;
+    getSavedArticles()
+      .then((saved) => setSavedUrls(new Set(saved.map((item) => item.url))))
+      .catch(() => setSavedUrls(new Set()));
+  }, []);
+
+  const toggleSaved = async (article: Article) => {
+    if (!auth.loggedIn()) {
+      navigate('/login');
+      return;
+    }
+
+    setSavingUrl(article.url);
+    setSaveNotice('');
+
+    try {
+      if (savedUrls.has(article.url)) {
+        await removeSavedArticle(article.url);
+        setSavedUrls((current) => {
+          const next = new Set(current);
+          next.delete(article.url);
+          return next;
+        });
+        setSaveNotice('Removed from saved articles.');
+      } else {
+        const saved = await saveArticle(buildSavedPayload(article, category || keywords || 'Latest'));
+        setSavedUrls((current) => new Set(current).add(saved?.url || article.url));
+        setSaveNotice('Saved to your reading list.');
+      }
+    } catch (saveError) {
+      setSaveNotice(saveError instanceof Error ? saveError.message : 'Unable to update saved articles.');
+    } finally {
+      setSavingUrl('');
+    }
+  };
 
   useEffect(() => {
     setPage(1);
@@ -136,6 +181,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
               The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
             </p>
           )}
+          {saveNotice && <p className="news-save-notice" role="status">{saveNotice}</p>}
           <div className="news-grid">
             {articles.map((article) => (
               <article key={article.url} className="news-card">
@@ -156,14 +202,27 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                   <p className="news-summary">
                     {article.description?.trim() || 'Open the original story for the latest details.'}
                   </p>
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="read-more"
-                  >
-                    Open story <FiArrowUpRight />
-                  </a>
+                  <div className="news-card-actions">
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="read-more"
+                    >
+                      Open story <FiArrowUpRight />
+                    </a>
+                    <button
+                      type="button"
+                      className={`news-save${savedUrls.has(article.url) ? ' saved' : ''}`}
+                      disabled={savingUrl === article.url}
+                      onClick={() => toggleSaved(article)}
+                      aria-pressed={savedUrls.has(article.url)}
+                      aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
+                    >
+                      {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
+                      {savedUrls.has(article.url) ? 'Saved' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
