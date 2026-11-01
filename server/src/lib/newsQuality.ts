@@ -38,6 +38,10 @@ const QUERY_PROFILES: Record<string, string[]> = {
   nintendo: ['nintendo', 'switch', 'switch 2', 'mario', 'zelda', 'pokemon', 'joy con', 'eshop'],
   steam: ['steam', 'valve', 'steam deck', 'steam machine', 'proton', 'steamos', 'half life', 'counter strike'],
   'intel cpu': ['intel', 'core ultra', 'arc', 'cpu', 'processor', 'xe', 'battlemage', 'arrow lake', 'chip'],
+  'call of duty': ['call of duty', 'warzone', 'black ops', 'modern warfare', 'activision', 'cod'],
+  fortnite: ['fortnite', 'epic games', 'battle royale', 'unreal engine', 'chapter'],
+  'grand theft auto': ['grand theft auto', 'gta', 'rockstar', 'take two', 'red dead'],
+  'elden ring': ['elden ring', 'fromsoftware', 'souls', 'shadow of the erdtree', 'bandai namco'],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
 };
 
@@ -77,6 +81,16 @@ const PROFILE_ALIASES: Record<string, string> = {
   intel: 'intel cpu',
   'intel arc': 'intel cpu',
   'game releases': 'video game releases',
+  cod: 'call of duty',
+  warzone: 'call of duty',
+  'black ops': 'call of duty',
+  'epic games': 'fortnite',
+  gta: 'grand theft auto',
+  'gta 6': 'grand theft auto',
+  'gta vi': 'grand theft auto',
+  rockstar: 'grand theft auto',
+  fromsoftware: 'elden ring',
+  'dark souls': 'elden ring',
   'video games': 'gaming',
 };
 
