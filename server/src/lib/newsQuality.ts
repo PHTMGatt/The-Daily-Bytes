@@ -42,6 +42,11 @@ const QUERY_PROFILES: Record<string, string[]> = {
   fortnite: ['fortnite', 'epic games', 'battle royale', 'unreal engine', 'chapter'],
   'grand theft auto': ['grand theft auto', 'gta', 'rockstar', 'take two', 'red dead'],
   'elden ring': ['elden ring', 'fromsoftware', 'souls', 'shadow of the erdtree', 'bandai namco'],
+  minecraft: ['minecraft', 'mojang', 'creeper', 'java edition', 'bedrock', 'mod'],
+  pokemon: ['pokemon', 'game freak', 'nintendo', 'pikachu', 'scarlet', 'violet', 'legends'],
+  battlefield: ['battlefield', 'ea', 'dice', 'electronic arts', 'battle royale', 'season'],
+  esports: ['esports', 'tournament', 'championship', 'league of legends', 'valorant', 'counter strike', 'dota', 'finals'],
+  'game industry': ['layoffs', 'studio', 'acquisition', 'acquires', 'publisher', 'developer', 'closure', 'earnings', 'union'],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
 };
 
@@ -92,10 +97,21 @@ const PROFILE_ALIASES: Record<string, string> = {
   fromsoftware: 'elden ring',
   'dark souls': 'elden ring',
   'video games': 'gaming',
+  mojang: 'minecraft',
+  'pokemon go': 'pokemon',
+  bf6: 'battlefield',
+  'electronic arts': 'battlefield',
+  valorant: 'esports',
+  'league of legends': 'esports',
+  'gaming industry': 'game industry',
+  'game studio': 'game industry',
+  'game layoffs': 'game industry',
 };
 
 export const normalizeHeadline = (value: unknown) =>
   String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[’']/g, '')
     .replace(/[^a-z0-9]+/g, ' ')

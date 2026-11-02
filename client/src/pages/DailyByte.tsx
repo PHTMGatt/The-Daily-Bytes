@@ -59,6 +59,11 @@ const quickTopics = [
   ['RAM Prices', 'RAM prices'],
   ['PC Hardware', 'PC hardware'],
   ['Game Releases', 'video game releases'],
+  ['Xbox', 'Xbox'],
+  ['PlayStation', 'PlayStation'],
+  ['Nintendo', 'Nintendo'],
+  ['Steam', 'Steam'],
+  ['Industry', 'game industry'],
 ];
 
 const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';

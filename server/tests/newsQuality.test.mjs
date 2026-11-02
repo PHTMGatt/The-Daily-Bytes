@@ -11,6 +11,10 @@ const article = (overrides = {}) => ({
   ...overrides,
 });
 
+test('normalizeHeadline folds accents instead of splitting words', () => {
+  assert.equal(normalizeHeadline('Pokémon Café’s Résumé'), 'pokemon cafes resume');
+});
+
 test('normalizeHeadline collapses punctuation, case, and whitespace', () => {
   assert.equal(normalizeHeadline('  RTX 5090: Prices DROP!!  '), 'rtx 5090 prices drop');
 });
@@ -330,6 +334,20 @@ test('typed franchise queries (Call of Duty, Fortnite, GTA, Elden Ring) reuse cu
   assert.equal(pick('Fortnite', 'Epic Games launches new Fortnite chapter', 'Shares dip on quarterly forecast'), 'https://example.com/on');
   assert.equal(pick('GTA 6', 'Rockstar details Grand Theft Auto launch', 'Museum exhibit opens downtown'), 'https://example.com/on');
   assert.equal(pick('Elden Ring', 'FromSoftware ships Elden Ring patch', 'Retail chain names new chairman'), 'https://example.com/on');
+});
+
+test('typed queries for Minecraft, Pokemon, Battlefield, esports and the game industry reuse curated profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('Minecraft', 'Mojang ships Java Edition snapshot with new mobs', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Pokémon', 'Game Freak reveals next Pokemon legends title', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Battlefield', 'DICE details Battlefield season roadmap', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Valorant', 'Esports championship finals draw record viewers', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('game layoffs', 'Publisher announces studio closure and layoffs', 'Museum exhibit opens downtown'), 'https://example.com/on');
 });
 
 test('diversifySources limits consecutive stories from one source without dropping any', () => {
