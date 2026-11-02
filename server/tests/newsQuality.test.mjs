@@ -350,6 +350,19 @@ test('typed queries for Minecraft, Pokemon, Battlefield, esports and the game in
   assert.equal(pick('game layoffs', 'Publisher announces studio closure and layoffs', 'Museum exhibit opens downtown'), 'https://example.com/on');
 });
 
+test('typed queries for Capcom, Square Enix, Ubisoft and Cyberpunk reuse curated profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('Capcom', 'Resident Evil gets new Monster Hunter crossover', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Final Fantasy', 'Square Enix confirms Dragon Quest remake date', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Ubisoft', 'Assassins Creed team details Far Cry follow-up', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Cyberpunk', 'Night City expansion ships from CD Projekt', 'Museum exhibit opens downtown'), 'https://example.com/on');
+});
+
 test('diversifySources limits consecutive stories from one source without dropping any', () => {
   const stories = ['A', 'A', 'A', 'A', 'B', 'C'].map((source, i) => ({ title: `s${i}`, source }));
   const result = diversifySources(stories);
