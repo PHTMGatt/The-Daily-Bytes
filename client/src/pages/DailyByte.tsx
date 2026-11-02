@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
 import ArticleImage from '../components/ArticleImage';
@@ -6,6 +6,8 @@ import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
 import { formatPublishedLabel } from '../utils/articleTime';
+import { createLatestRequestGuard } from '../utils/latestRequest.js';
+import { isStaleFeed } from '../utils/newsViewState.js';
 import './DailyByte.css';
 import './Bookmarks.css';
 
@@ -92,26 +94,34 @@ export default function DailyByte() {
   const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
   const [savingUrl, setSavingUrl] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
+  const [stale, setStale] = useState(false);
+  const requestGuard = useRef(createLatestRequestGuard()).current;
 
   const fetchTopic = async (query: string) => {
+    const token = requestGuard.start();
     setLoading(true);
     setError('');
     setActiveTopic(query);
 
     try {
       const data = await retrieveNews(undefined, 1, 12, query);
+      if (!requestGuard.isCurrent(token)) return;
       setArticles(Array.isArray(data.articles) ? data.articles : []);
+      setStale(isStaleFeed(data));
     } catch (err) {
+      if (!requestGuard.isCurrent(token)) return;
       setArticles([]);
+      setStale(false);
       setError(err instanceof Error ? err.message : 'Unable to load stories right now.');
     } finally {
-      setLoading(false);
+      if (requestGuard.isCurrent(token)) setLoading(false);
     }
   };
 
   useEffect(() => {
     setTopic(urlTopic);
     fetchTopic(urlTopic);
+    return () => requestGuard.invalidate();
   }, [location.search]);
 
   useEffect(() => {
@@ -207,6 +217,11 @@ export default function DailyByte() {
             </button>
           ))}
         </div>
+        {stale && (
+          <div className="db-save-notice" role="status">
+            The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
+          </div>
+        )}
         {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
       </section>
 
