@@ -245,3 +245,19 @@ body.light .saved-card-actions a {
     grid-template-columns: 1fr;
   }
 }
+
+.saved-retry {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.saved-retry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
