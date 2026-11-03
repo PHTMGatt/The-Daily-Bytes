@@ -6,6 +6,7 @@ import { parseNewsCategory } from '../../lib/newsCategory.js';
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
+import { resolveFetchedBlock } from '../../lib/feedBlock.js';
 import { ProviderCooldown, shouldCooldownOnError } from '../../lib/providerCooldown.js';
 
 const router = express.Router();
@@ -21,7 +22,7 @@ interface NewsBlock {
 }
 
 const newsCache = new TimedCache<NewsBlock>(NEWS_CACHE_TTL_MS, 100);
-const inflightFetches = new InflightRequests<NewsBlock>();
+const inflightFetches = new InflightRequests<{ block: NewsBlock; stale: boolean }>();
 // After a provider failure (e.g. Mediastack rate limiting) stop calling it for a while
 // and serve stale cache instead of retrying on every request.
 const providerCooldown = new ProviderCooldown(30 * 1000, 10 * 60 * 1000);
@@ -91,11 +92,13 @@ router.get('/:category?', async (req: Request, res: Response) => {
         articles: rankAndDedupeArticles(raw, getRankingQuery(category, keywords)),
         totalResults: reportedTotal,
       };
-      newsCache.set(cacheKey, fetched);
-      return fetched;
+      const decision = resolveFetchedBlock(fetched, newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS));
+      // A stale fallback keeps its original cache entry so it still ages out; only fresh data is stored.
+      if (!decision.stale) newsCache.set(cacheKey, decision.block, Date.now(), decision.cacheTtlMs);
+      return decision;
     });
 
-    return respond(block, { cached: false });
+    return respond(block.block, block.stale ? { cached: true, stale: true } : { cached: false });
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
     if (!(error instanceof ProviderCooldownError)) {
