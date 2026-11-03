@@ -363,6 +363,19 @@ test('typed queries for Capcom, Square Enix, Ubisoft and Cyberpunk reuse curated
   assert.equal(pick('Cyberpunk', 'Night City expansion ships from CD Projekt', 'Museum exhibit opens downtown'), 'https://example.com/on');
 });
 
+test('typed queries for Blizzard, Bethesda, Baldur\'s Gate and Nintendo franchises reuse curated profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('Diablo', 'Blizzard details Overwatch and Hearthstone seasons', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Skyrim', 'Bethesda confirms Elder Scrolls and Fallout plans', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick("Baldur's Gate 3", 'Larian ships a Divinity-era patch for Dungeons and Dragons fans', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Zelda', 'Nintendo eShop adds new Mario release', 'Museum exhibit opens downtown'), 'https://example.com/on');
+});
+
 test('diversifySources limits consecutive stories from one source without dropping any', () => {
   const stories = ['A', 'A', 'A', 'A', 'B', 'C'].map((source, i) => ({ title: `s${i}`, source }));
   const result = diversifySources(stories);

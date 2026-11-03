@@ -50,6 +50,9 @@ const QUERY_PROFILES: Record<string, string[]> = {
   pokemon: ['pokemon', 'game freak', 'nintendo', 'pikachu', 'scarlet', 'violet', 'legends'],
   battlefield: ['battlefield', 'ea', 'dice', 'electronic arts', 'battle royale', 'season'],
   esports: ['esports', 'tournament', 'championship', 'league of legends', 'valorant', 'counter strike', 'dota', 'finals'],
+  blizzard: ['blizzard', 'diablo', 'overwatch', 'world of warcraft', 'warcraft', 'battle net', 'hearthstone', 'activision'],
+  bethesda: ['bethesda', 'starfield', 'elder scrolls', 'fallout', 'skyrim', 'doom', 'id software', 'obsidian'],
+  'baldurs gate': ['baldurs gate', 'larian', 'divinity', 'dungeons and dragons', 'dnd', 'crpg', 'patch'],
   'game industry': ['layoffs', 'studio', 'acquisition', 'acquires', 'publisher', 'developer', 'closure', 'earnings', 'union'],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
 };
@@ -120,6 +123,19 @@ const PROFILE_ALIASES: Record<string, string> = {
   'gaming industry': 'game industry',
   'game studio': 'game industry',
   'game layoffs': 'game industry',
+  diablo: 'blizzard',
+  overwatch: 'blizzard',
+  'world of warcraft': 'blizzard',
+  wow: 'blizzard',
+  starfield: 'bethesda',
+  fallout: 'bethesda',
+  skyrim: 'bethesda',
+  'elder scrolls': 'bethesda',
+  'baldurs gate 3': 'baldurs gate',
+  larian: 'baldurs gate',
+  zelda: 'nintendo',
+  mario: 'nintendo',
+  'super mario': 'nintendo',
 };
 
 export const normalizeHeadline = (value: unknown) =>
