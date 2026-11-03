@@ -34,6 +34,7 @@ const SideNav = () => {
           return (
             <Link
               to={item.to}
+              aria-current={isActive(item.to, item.query) ? 'page' : undefined}
               key={item.label}
               className={`sidenav-link ${isActive(item.to, item.query) ? 'active' : ''}`}
             >
