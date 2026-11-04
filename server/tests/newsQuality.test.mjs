@@ -503,3 +503,22 @@ test('technology boost lifts gaming hardware stories without dropping other stor
   assert.equal(results.length, 2);
   assert.match(results[0].title, /NVIDIA/);
 });
+
+test('multi-word queries containing a known franchise reuse its curated profile', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX 5090 deals roundup', url: 'https://example.com/a', description: 'A discount roundup.' }),
+    article({ title: 'RTX 5090 supply check', url: 'https://example.com/b', description: 'GeForce supply at retailers, DLSS support, fresh GPU shipments.' }),
+  ], 'rtx 5090 news');
+
+  assert.equal(results[0].url, 'https://example.com/b');
+});
+
+test('very short aliases do not hijack unrelated phrases', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Wow factor in new phones', url: 'https://example.com/a' }),
+    article({ title: 'Warcraft raid world first wow factor', url: 'https://example.com/b', description: 'Blizzard diablo overwatch' }),
+  ], 'wow factor');
+
+  // No Blizzard profile applied: ordering follows plain relevance (both title-match; stable by index).
+  assert.equal(results[0].url, 'https://example.com/a');
+});

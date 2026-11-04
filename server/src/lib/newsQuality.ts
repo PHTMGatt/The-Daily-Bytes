@@ -226,13 +226,36 @@ const hasWord = (words: Set<string>, word: string) =>
 const matchesTerm = (normalizedText: string, words: Set<string>, term: string) =>
   term.includes(' ') ? normalizedText.includes(term) : hasWord(words, term);
 
+// Aliases that are also everyday words or abbreviations only count when they are the whole query.
+const AMBIGUOUS_ALIASES = new Set(['wow', 'cod', 'sony', 'mario', 'hardware', 'intel', 'valve']);
+
+const PROFILE_LOOKUP: Array<[string, string]> = [
+  ...Object.keys(QUERY_PROFILES).map((key): [string, string] => [key, key]),
+  ...Object.entries(PROFILE_ALIASES),
+]
+  .filter(([term]) => !AMBIGUOUS_ALIASES.has(term))
+  .sort((a, b) => b[0].length - a[0].length);
+
+// Exact query or alias first; otherwise a typed phrase like "rtx 5090 stock" reuses the profile of
+// the longest known term it contains as whole words.
+const resolveProfile = (normalizedQuery: string) => {
+  const direct = QUERY_PROFILES[PROFILE_ALIASES[normalizedQuery] ?? normalizedQuery];
+  if (direct) return direct;
+
+  const padded = ` ${normalizedQuery} `;
+  for (const [term, key] of PROFILE_LOOKUP) {
+    if (padded.includes(` ${term} `)) return QUERY_PROFILES[key];
+  }
+  return undefined;
+};
+
 const profileBonus = (
   title: string,
   description: string,
   normalizedQuery: string,
   queryTokens: Set<string>,
 ) => {
-  const profile = QUERY_PROFILES[PROFILE_ALIASES[normalizedQuery] ?? normalizedQuery];
+  const profile = resolveProfile(normalizedQuery);
   if (!profile) return 0;
 
   const titleWords = new Set(title.split(' ').filter(Boolean));
