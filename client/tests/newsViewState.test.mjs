@@ -40,3 +40,13 @@ test('page resets to 1 as soon as the feed changes', async () => {
   assert.equal(resolvePage(null, gaming), 1);
   assert.equal(resolvePage({ feedKey: gaming, page: 0 }, gaming), 1);
 });
+
+test('an empty later page offers a way back to page 1, the first page does not', async () => {
+  const { getEmptyStateCopy } = await import('../src/utils/newsViewState.js');
+  const later = getEmptyStateCopy(3);
+  assert.equal(later.canReset, true);
+  assert.match(later.message, /page 3/);
+  const first = getEmptyStateCopy(1);
+  assert.equal(first.canReset, false);
+  assert.equal(first.title, 'No stories found');
+});

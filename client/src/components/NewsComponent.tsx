@@ -7,7 +7,7 @@ import auth from '../utils/auth';
 import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
-import { feedKeyFor, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
+import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
 interface NewsSource {
@@ -138,6 +138,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
 
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
   const viewState = getNewsViewState({ loading, error, articleCount: articles.length });
+  const emptyCopy = getEmptyStateCopy(page);
   const resolvedHeading = heading || (category ? `${category} News` : 'Latest News');
   const resolvedSubtitle = subtitle || (
     category
@@ -168,13 +169,23 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
           <button type="button" onClick={() => setRetryKey((current) => current + 1)}>
             Try again
           </button>
+          {page > 1 && (
+            <button type="button" onClick={() => setPage(() => 1)}>
+              Back to first page
+            </button>
+          )}
         </div>
       )}
 
       {viewState === 'empty' && (
         <div className="news-state-card">
-          <h2>No stories found</h2>
-          <p>This feed is quiet right now. Check back soon or use the search above.</p>
+          <h2>{emptyCopy.title}</h2>
+          <p>{emptyCopy.message}</p>
+          {emptyCopy.canReset && (
+            <button type="button" onClick={() => setPage(() => 1)}>
+              Back to first page
+            </button>
+          )}
         </div>
       )}
 
