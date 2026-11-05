@@ -191,6 +191,16 @@ const stripSourceSuffix = (title: unknown, source: unknown) => {
   return match && normalizeHeadline(match[2]) === outlet ? match[1] : text;
 };
 
+// Syndicated "Global X Market Size, Share, CAGR 2025-2032" press releases are paid market-research
+// promotion, not news. Match only unmistakable report phrasing so genuine "GPU market share" stories stay.
+const MARKET_REPORT_TITLE =
+  /\bmarket\s+(size|research|report|analysis|forecast|outlook|insights|trends)\b|\b(industry|market)\s+report\b|\bkey\s+players\b|\bmarket\b.*\b(worth|to reach|valued at)\b.*\$/i;
+const MARKET_REPORT_CAGR = /\bcagr\b|compound annual growth|forecast period/i;
+
+export const isMarketReportSpam = (article: NewsQualityArticle) =>
+  MARKET_REPORT_TITLE.test(String(article.title || '')) ||
+  MARKET_REPORT_CAGR.test(`${article.title || ''} ${article.description || ''}`);
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -372,7 +382,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

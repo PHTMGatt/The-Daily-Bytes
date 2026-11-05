@@ -522,3 +522,23 @@ test('very short aliases do not hijack unrelated phrases', () => {
   // No Blizzard profile applied: ordering follows plain relevance (both title-match; stable by index).
   assert.equal(results[0].url, 'https://example.com/a');
 });
+
+test('rankAndDedupeArticles drops market-research report spam but keeps real market news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Global Graphics Card Market Size, Share & Growth Report 2025-2032', url: 'https://spam.example/1' }),
+    article({ title: 'Gaming Laptop Industry to Reach $50B by 2031', description: 'The market is expected to grow at a CAGR of 8.2% during the forecast period.', url: 'https://spam.example/2' }),
+    article({ title: 'Key Players in the Gaming Monitor Market Research Report', url: 'https://spam.example/3' }),
+    article({ title: 'AMD gains GPU market share as RTX 50 supply tightens', url: 'https://news.example/1' }),
+    article({ title: 'Memory prices climb as DRAM market tightens', url: 'https://news.example/2' }),
+  ], 'gpu');
+
+  assert.deepEqual(results.map((item) => item.url).sort(), ['https://news.example/1', 'https://news.example/2']);
+});
+
+test('market-report filtering also applies when there is no query', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Cloud Gaming Market Size Worth $20 Billion', url: 'https://spam.example/4' }),
+    article({ title: 'Valve announces new Steam update', url: 'https://news.example/3' }),
+  ], '');
+  assert.deepEqual(results.map((item) => item.url), ['https://news.example/3']);
+});
