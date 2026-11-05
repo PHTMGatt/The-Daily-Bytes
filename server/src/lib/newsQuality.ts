@@ -209,6 +209,18 @@ const GAMBLING_PROMO =
 export const isGamblingPromo = (article: NewsQualityArticle) =>
   GAMBLING_PROMO.test(String(article.title || ''));
 
+// Daily puzzle walkthroughs ("Wordle today: hints and answer", "NYT Connections answers #878") repeat
+// every day and crowd out real news. Require a puzzle name plus hint/answer phrasing so stories about
+// the games themselves ("NYT adds a new Wordle spin-off") are kept.
+const PUZZLE_NAME = /\b(wordle|connections|strands|quordle|octordle|spelling bee|the mini|mini crossword|contexto|heardle|nerdle|waffle)\b/i;
+const PUZZLE_ANSWER = /\b(hints?|answers?|clues?|solutions?|spangram|today'?s)\b/i;
+
+export const isDailyPuzzlePost = (article: NewsQualityArticle) => {
+  const title = String(article.title || '');
+  return PUZZLE_NAME.test(title) && PUZZLE_ANSWER.test(title) && /\b(today|daily|#\d+|nov(ember)?|hints?|answers?)\b/i.test(title)
+    && !/\b(adds?|launch(es)?|spin-?off|new game|lawsuit|acquir\w*)\b/i.test(title);
+};
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -390,7 +402,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isDailyPuzzlePost(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

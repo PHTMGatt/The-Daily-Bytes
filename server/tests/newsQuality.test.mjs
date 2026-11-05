@@ -559,3 +559,20 @@ test('rankAndDedupeArticles drops gambling and bonus-code promotion but keeps ge
     ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
   );
 });
+
+test('rankAndDedupeArticles drops daily puzzle hint/answer posts but keeps real puzzle-game news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Wordle today: hints and answer for November 5', url: 'https://example.com/puzzle-1' }),
+    article({ title: "NYT Connections answers today (#878) - hints for Nov 5", url: 'https://example.com/puzzle-2' }),
+    article({ title: "Today's Quordle answers and clues", url: 'https://example.com/puzzle-3' }),
+    article({ title: 'NYT Strands hints, spangram and answers for today', url: 'https://example.com/puzzle-4' }),
+    article({ title: 'The New York Times is adding a new Wordle spin-off game', url: 'https://example.com/real-1' }),
+    article({ title: 'Answer to the RTX 5090 shortage: Nvidia expands production', url: 'https://example.com/real-2' }),
+    article({ title: 'Nintendo shows new Switch 2 bundle', url: 'https://example.com/real-3' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});
