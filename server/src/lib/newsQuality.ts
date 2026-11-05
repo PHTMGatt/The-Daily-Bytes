@@ -201,6 +201,14 @@ export const isMarketReportSpam = (article: NewsQualityArticle) =>
   MARKET_REPORT_TITLE.test(String(article.title || '')) ||
   MARKET_REPORT_CAGR.test(`${article.title || ''} ${article.description || ''}`);
 
+// Affiliate-style gambling promotion ("best online casino sites", "no deposit bonus", "sportsbook promo
+// codes") is not news. Match only promotional phrasing so reporting on casinos or loot boxes survives.
+const GAMBLING_PROMO =
+  /\b(online|real[- ]money)\s+(casinos?|slots?|poker|betting)\b|\b(casino|sportsbook|betting)\s+(sites?|apps?|bonus(es)?|promos?)\b|\bno[- ]deposit\b|\bfree\s+spins\b|\b(sportsbook|betting|casino|bonus)\s+(promo\s+)?codes?\b|\bslots?\s+sites?\b/i;
+
+export const isGamblingPromo = (article: NewsQualityArticle) =>
+  GAMBLING_PROMO.test(String(article.title || ''));
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -382,7 +390,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

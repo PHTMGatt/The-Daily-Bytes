@@ -542,3 +542,20 @@ test('market-report filtering also applies when there is no query', () => {
   ], '');
   assert.deepEqual(results.map((item) => item.url), ['https://news.example/3']);
 });
+
+test('rankAndDedupeArticles drops gambling and bonus-code promotion but keeps genuine casino or betting news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Best Online Casino Sites for Real Money in 2026', url: 'https://example.com/casino-1' }),
+    article({ title: 'Top sportsbook promo codes: claim your bonus bets today', url: 'https://example.com/casino-2' }),
+    article({ title: 'Best no deposit bonus offers this week', url: 'https://example.com/casino-3' }),
+    article({ title: 'Free spins and welcome bonus: new slots sites ranked', url: 'https://example.com/casino-4' }),
+    article({ title: 'Casino operator confirms ransomware attack on its network', url: 'https://example.com/real-1' }),
+    article({ title: 'Valve cracks down on loot box gambling in Counter-Strike 2', url: 'https://example.com/real-2' }),
+    article({ title: 'Nintendo shows new Switch 2 bundle', url: 'https://example.com/real-3' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});
