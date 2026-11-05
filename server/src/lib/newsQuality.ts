@@ -209,6 +209,16 @@ const GAMBLING_PROMO =
 export const isGamblingPromo = (article: NewsQualityArticle) =>
   GAMBLING_PROMO.test(String(article.title || ''));
 
+// Coupon/discount-code listings ("Steam coupon codes", "use code SAVE20 for 20% off") are affiliate
+// promotion. Match code-offer phrasing only, so real price cuts, sales and coupon-scam reporting survive.
+const COUPON_PROMO =
+  /\b(coupon|promo|discount|voucher|referral)\s+codes?\b|\bcoupons?\s+(and|&)\s+(deals|promos?|codes?)\b|\bsave\s+\d+%\s+with\s+(this\s+)?(coupon|code)\b/i;
+
+const COUPON_CODE_OFFER = /\b([Uu]se|[Ww]ith|[Ee]nter|[Aa]pply)\s+(the\s+)?(code|coupon)\s+[A-Z0-9]{4,}\b/;
+
+export const isCouponPromo = (article: NewsQualityArticle) =>
+  (COUPON_PROMO.test(String(article.title || '')) || COUPON_CODE_OFFER.test(String(article.title || ''))) && !/\b(scam|fake|phishing|fraud|lawsuit|sues?)\b/i.test(String(article.title || ''));
+
 // Daily puzzle walkthroughs ("Wordle today: hints and answer", "NYT Connections answers #878") repeat
 // every day and crowd out real news. Require a puzzle name plus hint/answer phrasing so stories about
 // the games themselves ("NYT adds a new Wordle spin-off") are kept.
@@ -402,7 +412,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isDailyPuzzlePost(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isDailyPuzzlePost(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

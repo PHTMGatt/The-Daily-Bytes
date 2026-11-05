@@ -576,3 +576,20 @@ test('rankAndDedupeArticles drops daily puzzle hint/answer posts but keeps real 
     ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
   );
 });
+
+test('rankAndDedupeArticles drops coupon and discount-code listings but keeps genuine deal and pricing news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Best Steam coupon codes and promo codes for November 2026', url: 'https://example.com/coupon-1' }),
+    article({ title: 'Newegg discount code: save 15% on GPUs with this coupon', url: 'https://example.com/coupon-2' }),
+    article({ title: 'Use code SAVE20 for 20% off gaming laptops', url: 'https://example.com/coupon-3' }),
+    article({ title: 'Studio ships update with code review tools for modders', url: 'https://example.com/real-4' }),
+    article({ title: 'Nvidia cuts RTX 5070 price by $50 in the US', url: 'https://example.com/real-1' }),
+    article({ title: 'Steam Autumn Sale starts with deep discounts on Capcom games', url: 'https://example.com/real-2' }),
+    article({ title: 'Valve explains why the Steam Deck coupon scam is spreading', url: 'https://example.com/real-3' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3', 'https://example.com/real-4'],
+  );
+});
