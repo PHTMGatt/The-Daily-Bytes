@@ -68,6 +68,11 @@ const quickTopics = [
   ['Nintendo', 'Nintendo'],
   ['Steam', 'Steam'],
   ['Industry', 'game industry'],
+  ['CPUs', 'CPU'],
+  ['Handhelds', 'handheld PC'],
+  ['Esports', 'esports'],
+  ['VR', 'VR'],
+  ['AI Chips', 'AI chips'],
 ];
 
 const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
