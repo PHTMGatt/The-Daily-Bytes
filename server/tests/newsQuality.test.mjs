@@ -594,6 +594,23 @@ test('rankAndDedupeArticles drops coupon and discount-code listings but keeps ge
   );
 });
 
+test('rankAndDedupeArticles drops affiliate shopping roundups but keeps price and sales reporting', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Best Black Friday gaming monitor deals 2026', url: 'https://example.com/shop-1' }),
+    article({ title: 'The 25 best gift ideas for PC gamers', url: 'https://example.com/shop-2' }),
+    article({ title: 'GPU buying guide: which graphics card should you get?', url: 'https://example.com/shop-3' }),
+    article({ title: 'Cyber Monday deals live blog: the best offers right now', url: 'https://example.com/shop-4' }),
+    article({ title: 'DDR5 RAM prices jump 30% as memory shortage deepens', url: 'https://example.com/real-1' }),
+    article({ title: 'Steam Autumn Sale starts with deep discounts on Capcom games', url: 'https://example.com/real-2' }),
+    article({ title: 'FTC sues retailer over fake Black Friday deals', url: 'https://example.com/real-3' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});
+
 test('rankAndDedupeArticles drops sponsored posts and paid wire press releases but keeps real reporting', () => {
   const results = rankAndDedupeArticles([
     article({ title: 'Sponsored: Upgrade your rig with Acme gaming chairs', url: 'https://example.com/ad-1' }),

@@ -266,6 +266,16 @@ export const isDailyPuzzlePost = (article: NewsQualityArticle) => {
     && !/\b(adds?|launch(es)?|spin-?off|new game|lawsuit|acquir\w*)\b/i.test(title);
 };
 
+// Affiliate shopping roundups ("Best Black Friday gaming deals", "holiday gift guide", "buying guide")
+// repeat every shopping season and are link bait, not news. Match roundup phrasing only, so reporting
+// on prices, sales events or retailers ("RAM prices jump", "Steam Autumn Sale starts") survives.
+const SHOPPING_ROUNDUP =
+  /\bgift\s+(guide|ideas)\b|\b(buyer'?s|buying|shopping)\s+guide\b|\b(black friday|cyber monday|prime day|holiday)\b.*\bdeals?\b|\bdeals?\b.*\b(live blog|live updates|roundup|right now|so far)\b|\bbest\b.*\bdeals?\b/i;
+
+export const isShoppingRoundup = (article: NewsQualityArticle) =>
+  SHOPPING_ROUNDUP.test(String(article.title || '')) &&
+  !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc)\b/i.test(String(article.title || ''));
+
 // Paid placements ("Sponsored: ...", "Advertorial") and wire-service press-release outlets are
 // promotion, not reporting. Match explicit labels and known paid-release sources only.
 const SPONSORED_LABEL = /^\s*[\[(]?\s*(sponsored|advertorial|paid (post|content|partnership)|partner content|promoted)\s*[\])]?\s*(:|-|\||–|—|\]|\))/i;
@@ -459,7 +469,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isDailyPuzzlePost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isShoppingRoundup(article) || isDailyPuzzlePost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);
