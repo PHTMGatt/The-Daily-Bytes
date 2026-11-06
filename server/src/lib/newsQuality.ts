@@ -231,6 +231,18 @@ export const isDailyPuzzlePost = (article: NewsQualityArticle) => {
     && !/\b(adds?|launch(es)?|spin-?off|new game|lawsuit|acquir\w*)\b/i.test(title);
 };
 
+// Paid placements ("Sponsored: ...", "Advertorial") and wire-service press-release outlets are
+// promotion, not reporting. Match explicit labels and known paid-release sources only.
+const SPONSORED_LABEL = /^\s*[\[(]?\s*(sponsored|advertorial|paid (post|content|partnership)|partner content|promoted)\s*[\])]?\s*(:|-|\||–|—|\]|\))/i;
+const PRESS_RELEASE_SOURCES = new Set([
+  'pr newswire', 'prnewswire', 'globenewswire', 'globe newswire', 'business wire', 'businesswire',
+  'ein presswire', 'einpresswire', 'openpr', 'openpr com', 'accesswire', 'newsfile', 'issuewire',
+]);
+
+export const isSponsoredOrPressRelease = (article: NewsQualityArticle) =>
+  SPONSORED_LABEL.test(String(article.title || '')) ||
+  PRESS_RELEASE_SOURCES.has(normalizeHeadline(article.source));
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -412,7 +424,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isDailyPuzzlePost(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isDailyPuzzlePost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

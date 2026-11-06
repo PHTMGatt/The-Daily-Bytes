@@ -593,3 +593,21 @@ test('rankAndDedupeArticles drops coupon and discount-code listings but keeps ge
     ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3', 'https://example.com/real-4'],
   );
 });
+
+test('rankAndDedupeArticles drops sponsored posts and paid wire press releases but keeps real reporting', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Sponsored: Upgrade your rig with Acme gaming chairs', url: 'https://example.com/ad-1' }),
+    article({ title: '[Sponsored] The best VPN for gamers', url: 'https://example.com/ad-2' }),
+    article({ title: 'Advertorial: Why Acme SSDs are faster', url: 'https://example.com/ad-3' }),
+    article({ title: 'Acme launches new GPU cooler', url: 'https://example.com/pr-1', source: 'PR Newswire' }),
+    article({ title: 'Acme Studios announces funding round', url: 'https://example.com/pr-2', source: 'openPR' }),
+    article({ title: 'Acme unveils headset', url: 'https://example.com/pr-3', source: 'EIN Presswire' }),
+    article({ title: 'Sponsorship deal ends as esports team leaves league', url: 'https://example.com/real-1', source: 'PC Gamer' }),
+    article({ title: 'Nvidia confirms RTX supply update', url: 'https://example.com/real-2', source: 'Tom\'s Hardware' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2'],
+  );
+});
