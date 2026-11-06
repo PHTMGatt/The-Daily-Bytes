@@ -611,3 +611,30 @@ test('rankAndDedupeArticles drops sponsored posts and paid wire press releases b
     ['https://example.com/real-1', 'https://example.com/real-2'],
   );
 });
+
+test('"vr headset" queries reuse the VR profile and rank headset stories above generic mentions', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Headset makers report quarterly sales', url: 'https://example.com/generic', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: 'Meta Quest 3 gets SteamVR streaming update', url: 'https://example.com/quest', published_at: '2026-10-26T12:00:00Z' }),
+  ], 'vr headset', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/quest');
+});
+
+test('"ai chips" queries reuse the AI hardware profile', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Chips and snacks recall announced', url: 'https://example.com/snacks', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: 'Nvidia Blackwell data center GPU demand lifts AI accelerator supply', url: 'https://example.com/accel', published_at: '2026-10-26T12:00:00Z' }),
+  ], 'ai chips', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/accel');
+});
+
+test('the bare word "ai" inside an unrelated phrase does not hijack ranking', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Ai Weiwei opens new exhibition', url: 'https://example.com/art' }),
+    article({ title: 'Ai Weiwei exhibition with openai chatgpt gpu inference', url: 'https://example.com/ai' }),
+  ], 'ai weiwei');
+
+  assert.equal(results[0].url, 'https://example.com/art');
+});

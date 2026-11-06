@@ -54,6 +54,11 @@ const QUERY_PROFILES: Record<string, string[]> = {
   bethesda: ['bethesda', 'starfield', 'elder scrolls', 'fallout', 'skyrim', 'doom', 'id software', 'obsidian'],
   'baldurs gate': ['baldurs gate', 'larian', 'divinity', 'dungeons and dragons', 'dnd', 'crpg', 'patch'],
   'game industry': ['layoffs', 'studio', 'acquisition', 'acquires', 'publisher', 'developer', 'closure', 'earnings', 'union'],
+  vr: ['vr', 'virtual reality', 'meta quest', 'quest 3', 'psvr2', 'steamvr', 'vision pro', 'headset', 'valve index'],
+  'ai chips': [
+    'ai', 'nvidia', 'blackwell', 'gpu', 'accelerator', 'data center', 'hbm', 'inference', 'openai',
+    'chip', 'semiconductor', 'tsmc', 'datacenter',
+  ],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
 };
 
@@ -135,6 +140,14 @@ const PROFILE_ALIASES: Record<string, string> = {
   larian: 'baldurs gate',
   zelda: 'nintendo',
   mario: 'nintendo',
+  'vr headset': 'vr',
+  'virtual reality': 'vr',
+  'meta quest': 'vr',
+  psvr2: 'vr',
+  'ai chip': 'ai chips',
+  'ai gpu': 'ai chips',
+  'ai hardware': 'ai chips',
+  'ai accelerator': 'ai chips',
   'super mario': 'nintendo',
 };
 
