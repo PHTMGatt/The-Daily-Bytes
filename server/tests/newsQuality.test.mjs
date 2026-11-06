@@ -638,3 +638,32 @@ test('the bare word "ai" inside an unrelated phrase does not hijack ranking', ()
 
   assert.equal(results[0].url, 'https://example.com/art');
 });
+
+test('bare hardware terms ("ram", "ssd", "dlss") reuse their curated profiles', () => {
+  const cases = [
+    ['ram', 'DDR5 kit prices climb as DRAM supply tightens', 'Council budget vote delayed again'],
+    ['ssd', 'NVMe SSD deals hit record lows for storage upgrades', 'Council budget vote delayed again'],
+    ['dlss', 'Nvidia RTX GeForce adds DLSS support in new patch', 'Council budget vote delayed again'],
+  ];
+  for (const [query, good, plain] of cases) {
+    const results = rankAndDedupeArticles([
+      article({ title: plain, url: 'https://example.com/plain', published_at: '2026-10-27T12:00:00Z' }),
+      article({ title: good, url: 'https://example.com/good', published_at: '2026-10-26T12:00:00Z' }),
+    ], query, Date.parse('2026-10-28T12:00:00Z'));
+    assert.equal(results[0].url, 'https://example.com/good', query);
+  }
+});
+
+test('"cpu" and "handheld" queries use dedicated profiles', () => {
+  const cpu = rankAndDedupeArticles([
+    article({ title: 'Council budget vote delayed again', url: 'https://example.com/plain', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: 'Ryzen X3D processor tops gaming benchmark against Core Ultra', url: 'https://example.com/good', published_at: '2026-10-26T12:00:00Z' }),
+  ], 'cpu', Date.parse('2026-10-28T12:00:00Z'));
+  assert.equal(cpu[0].url, 'https://example.com/good');
+
+  const handheld = rankAndDedupeArticles([
+    article({ title: 'Council budget vote delayed again', url: 'https://example.com/plain', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: 'ROG Ally and Steam Deck rivals: Legion Go gets SteamOS update', url: 'https://example.com/good', published_at: '2026-10-26T12:00:00Z' }),
+  ], 'handheld', Date.parse('2026-10-28T12:00:00Z'));
+  assert.equal(handheld[0].url, 'https://example.com/good');
+});
