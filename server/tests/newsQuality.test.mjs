@@ -611,6 +611,23 @@ test('rankAndDedupeArticles drops affiliate shopping roundups but keeps price an
   );
 });
 
+test('rankAndDedupeArticles drops leading "Best <gear>" buying roundups but keeps awards and news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Best graphics cards for gaming in 2026', url: 'https://example.com/gear-1' }),
+    article({ title: 'The 10 best gaming laptops you can buy right now', url: 'https://example.com/gear-2' }),
+    article({ title: 'Best budget gaming headsets', url: 'https://example.com/gear-3' }),
+    article({ title: 'Best SSDs for PS5 and Xbox Series X', url: 'https://example.com/gear-4' }),
+    article({ title: 'Baldur\'s Gate 3 wins best RPG at the awards', url: 'https://example.com/real-1' }),
+    article({ title: 'Best Buy to stop selling physical PC games', url: 'https://example.com/real-2' }),
+    article({ title: 'Nvidia RTX 5090 review: the best graphics card ever made?', url: 'https://example.com/real-3' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});
+
 test('rankAndDedupeArticles drops sponsored posts and paid wire press releases but keeps real reporting', () => {
   const results = rankAndDedupeArticles([
     article({ title: 'Sponsored: Upgrade your rig with Acme gaming chairs', url: 'https://example.com/ad-1' }),

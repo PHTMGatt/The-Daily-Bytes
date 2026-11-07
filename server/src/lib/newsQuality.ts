@@ -272,8 +272,14 @@ export const isDailyPuzzlePost = (article: NewsQualityArticle) => {
 const SHOPPING_ROUNDUP =
   /\bgift\s+(guide|ideas)\b|\b(buyer'?s|buying|shopping)\s+guide\b|\b(black friday|cyber monday|prime day|holiday)\b.*\bdeals?\b|\bdeals?\b.*\b(live blog|live updates|roundup|right now|so far)\b|\bbest\b.*\bdeals?\b/i;
 
+// "Best graphics cards for gaming" style buying lists open the headline with "Best <gear>"; real
+// news rarely does ("Best Buy ...", "wins best RPG" do not match since gear must follow "best").
+const GEAR_NOUN =
+  '(?:gaming\\s+|budget\\s+|cheap\\s+|wireless\\s+|mechanical\\s+|pc\\s+)*(?:laptops?|monitors?|graphics\\s+cards?|gpus?|cpus?|processors?|ssds?|hard\\s+drives?|ram|memory|headsets?|headphones|keyboards?|mice|mouse|controllers?|handhelds?|chairs?|desks?|routers?|webcams?|microphones?|capture\\s+cards?|motherboards?|power\\s+supplies|psus?|cases|coolers?|pc\\s+builds?|prebuilt\\s+pcs?|gaming\\s+pcs?|tvs?|consoles?)';
+const BEST_GEAR_ROUNDUP = new RegExp(`^\\s*(?:the\\s+)?(?:\\d+\\s+)?best\\s+${GEAR_NOUN}\\b`, 'i');
+
 export const isShoppingRoundup = (article: NewsQualityArticle) =>
-  SHOPPING_ROUNDUP.test(String(article.title || '')) &&
+  (SHOPPING_ROUNDUP.test(String(article.title || '')) || BEST_GEAR_ROUNDUP.test(String(article.title || ''))) &&
   !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc)\b/i.test(String(article.title || ''));
 
 // Paid placements ("Sponsored: ...", "Advertorial") and wire-service press-release outlets are
