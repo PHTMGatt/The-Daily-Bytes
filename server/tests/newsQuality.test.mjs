@@ -732,3 +732,21 @@ test('stories with unknown or future timestamps are not treated as stale', () =>
 
   assert.equal(results[0].url, 'https://b.example/undated');
 });
+
+test('new franchise and hardware aliases reuse curated profiles and outrank generic matches', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const cases = [
+    ['silksong', 'Hollow Knight Silksong DLC patch from Team Cherry', 'Silk prices rise at the textile market'],
+    ['helldivers 2', 'Arrowhead ships Helldivers warbond and patch', 'Divers rescued off the coast near the harbour'],
+    ['ps6', 'PS6 and Xbox Next specs rumored for next gen console launch', 'Ps6 printer firmware notice for offices'],
+    ['oled', 'QD OLED gaming monitor hits 360Hz with FreeSync support', 'Oled lighting retrofit for office buildings'],
+    ['roblox', 'Roblox adds child safety moderation for creator experiences', 'Roblox market opens higher on Tuesday'],
+  ];
+  for (const [query, good, bad] of cases) {
+    const results = rankAndDedupeArticles([
+      article({ title: bad, url: 'https://example.com/bad', published_at: '2026-10-27T12:00:00Z' }),
+      article({ title: good, url: 'https://example.com/good', published_at: '2026-10-26T12:00:00Z' }),
+    ], query, now);
+    assert.equal(results[0].url, 'https://example.com/good', query);
+  }
+});

@@ -66,6 +66,12 @@ const QUERY_PROFILES: Record<string, string[]> = {
     'ai', 'nvidia', 'blackwell', 'gpu', 'accelerator', 'data center', 'hbm', 'inference', 'openai',
     'chip', 'semiconductor', 'tsmc', 'datacenter',
   ],
+  roblox: ['roblox', 'robux', 'creator', 'experience', 'moderation', 'child safety', 'developer exchange'],
+  'apex legends': ['apex legends', 'respawn', 'electronic arts', 'ea', 'season', 'ranked', 'battle royale', 'legend'],
+  helldivers: ['helldivers', 'arrowhead', 'sony', 'playstation', 'super earth', 'warbond', 'patch', 'steam'],
+  'hollow knight': ['hollow knight', 'silksong', 'team cherry', 'metroidvania', 'hornet', 'dlc', 'patch'],
+  'next gen consoles': ['ps6', 'next gen', 'xbox next', 'project amethyst', 'magnus', 'console', 'playstation', 'xbox', 'amd'],
+  'gaming monitor': ['monitor', 'oled', 'refresh rate', 'hz', 'qd oled', 'g sync', 'freesync', 'ultrawide', '4k', 'gaming'],
   'video game releases': ['release', 'launch', 'game', 'gaming', 'steam', 'xbox', 'playstation', 'nintendo'],
 };
 
@@ -171,6 +177,20 @@ const PROFILE_ALIASES: Record<string, string> = {
   'ai hardware': 'ai chips',
   'ai accelerator': 'ai chips',
   'super mario': 'nintendo',
+  'roblox games': 'roblox',
+  apex: 'apex legends',
+  'apex legends season': 'apex legends',
+  'helldivers 2': 'helldivers',
+  silksong: 'hollow knight',
+  'hollow knight silksong': 'hollow knight',
+  ps6: 'next gen consoles',
+  'next gen console': 'next gen consoles',
+  'xbox next': 'next gen consoles',
+  'next gen xbox': 'next gen consoles',
+  monitor: 'gaming monitor',
+  monitors: 'gaming monitor',
+  'gaming monitors': 'gaming monitor',
+  oled: 'gaming monitor',
 };
 
 export const normalizeHeadline = (value: unknown) =>
