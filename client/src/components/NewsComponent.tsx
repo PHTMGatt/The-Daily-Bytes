@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
+import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
+import auth from '../utils/auth';
+import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
-import { getNewsViewState, isStaleFeed } from '../utils/newsViewState';
+import { formatPublishedLabel } from '../utils/articleTime';
+import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
 interface NewsSource {
@@ -30,15 +35,8 @@ interface NewsComponentProps {
   keywords?: string;
 }
 
-const formatPublishedDate = (article: Article) => {
-  const value = article.publishedAt || article.published_at;
-  if (!value) return 'Recent';
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? 'Recent'
-    : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const formatPublishedDate = (article: Article) =>
+  formatPublishedLabel(article.publishedAt || article.published_at);
 
 const getSource = (article: Article) => {
   if (typeof article.source === 'string') return article.source;
@@ -51,10 +49,18 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const feedKey = feedKeyFor(category, keywords);
+  const [pageState, setPageState] = useState({ feedKey, page: 1 });
+  const page = resolvePage(pageState, feedKey);
+  const setPage = (update: (current: number) => number) =>
+    setPageState({ feedKey, page: update(page) });
   const [retryKey, setRetryKey] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
   const [stale, setStale] = useState(false);
+  const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
+  const [savingUrl, setSavingUrl] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
+  const navigate = useNavigate();
   const articlesPerPage = 12;
 
   useEffect(() => {
@@ -90,11 +96,49 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   }, [category, keywords, page, retryKey]);
 
   useEffect(() => {
-    setPage(1);
-  }, [category, keywords]);
+    if (!auth.loggedIn()) return;
+    getSavedArticles()
+      .then((saved) => setSavedUrls(new Set(saved.map((item) => item.url))))
+      .catch(() => setSavedUrls(new Set()));
+  }, []);
+
+  const toggleSaved = async (article: Article) => {
+    if (!auth.loggedIn()) {
+      navigate('/login');
+      return;
+    }
+
+    setSavingUrl(article.url);
+    setSaveNotice('');
+
+    try {
+      if (savedUrls.has(article.url)) {
+        await removeSavedArticle(article.url);
+        setSavedUrls((current) => {
+          const next = new Set(current);
+          next.delete(article.url);
+          return next;
+        });
+        setSaveNotice('Removed from saved articles.');
+      } else {
+        const saved = await saveArticle(buildSavedPayload(article, category || keywords || 'Latest'));
+        setSavedUrls((current) => new Set(current).add(saved?.url || article.url));
+        setSaveNotice('Saved to your reading list.');
+      }
+    } catch (saveError) {
+      setSaveNotice(saveError instanceof Error ? saveError.message : 'Unable to update saved articles.');
+    } finally {
+      setSavingUrl('');
+    }
+  };
+
+  useEffect(() => {
+    setSaveNotice('');
+  }, [feedKey]);
 
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
   const viewState = getNewsViewState({ loading, error, articleCount: articles.length });
+  const emptyCopy = getEmptyStateCopy(page);
   const resolvedHeading = heading || (category ? `${category} News` : 'Latest News');
   const resolvedSubtitle = subtitle || (
     category
@@ -125,13 +169,23 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
           <button type="button" onClick={() => setRetryKey((current) => current + 1)}>
             Try again
           </button>
+          {page > 1 && (
+            <button type="button" onClick={() => setPage(() => 1)}>
+              Back to first page
+            </button>
+          )}
         </div>
       )}
 
       {viewState === 'empty' && (
         <div className="news-state-card">
-          <h2>No stories found</h2>
-          <p>This feed is quiet right now. Check back soon or use the search above.</p>
+          <h2>{emptyCopy.title}</h2>
+          <p>{emptyCopy.message}</p>
+          {emptyCopy.canReset && (
+            <button type="button" onClick={() => setPage(() => 1)}>
+              Back to first page
+            </button>
+          )}
         </div>
       )}
 
@@ -142,6 +196,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
               The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
             </p>
           )}
+          {saveNotice && <p className="news-save-notice" role="status">{saveNotice}</p>}
           <div className="news-grid">
             {articles.map((article) => (
               <article key={article.url} className="news-card">
@@ -162,14 +217,27 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                   <p className="news-summary">
                     {article.description?.trim() || 'Open the original story for the latest details.'}
                   </p>
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="read-more"
-                  >
-                    Open story <FiArrowUpRight />
-                  </a>
+                  <div className="news-card-actions">
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="read-more"
+                    >
+                      Open story <FiArrowUpRight />
+                    </a>
+                    <button
+                      type="button"
+                      className={`news-save${savedUrls.has(article.url) ? ' saved' : ''}`}
+                      disabled={savingUrl === article.url}
+                      onClick={() => toggleSaved(article)}
+                      aria-pressed={savedUrls.has(article.url)}
+                      aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
+                    >
+                      {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
+                      {savedUrls.has(article.url) ? 'Saved' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}

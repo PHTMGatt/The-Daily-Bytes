@@ -8,8 +8,29 @@ import {
   readPassword,
 } from '../lib/authInputs.js';
 import { createSessionToken, DEMO_USERNAME } from '../lib/authSession.js';
+import { createRateLimitMiddleware } from '../lib/rateLimit.js';
 
 const router = Router();
+
+// Login/register run bcrypt, so cap attempts per client to slow brute force and CPU exhaustion.
+router.use(
+  ['/login', '/register'],
+  createRateLimitMiddleware({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    message: 'Too many sign-in attempts. Please wait a few minutes and try again.',
+  })
+);
+
+// Demo sessions skip bcrypt but still hit MongoDB and mint a token, so cap them separately and more loosely.
+router.use(
+  '/demo',
+  createRateLimitMiddleware({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    message: 'Too many demo requests. Please wait a few minutes and try again.',
+  })
+);
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_KEY;

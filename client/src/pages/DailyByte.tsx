@@ -1,10 +1,14 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
 import ArticleImage from '../components/ArticleImage';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
+import { formatPublishedLabel } from '../utils/articleTime';
+import { createLatestRequestGuard } from '../utils/latestRequest.js';
+import { isStaleFeed } from '../utils/newsViewState.js';
+import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
 import './DailyByte.css';
 import './Bookmarks.css';
 
@@ -21,6 +25,7 @@ interface SearchArticle {
 }
 
 const DEFAULT_TOPIC = 'gaming';
+const PAGE_SIZE = 12;
 
 const priorityTopics = [
   {
@@ -58,6 +63,16 @@ const quickTopics = [
   ['RAM Prices', 'RAM prices'],
   ['PC Hardware', 'PC hardware'],
   ['Game Releases', 'video game releases'],
+  ['Xbox', 'Xbox'],
+  ['PlayStation', 'PlayStation'],
+  ['Nintendo', 'Nintendo'],
+  ['Steam', 'Steam'],
+  ['Industry', 'game industry'],
+  ['CPUs', 'CPU'],
+  ['Handhelds', 'handheld PC'],
+  ['Esports', 'esports'],
+  ['VR', 'VR'],
+  ['AI Chips', 'AI chips'],
 ];
 
 const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
@@ -69,13 +84,7 @@ const getSource = (article: SearchArticle) => {
 
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
 
-const formatDate = (article: SearchArticle) => {
-  const value = getPublishedAt(article);
-  if (!value) return 'Recent';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Recent';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const formatDate = (article: SearchArticle) => formatPublishedLabel(getPublishedAt(article));
 
 const articleSummary = (article: SearchArticle) =>
   article.description?.trim() || 'Open the full story for the latest details.';
@@ -92,26 +101,68 @@ export default function DailyByte() {
   const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
   const [savingUrl, setSavingUrl] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
+  const [stale, setStale] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState('');
+  const requestGuard = useRef(createLatestRequestGuard()).current;
 
   const fetchTopic = async (query: string) => {
+    const token = requestGuard.start();
     setLoading(true);
+    setLoadingMore(false);
     setError('');
+    setMoreError('');
     setActiveTopic(query);
+    // Drop the previous topic's stories so they are never shown under the new topic's heading.
+    setArticles([]);
+    setPage(1);
+    setHasMore(false);
 
     try {
-      const data = await retrieveNews(undefined, 1, 12, query);
-      setArticles(Array.isArray(data.articles) ? data.articles : []);
+      const data = await retrieveNews(undefined, 1, PAGE_SIZE, query);
+      if (!requestGuard.isCurrent(token)) return;
+      const loaded = Array.isArray(data.articles) ? data.articles : [];
+      setArticles(loaded);
+      setHasMore(hasMoreStories({ page: 1, pageSize: PAGE_SIZE, totalResults: data.totalResults, added: loaded.length }));
+      setStale(isStaleFeed(data));
     } catch (err) {
+      if (!requestGuard.isCurrent(token)) return;
       setArticles([]);
+      setStale(false);
       setError(err instanceof Error ? err.message : 'Unable to load stories right now.');
     } finally {
-      setLoading(false);
+      if (requestGuard.isCurrent(token)) setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || loading) return;
+    const token = requestGuard.start();
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    setMoreError('');
+
+    try {
+      const data = await retrieveNews(undefined, nextPage, PAGE_SIZE, activeTopic);
+      if (!requestGuard.isCurrent(token)) return;
+      const { articles: merged, added } = mergeArticlePages(articles, data.articles);
+      setArticles(merged);
+      setPage(nextPage);
+      setHasMore(hasMoreStories({ page: nextPage, pageSize: PAGE_SIZE, totalResults: data.totalResults, added }));
+    } catch (err) {
+      if (!requestGuard.isCurrent(token)) return;
+      setMoreError(err instanceof Error ? err.message : 'Unable to load more stories.');
+    } finally {
+      if (requestGuard.isCurrent(token)) setLoadingMore(false);
     }
   };
 
   useEffect(() => {
     setTopic(urlTopic);
     fetchTopic(urlTopic);
+    return () => requestGuard.invalidate();
   }, [location.search]);
 
   useEffect(() => {
@@ -201,12 +252,18 @@ export default function DailyByte() {
               type="button"
               key={label}
               className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
+              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
               onClick={() => openTopic(query)}
             >
               {label}
             </button>
           ))}
         </div>
+        {stale && (
+          <div className="db-save-notice" role="status">
+            The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
+          </div>
+        )}
         {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
       </section>
 
@@ -304,6 +361,16 @@ export default function DailyByte() {
                   </article>
                 ))}
               </div>
+
+              {(hasMore || moreError) && (
+                <div className="db-load-more">
+                  {moreError && <p role="alert">{moreError}</p>}
+                  <button type="button" onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? <FiRefreshCw className="spin" aria-hidden="true" /> : null}
+                    {loadingMore ? 'Loading...' : moreError ? 'Try again' : 'Load more stories'}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
