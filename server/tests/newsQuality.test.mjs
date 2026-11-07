@@ -424,7 +424,7 @@ test('future-dated stories do not outrank equally relevant, genuinely dated ones
   const now = Date.parse('2026-10-29T12:00:00Z');
   const results = rankAndDedupeArticles([
     article({ title: 'Nvidia scheduled teaser', url: 'https://a.example/future', published_at: '2027-01-01T00:00:00Z' }),
-    article({ title: 'Nvidia older driver news', url: 'https://b.example/recent', published_at: '2026-09-29T08:00:00Z' }),
+    article({ title: 'Nvidia older driver news', url: 'https://b.example/recent', published_at: '2026-10-20T08:00:00Z' }),
   ], 'nvidia', now);
 
   assert.deepEqual(results.map((item) => item.url), ['https://b.example/recent', 'https://a.example/future']);
@@ -683,4 +683,35 @@ test('"cpu" and "handheld" queries use dedicated profiles', () => {
     article({ title: 'ROG Ally and Steam Deck rivals: Legion Go gets SteamOS update', url: 'https://example.com/good', published_at: '2026-10-26T12:00:00Z' }),
   ], 'handheld', Date.parse('2026-10-28T12:00:00Z'));
   assert.equal(handheld[0].url, 'https://example.com/good');
+});
+
+test('rankAndDedupeArticles demotes months-old stories below a slightly weaker but current match', () => {
+  const now = new Date('2026-10-28T12:00:00Z').getTime();
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX 5090 GeForce DLSS benchmark and review results', url: 'https://a.example/old', published_at: '2025-12-01T12:00:00Z' }),
+    article({ title: 'RTX driver update fixes stutter', url: 'https://b.example/new', published_at: '2026-10-27T12:00:00Z' }),
+  ], 'RTX', now);
+
+  assert.equal(results[0].url, 'https://b.example/new');
+});
+
+test('staleness demotion never drops a matching story or promotes a non-match', () => {
+  const now = new Date('2026-10-28T12:00:00Z').getTime();
+  const results = rankAndDedupeArticles([
+    article({ title: 'Celebrity gossip', url: 'https://a.example/gossip', published_at: '2026-10-28T11:00:00Z' }),
+    article({ title: 'RTX history retrospective', url: 'https://b.example/old', published_at: '2024-01-01T12:00:00Z' }),
+  ], 'RTX', now);
+
+  assert.equal(results.length, 2);
+  assert.equal(results[0].url, 'https://b.example/old');
+});
+
+test('stories with unknown or future timestamps are not treated as stale', () => {
+  const now = new Date('2026-10-28T12:00:00Z').getTime();
+  const results = rankAndDedupeArticles([
+    article({ title: 'RTX older benchmark', url: 'https://a.example/old', published_at: '2025-01-01T12:00:00Z' }),
+    article({ title: 'RTX undated benchmark', url: 'https://b.example/undated', published_at: undefined }),
+  ], 'RTX', now);
+
+  assert.equal(results[0].url, 'https://b.example/undated');
 });

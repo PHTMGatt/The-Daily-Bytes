@@ -389,6 +389,21 @@ const freshnessBonus = (publishedTime: number, now: number) => {
   return 0;
 };
 
+// Months-old coverage should not outrank current stories on a news feed. The demotion only applies
+// to stories with a trustworthy timestamp and never drops a match below a score of 1.
+const STALENESS_TIERS: Array<[number, number]> = [
+  [180 * 24 * HOUR_MS, 30],
+  [60 * 24 * HOUR_MS, 18],
+  [21 * 24 * HOUR_MS, 8],
+];
+
+const stalenessPenalty = (publishedTime: number, now: number) => {
+  if (!publishedTime) return 0;
+  const age = now - publishedTime;
+  for (const [minAge, penalty] of STALENESS_TIERS) if (age >= minAge) return penalty;
+  return 0;
+};
+
 const relevanceScore = (article: NewsQualityArticle, query: string, tokens: string[]) => {
   const title = normalizeHeadline(article.title);
   const description = normalizeHeadline(article.description);
@@ -498,7 +513,14 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
         article,
         index,
         // Freshness only breaks ties among matching stories; it must not lift unrelated ones.
-        score: relevance > 0 ? relevance + freshnessBonus(getPublishedTime(article, now), now) : 0,
+        score: relevance > 0
+          ? Math.max(
+              1,
+              relevance +
+                freshnessBonus(getPublishedTime(article, now), now) -
+                stalenessPenalty(getPublishedTime(article, now), now),
+            )
+          : 0,
         publishedTime: getPublishedTime(article, now),
       };
     })
