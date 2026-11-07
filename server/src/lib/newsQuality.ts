@@ -302,6 +302,22 @@ export const isShoppingRoundup = (article: NewsQualityArticle) =>
   (SHOPPING_ROUNDUP.test(String(article.title || '')) || BEST_GEAR_ROUNDUP.test(String(article.title || ''))) &&
   !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc)\b/i.test(String(article.title || ''));
 
+// Single-product retail deal posts ("Deal alert: SSD drops to $119", "headset is $50 off at Best Buy")
+// are ephemeral affiliate listings. Require a deal label or a retailer-plus-discount phrasing; price
+// reporting ("Nvidia cuts RTX price") and storewide sales ("Steam sale, up to 90% off") survive.
+const RETAILERS = '(?:amazon|best\\s*buy|walmart|target|newegg|b&h|micro\\s*center|gamestop|woot)';
+const DEAL_LABEL = /^\s*(?:hot\s+)?deals?\s*(?:alert|of the day)?\s*(?::|-|\||–|—)|\bdeal\s+alert\b/i;
+const RETAIL_DISCOUNT = new RegExp(
+  `(?:\\$\\d[\\d,.]*\\s+off|\\d{1,2}%\\s+off|drops?\\s+to\\s+\\$\\d|save\\s+(?:\\$\\d|\\d{1,2}%)).*\\b(?:at|from|on|via)\\s+${RETAILERS}\\b|\\b(?:at|from|on|via)\\s+${RETAILERS}\\b.*(?:\\$\\d[\\d,.]*\\s+off|\\d{1,2}%\\s+off)`,
+  'i',
+);
+
+export const isRetailDealPost = (article: NewsQualityArticle) => {
+  const title = String(article.title || '');
+  return (DEAL_LABEL.test(title) || RETAIL_DISCOUNT.test(title)) &&
+    !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc|antitrust|acquir\w*)\b/i.test(title);
+};
+
 // Paid placements ("Sponsored: ...", "Advertorial") and wire-service press-release outlets are
 // promotion, not reporting. Match explicit labels and known paid-release sources only.
 const SPONSORED_LABEL = /^\s*[\[(]?\s*(sponsored|advertorial|paid (post|content|partnership)|partner content|promoted)\s*[\])]?\s*(:|-|\||–|—|\]|\))/i;
@@ -510,7 +526,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isShoppingRoundup(article) || isDailyPuzzlePost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isShoppingRoundup(article) || isRetailDealPost(article) || isDailyPuzzlePost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

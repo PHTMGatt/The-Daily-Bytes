@@ -611,6 +611,24 @@ test('rankAndDedupeArticles drops affiliate shopping roundups but keeps price an
   );
 });
 
+test('rankAndDedupeArticles drops single-product retail deal posts but keeps price and discount news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Deal alert: Samsung 990 Pro 2TB SSD drops to $119', url: 'https://example.com/deal-1' }),
+    article({ title: 'Deals: save 40% on the Xbox Wireless Controller at Amazon', url: 'https://example.com/deal-2' }),
+    article({ title: 'The Logitech G Pro X headset is $50 off at Best Buy', url: 'https://example.com/deal-3' }),
+    article({ title: 'Grab the ASUS ROG Ally for 25% off at Walmart today', url: 'https://example.com/deal-4' }),
+    article({ title: 'DDR5 RAM prices jump 30% as memory shortage deepens', url: 'https://example.com/real-1' }),
+    article({ title: 'Nvidia cuts RTX 5070 price by $50 amid weak demand', url: 'https://example.com/real-2' }),
+    article({ title: 'Steam Autumn Sale starts with up to 90% off Capcom games', url: 'https://example.com/real-3' }),
+    article({ title: 'Amazon deal with Microsoft expands cloud gaming', url: 'https://example.com/real-4' }),
+  ], '');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3', 'https://example.com/real-4'],
+  );
+});
+
 test('rankAndDedupeArticles drops leading "Best <gear>" buying roundups but keeps awards and news', () => {
   const results = rankAndDedupeArticles([
     article({ title: 'Best graphics cards for gaming in 2026', url: 'https://example.com/gear-1' }),
