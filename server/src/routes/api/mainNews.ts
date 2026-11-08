@@ -8,6 +8,7 @@ import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
 import { resolveFetchedBlock } from '../../lib/feedBlock.js';
 import { ProviderCooldown, shouldCooldownOnError } from '../../lib/providerCooldown.js';
+import { getRssArticles } from '../../lib/rssFeeds.js';
 
 const router = express.Router();
 
@@ -77,17 +78,38 @@ router.get('/:category?', async (req: Request, res: Response) => {
     if (providerKeywords) params.keywords = providerKeywords;
 
     const block = await inflightFetches.run(cacheKey, async () => {
-      if (providerCooldown.isOpen()) throw new ProviderCooldownError(PROVIDER_COOLDOWN_MESSAGE);
-      let response;
-      try {
-        response = await axios.get(BASE_URL, { params, timeout: 12000 });
-      } catch (fetchError) {
-        if (shouldCooldownOnError(fetchError)) providerCooldown.recordFailure();
-        throw fetchError;
+      let raw: any[] = [];
+      let reportedTotal = 0;
+      let providerError: unknown;
+
+      if (providerCooldown.isOpen()) {
+        providerError = new ProviderCooldownError(PROVIDER_COOLDOWN_MESSAGE);
+      } else {
+        try {
+          const response = await axios.get(BASE_URL, { params, timeout: 12000 });
+          providerCooldown.recordSuccess();
+          raw = Array.isArray(response.data?.data) ? response.data.data : [];
+          reportedTotal = Number(response.data?.pagination?.total) || raw.length;
+        } catch (fetchError) {
+          if (shouldCooldownOnError(fetchError)) providerCooldown.recordFailure();
+          providerError = fetchError;
+        }
       }
-      providerCooldown.recordSuccess();
-      const raw = Array.isArray(response.data?.data) ? response.data.data : [];
-      const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
+
+      // Gaming / tech searches fall back to free RSS feeds when Mediastack is rate limited,
+      // failing, or simply has nothing for the query.
+      if (!raw.length && !category) {
+        try {
+          const rss = await getRssArticles(keywords || 'gaming');
+          raw = rss.slice(offset, offset + fetchLimit);
+          reportedTotal = rss.length;
+          if (raw.length) providerError = undefined;
+        } catch (rssError) {
+          console.error('RSS fallback error:', rssError instanceof Error ? rssError.message : rssError);
+        }
+      }
+
+      if (providerError) throw providerError;
       const fetched: NewsBlock = {
         articles: rankAndDedupeArticles(raw, getRankingQuery(category, keywords)),
         totalResults: reportedTotal,
