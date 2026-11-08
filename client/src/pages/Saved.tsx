@@ -1,3 +1,4 @@
+import { formatSourceName } from '../utils/articleSource.js';
 import { useEffect, useState } from 'react';
 import { FiArrowUpRight, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -95,7 +96,7 @@ export default function Saved() {
               </div>
               <div className="saved-card-body">
                 <div className="saved-card-meta">
-                  <span>{article.source || 'News source'}</span>
+                  <span>{formatSourceName(article.source)}</span>
                   <span>•</span>
                   <span>{formatDate(article.publishedAt || article.savedAt)}</span>
                 </div>

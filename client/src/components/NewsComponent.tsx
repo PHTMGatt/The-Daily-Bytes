@@ -7,6 +7,7 @@ import auth from '../utils/auth';
 import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
+import { getArticleSource } from '../utils/articleSource.js';
 import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
@@ -37,11 +38,6 @@ interface NewsComponentProps {
 
 const formatPublishedDate = (article: Article) =>
   formatPublishedLabel(article.publishedAt || article.published_at);
-
-const getSource = (article: Article) => {
-  if (typeof article.source === 'string') return article.source;
-  return article.source?.name || article.author || 'News source';
-};
 
 const getImage = (article: Article) => article.image || article.urlToImage || '';
 
@@ -209,7 +205,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                 </div>
                 <div className="news-card-content">
                   <div className="news-card-meta">
-                    <span>{getSource(article)}</span>
+                    <span>{getArticleSource(article)}</span>
                     <span>•</span>
                     <span>{formatPublishedDate(article)}</span>
                   </div>

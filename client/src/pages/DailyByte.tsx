@@ -6,6 +6,7 @@ import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
 import { formatPublishedLabel } from '../utils/articleTime';
+import { getArticleSource } from '../utils/articleSource.js';
 import { createLatestRequestGuard } from '../utils/latestRequest.js';
 import { isStaleFeed } from '../utils/newsViewState.js';
 import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
@@ -76,11 +77,6 @@ const quickTopics = [
 ];
 
 const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
-
-const getSource = (article: SearchArticle) => {
-  if (typeof article.source === 'string') return article.source;
-  return article.source?.name || article.author || 'News source';
-};
 
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
 
@@ -206,7 +202,7 @@ export default function DailyByte() {
           url: article.url,
           description: articleSummary(article),
           image: getImage(article),
-          source: getSource(article),
+          source: getArticleSource(article),
           publishedAt: getPublishedAt(article),
           topic: activeTopic,
         });
@@ -298,7 +294,7 @@ export default function DailyByte() {
                   <h2>{featured.title}</h2>
                   <p>{articleSummary(featured)}</p>
                   <div className="db-article-meta">
-                    <span>{getSource(featured)}</span>
+                    <span>{getArticleSource(featured)}</span>
                     <span>•</span>
                     <span>{formatDate(featured)}</span>
                   </div>
@@ -338,7 +334,7 @@ export default function DailyByte() {
                       <h3>{article.title}</h3>
                       <p>{articleSummary(article)}</p>
                       <div className="db-article-meta">
-                        <span>{getSource(article)}</span>
+                        <span>{getArticleSource(article)}</span>
                         <span>•</span>
                         <span>{formatDate(article)}</span>
                       </div>
