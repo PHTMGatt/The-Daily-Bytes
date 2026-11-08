@@ -768,3 +768,22 @@ test('new franchise and hardware aliases reuse curated profiles and outrank gene
     assert.equal(results[0].url, 'https://example.com/good', query);
   }
 });
+
+test('rankAndDedupeArticles drops recurring lottery, mortgage-rate and horoscope utility posts but keeps real reporting', () => {
+  const result = rankAndDedupeArticles([
+    article({ title: 'Powerball winning numbers for Saturday, Nov. 8, 2026', url: 'https://example.com/util-1' }),
+    article({ title: "Mega Millions results: Friday's winning lottery numbers", url: 'https://example.com/util-2' }),
+    article({ title: 'Mortgage rates today, November 8: 30-year rates fall', url: 'https://example.com/util-3' }),
+    article({ title: 'Current refinance rates for November 8, 2026', url: 'https://example.com/util-4' }),
+    article({ title: 'Daily horoscope for Scorpio, November 8', url: 'https://example.com/util-5' }),
+    article({ title: 'Your horoscope today: what the stars say', url: 'https://example.com/util-6' }),
+    article({ title: 'Valve raises Steam Deck lottery odds after launch backlash', url: 'https://example.com/keep-1' }),
+    article({ title: 'NVIDIA RTX 5090 supply improves as DRAM rates ease', url: 'https://example.com/keep-2' }),
+    article({ title: 'Horoscope game Zodiac Quest tops Steam wishlists', url: 'https://example.com/keep-3' }),
+  ], '');
+  assert.deepEqual(result.map((a) => a.url), [
+    'https://example.com/keep-1',
+    'https://example.com/keep-2',
+    'https://example.com/keep-3',
+  ]);
+});
