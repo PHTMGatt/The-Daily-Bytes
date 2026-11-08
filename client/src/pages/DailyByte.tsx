@@ -56,9 +56,28 @@ const priorityTopics = [
   },
 ];
 
+// Bryen's own library: what he is playing now first, then the franchises he keeps coming back to.
+const myGames = [
+  ['Witcher 3', 'The Witcher 3'],
+  ['AC Black Flag', 'Assassins Creed Black Flag'],
+  ['Crimson Desert', 'Crimson Desert'],
+  ['AC Shadows', 'Assassins Creed Shadows'],
+  ['Cyberpunk 2077', 'Cyberpunk 2077'],
+  ['Elden Ring', 'Elden Ring'],
+  ['Apex Legends', 'Apex Legends'],
+  ['Black Ops', 'Call of Duty Black Ops'],
+  ['Hitman', 'Hitman'],
+  ['Batman Arkham', 'Batman Arkham'],
+  ['Far Cry', 'Far Cry'],
+  ['GTA 6', 'GTA 6'],
+  ['ARK', 'ARK Survival'],
+  ['Rocket League', 'Rocket League'],
+  ['CS2', 'Counter Strike 2'],
+  ['DOOM', 'DOOM'],
+];
+
 const quickTopics = [
   ['Gaming', 'gaming'],
-  ['Witcher 3', 'The Witcher 3'],
   ['NVIDIA', 'NVIDIA GPU'],
   ['GPU Prices', 'GPU prices'],
   ['RAM Prices', 'RAM prices'],
@@ -242,7 +261,23 @@ export default function DailyByte() {
           <button type="submit">Search</button>
         </form>
 
-        <div className="db-topic-chips" aria-label="Quick searches">
+        <span className="db-chip-label" id="db-my-games-label">My games</span>
+        <div className="db-topic-chips db-my-games" aria-labelledby="db-my-games-label">
+          {myGames.map(([label, query]) => (
+            <button
+              type="button"
+              key={label}
+              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
+              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
+              onClick={() => openTopic(query)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <span className="db-chip-label" id="db-topics-label">Topics</span>
+        <div className="db-topic-chips" aria-labelledby="db-topics-label">
           {quickTopics.map(([label, query]) => (
             <button
               type="button"

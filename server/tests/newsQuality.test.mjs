@@ -821,3 +821,22 @@ test('isLowValueArticle flags every dropped category and keeps real news', () =>
   ]) assert.equal(isLowValueArticle(article({ title })), false, title);
   assert.equal(isLowValueArticle(article({ title: 'Press release headline', source: 'PR Newswire' })), true);
 });
+
+test('"My games" hub queries reuse their curated game profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('Crimson Desert', 'Pearl Abyss shows Kliff exploring Pywel', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Assassins Creed Black Flag', 'Edward Kenway returns in Black Flag Resynced', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Assassins Creed Shadows', 'Naoe and Yasuke get new Shadows patch', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Hitman', 'IO Interactive teases Agent 47 mission', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Batman Arkham', 'Rocksteady hints at a new Arkham game', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Far Cry', 'Ubisoft confirms Far Cry 7 open world map', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('ARK Survival', 'Studio Wildcard adds dinosaur to Survival Ascended', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Rocket League', 'Psyonix announces RLCS season', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Counter Strike 2', 'Valve updates CS2 ahead of the Major', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('DOOM', 'id Software ships Doom The Dark Ages patch', 'Retail chain names new chairman'), 'https://example.com/on');
+});

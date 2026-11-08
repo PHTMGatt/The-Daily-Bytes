@@ -127,6 +127,25 @@ body.light .db-search {
   color: var(--db-text);
 }
 
+.db-chip-label {
+  display: block;
+  margin-top: 16px;
+  color: var(--db-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.db-chip-label + .db-topic-chips {
+  margin-top: 8px;
+}
+
+.db-my-games button {
+  color: var(--db-text);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 .db-dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
