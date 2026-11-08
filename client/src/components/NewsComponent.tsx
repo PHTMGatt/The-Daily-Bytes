@@ -8,6 +8,7 @@ import { buildSavedPayload } from '../utils/savedPayload';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
 import { getArticleSource } from '../utils/articleSource.js';
+import { getStoryLinkLabel } from '../utils/storyLinkLabel.js';
 import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
@@ -219,6 +220,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                       target="_blank"
                       rel="noopener noreferrer"
                       className="read-more"
+                      aria-label={getStoryLinkLabel(article.title, getArticleSource(article))}
                     >
                       Open story <FiArrowUpRight />
                     </a>
