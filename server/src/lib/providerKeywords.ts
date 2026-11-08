@@ -39,10 +39,31 @@ const MY_GAMES_PROVIDER_KEYWORDS = [
   'doom',
 ].join(',');
 
+// "my gear": one feed covering every part and brand in Bryen's "My gear" row on the tech hub.
+const MY_GEAR_PROVIDER_KEYWORDS = [
+  'rtx 5090',
+  'rtx 5080',
+  'nvidia',
+  '9950x3d',
+  'ryzen',
+  'corsair',
+  'dominator',
+  'ddr5',
+  'samsung ssd',
+  'razer',
+  'asus rog',
+  'oled monitor',
+  'ekwb',
+  'raspberry pi',
+  'elgato',
+  'logitech',
+].join(',');
+
 export const buildProviderKeywords = (keywords: string) => {
   const trimmed = keywords.trim();
   const lower = trimmed.toLowerCase();
   if (lower === 'gaming') return DEFAULT_GAMING_PROVIDER_KEYWORDS;
   if (lower === 'my games') return MY_GAMES_PROVIDER_KEYWORDS;
+  if (lower === 'my gear') return MY_GEAR_PROVIDER_KEYWORDS;
   return trimmed;
 };

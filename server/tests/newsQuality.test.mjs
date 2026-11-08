@@ -849,3 +849,20 @@ test('"my games" feed ranks stories about Bryen\'s games above generic gaming ne
 
   assert.equal(results[0].url, 'https://example.com/mine');
 });
+
+test('"My gear" tech hub queries reuse their curated hardware profiles', () => {
+  const now = Date.parse('2026-10-28T12:00:00Z');
+  const pick = (query, onTopic, offTopic) => rankAndDedupeArticles([
+    article({ title: offTopic, url: 'https://example.com/off', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: onTopic, url: 'https://example.com/on', published_at: '2026-10-26T12:00:00Z' }),
+  ], query, now)[0].url;
+
+  assert.equal(pick('my gear', 'Corsair launches new Dominator Titanium DDR5 kit', 'Console sales slow in October'), 'https://example.com/on');
+  assert.equal(pick('RTX 5090', 'GeForce 5090 Founders Edition restock spotted', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Ryzen 9 9950X3D', 'AMD 9950X3D tops Zen 5 gaming benchmarks', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('Corsair Dominator Titanium', 'Dominator Titanium DDR5 gets faster bins', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Samsung 9100 Pro', 'Samsung 9100 Pro PCIe 5 NVMe review', 'Retail chain names new chairman'), 'https://example.com/on');
+  assert.equal(pick('Razer', 'Razer Blade refresh adds Synapse features', 'Museum exhibit opens downtown'), 'https://example.com/on');
+  assert.equal(pick('EK water cooling', 'EKWB custom loop water block for RTX cards', 'Shares dip on quarterly forecast'), 'https://example.com/on');
+  assert.equal(pick('Raspberry Pi', 'Raspberry Pi 5 gets new single board kit', 'Retail chain names new chairman'), 'https://example.com/on');
+});

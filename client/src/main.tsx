@@ -31,6 +31,7 @@ const router = createBrowserRouter([
       { path: 'health', element: <Health /> },
       { path: 'trending', element: <Trending /> },
       { path: 'horoscope', element: <Horoscope /> },
+      { path: 'tech', element: <DailyByte key="tech" hub="tech" /> },
       { path: 'technology', element: <Technology /> },
     ],
   },

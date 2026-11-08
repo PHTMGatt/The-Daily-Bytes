@@ -51,3 +51,10 @@ test('"my games" expands to every game in the My games row', () => {
   }
   assert.ok(!terms.includes('gaming'));
 });
+
+test('"my gear" expands to every part and brand in the My gear row', () => {
+  const terms = buildProviderKeywords('my gear').toLowerCase().split(',');
+  for (const term of ['rtx 5090', 'corsair', 'dominator', 'razer', 'raspberry pi']) {
+    assert.ok(terms.includes(term), term);
+  }
+});
