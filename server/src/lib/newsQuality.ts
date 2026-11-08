@@ -264,6 +264,14 @@ const GAMBLING_PROMO =
 export const isGamblingPromo = (article: NewsQualityArticle) =>
   GAMBLING_PROMO.test(String(article.title || ''));
 
+// Sports-betting tipster posts ("odds, picks and predictions", "best bets", "same game parlay") are
+// gambling-affiliate content. Require tipster phrasing, so "the odds of a delay" or "picks up" survive.
+const BETTING_TIPS =
+  /\b(odds|lines?|spread)\s*(,|and|&)\s*(best\s+bets?|picks?|predictions?|props?)\b|\b(picks?|predictions?)\s*(,|and|&)\s*(odds|best\s+bets?|props?)\b|\bbest\s+bets?\b|\b(same[- ]game\s+)?parlays?\b|\bplayer\s+props?\b|\bbetting\s+(odds|lines?|picks|tips|preview)\b/i;
+
+export const isBettingTipsPost = (article: NewsQualityArticle) =>
+  BETTING_TIPS.test(String(article.title || ''));
+
 // Coupon/discount-code listings ("Steam coupon codes", "use code SAVE20 for 20% off") are affiliate
 // promotion. Match code-offer phrasing only, so real price cuts, sales and coupon-scam reporting survive.
 const COUPON_PROMO =
@@ -344,6 +352,7 @@ export const isSponsoredOrPressRelease = (article: NewsQualityArticle) =>
 const LOW_VALUE_FILTERS = [
   isMarketReportSpam,
   isGamblingPromo,
+  isBettingTipsPost,
   isCouponPromo,
   isShoppingRoundup,
   isRetailDealPost,

@@ -798,8 +798,17 @@ test('isLowValueArticle flags every dropped category and keeps real news', () =>
     'Wordle today: hints and answer for November 8',
     'Powerball winning numbers for Saturday jackpot',
     'Sponsored: Try this new VPN',
+    'Lions vs. Packers odds, picks and predictions for Sunday',
+    'NFL Week 10 best bets: parlay and player props',
+    'Same game parlay picks for Monday night',
   ];
   for (const title of dropped) assert.equal(isLowValueArticle(article({ title })), true, title);
   assert.equal(isLowValueArticle(article({ title: 'Nvidia confirms RTX 5090 supply constraints' })), false);
+  for (const title of [
+    'What are the odds GTA 6 slips again?',
+    'Why the Switch 2 picks up speed in Japan',
+    'Valve sues over loot box lawsuit claims',
+    'Esports team picks new coach after prediction market fallout',
+  ]) assert.equal(isLowValueArticle(article({ title })), false, title);
   assert.equal(isLowValueArticle(article({ title: 'Press release headline', source: 'PR Newswire' })), true);
 });
