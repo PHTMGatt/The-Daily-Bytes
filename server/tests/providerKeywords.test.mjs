@@ -43,3 +43,11 @@ test('focused and arbitrary searches pass through unchanged apart from trimming'
 test('empty keywords stay empty', () => {
   assert.equal(buildProviderKeywords('   '), '');
 });
+
+test('"my games" expands to every game in the My games row', () => {
+  const terms = buildProviderKeywords('My Games').toLowerCase().split(',');
+  for (const term of ['witcher', 'assassins creed', 'crimson desert', 'apex legends', 'hitman', 'doom']) {
+    assert.ok(terms.includes(term), term);
+  }
+  assert.ok(!terms.includes('gaming'));
+});

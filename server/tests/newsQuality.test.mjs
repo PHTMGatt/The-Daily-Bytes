@@ -840,3 +840,12 @@ test('"My games" hub queries reuse their curated game profiles', () => {
   assert.equal(pick('Counter Strike 2', 'Valve updates CS2 ahead of the Major', 'Shares dip on quarterly forecast'), 'https://example.com/on');
   assert.equal(pick('DOOM', 'id Software ships Doom The Dark Ages patch', 'Retail chain names new chairman'), 'https://example.com/on');
 });
+
+test('"my games" feed ranks stories about Bryen\'s games above generic gaming news', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: 'Console sales slow in October', url: 'https://example.com/generic', published_at: '2026-10-27T12:00:00Z' }),
+    article({ title: 'Crimson Desert gets Pearl Abyss performance patch', url: 'https://example.com/mine', published_at: '2026-10-26T12:00:00Z' }),
+  ], 'my games', Date.parse('2026-10-28T12:00:00Z'));
+
+  assert.equal(results[0].url, 'https://example.com/mine');
+});

@@ -137,8 +137,39 @@ body.light .db-search {
   text-transform: uppercase;
 }
 
-.db-chip-label + .db-topic-chips {
+.db-chip-label + .db-topic-chips,
+.db-chip-label-row + .db-topic-chips {
   margin-top: 8px;
+}
+
+.db-chip-label-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.db-chip-label-row .db-chip-label {
+  margin-top: 0;
+}
+
+.db-all-games {
+  padding: 6px 12px;
+  border: 1px solid var(--db-accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--db-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.db-all-games:hover,
+.db-all-games.active {
+  background: var(--db-accent-soft);
 }
 
 /* 16 games: even rows at every width (8 + 8, 4 x 4, 2 x 8) instead of a ragged last row. */

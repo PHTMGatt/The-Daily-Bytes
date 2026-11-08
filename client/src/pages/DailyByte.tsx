@@ -25,7 +25,8 @@ interface SearchArticle {
   publishedAt?: string;
 }
 
-const DEFAULT_TOPIC = 'gaming';
+// The gaming hub opens on one combined feed of every game in "My games".
+const DEFAULT_TOPIC = 'my games';
 const PAGE_SIZE = 12;
 
 const priorityTopics = [
@@ -261,7 +262,17 @@ export default function DailyByte() {
           <button type="submit">Search</button>
         </form>
 
-        <span className="db-chip-label" id="db-my-games-label">My games</span>
+        <div className="db-chip-label-row">
+          <span className="db-chip-label" id="db-my-games-label">My games</span>
+          <button
+            type="button"
+            className={`db-all-games ${activeTopic.toLowerCase() === DEFAULT_TOPIC ? 'active' : ''}`}
+            aria-pressed={activeTopic.toLowerCase() === DEFAULT_TOPIC}
+            onClick={() => openTopic(DEFAULT_TOPIC)}
+          >
+            All my games
+          </button>
+        </div>
         <div className="db-topic-chips db-my-games" aria-labelledby="db-my-games-label">
           {myGames.map(([label, query]) => (
             <button
@@ -315,7 +326,7 @@ export default function DailyByte() {
             <div className="db-state-card">
               <h2>No stories found</h2>
               <p>Try another priority topic or a broader search.</p>
-              <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to gaming</button>
+              <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to my games</button>
             </div>
           ) : (
             <>

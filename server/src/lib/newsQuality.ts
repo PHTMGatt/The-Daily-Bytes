@@ -53,7 +53,13 @@ const QUERY_PROFILES: Record<string, string[]> = {
   'final fantasy': ['final fantasy', 'square enix', 'dragon quest', 'kingdom hearts', 'remake', 'jrpg'],
   'assassins creed': ['assassins creed', 'ubisoft', 'far cry', 'rainbow six', 'ubisoft connect', 'tencent'],
   'cyberpunk 2077': ['cyberpunk', 'phantom liberty', 'night city', 'cd projekt', 'cdpr', 'witcher'],
-  // Bryen's "My games" row on the gaming hub.
+  // Bryen's "My games" row on the gaming hub; "my games" is the combined feed for all of them.
+  'my games': [
+    'witcher', 'cd projekt', 'assassins creed', 'black flag', 'crimson desert', 'pearl abyss',
+    'cyberpunk', 'elden ring', 'fromsoftware', 'apex legends', 'call of duty', 'black ops',
+    'hitman', 'io interactive', 'batman', 'arkham', 'far cry', 'gta', 'rockstar', 'ark survival',
+    'rocket league', 'counter strike', 'cs2', 'doom', 'ubisoft',
+  ],
   'assassins creed black flag': ['black flag', 'edward kenway', 'kenway', 'resynced', 'assassins creed', 'ubisoft', 'pirate'],
   'assassins creed shadows': ['shadows', 'naoe', 'yasuke', 'assassins creed', 'ubisoft', 'feudal japan'],
   'crimson desert': ['crimson desert', 'pearl abyss', 'kliff', 'pywel', 'black desert', 'blackspace engine'],

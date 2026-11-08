@@ -7,7 +7,7 @@ import './SideNav.css';
 
 const navItems = [
   { label: 'Home', to: '/', icon: FiHome },
-  { label: 'Gaming', to: '/dailybyte?q=gaming', query: 'gaming', icon: FaGamepad },
+  { label: 'Gaming', to: '/dailybyte?q=my%20games', query: 'my games', icon: FaGamepad },
   { label: 'Witcher 3', to: '/dailybyte?q=The%20Witcher%203', query: 'the witcher 3', icon: BsController },
   { label: 'NVIDIA', to: '/dailybyte?q=NVIDIA%20GPU', query: 'nvidia gpu', icon: FiCpu },
   { label: 'RAM Prices', to: '/dailybyte?q=RAM%20prices', query: 'ram prices', icon: MdMemory },
@@ -22,7 +22,8 @@ const SideNav = () => {
 
   const isActive = (to: string, query?: string) => {
     if (to === '/') return location.pathname === '/';
-    if (query) return location.pathname === '/dailybyte' && currentQuery === query;
+    // The gaming hub with no ?q= opens the "my games" feed, so Gaming stays highlighted there too.
+    if (query) return location.pathname === '/dailybyte' && (currentQuery || 'my games') === query;
     return location.pathname === to;
   };
 
