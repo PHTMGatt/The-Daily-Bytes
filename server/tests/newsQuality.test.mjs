@@ -801,6 +801,11 @@ test('isLowValueArticle flags every dropped category and keeps real news', () =>
     'Lions vs. Packers odds, picks and predictions for Sunday',
     'NFL Week 10 best bets: parlay and player props',
     'Same game parlay picks for Monday night',
+    'Summit Capital Management LLC Buys 1,240 Shares of NVIDIA Co. $NVDA',
+    'Redwood Wealth Advisors Sells 3,100 Shares of Advanced Micro Devices, Inc.',
+    'Harbor Trust Company Acquires New Stake in Take-Two Interactive Software',
+    'NVIDIA (NASDAQ:NVDA) Shares Gap Up - Here\'s Why',
+    'Micron Technology (NASDAQ:MU) Price Target Raised to $140.00',
   ];
   for (const title of dropped) assert.equal(isLowValueArticle(article({ title })), true, title);
   assert.equal(isLowValueArticle(article({ title: 'Nvidia confirms RTX 5090 supply constraints' })), false);
@@ -809,6 +814,10 @@ test('isLowValueArticle flags every dropped category and keeps real news', () =>
     'Why the Switch 2 picks up speed in Japan',
     'Valve sues over loot box lawsuit claims',
     'Esports team picks new coach after prediction market fallout',
+    'Nvidia takes a stake in Intel as part of $5 billion deal',
+    'Microsoft sells 10 million Xbox Series consoles in a quarter',
+    'Nintendo shares jump after Switch 2 sales beat forecasts',
+    'Sony acquires a majority position in Kadokawa',
   ]) assert.equal(isLowValueArticle(article({ title })), false, title);
   assert.equal(isLowValueArticle(article({ title: 'Press release headline', source: 'PR Newswire' })), true);
 });

@@ -347,6 +347,19 @@ export const isSponsoredOrPressRelease = (article: NewsQualityArticle) =>
   SPONSORED_LABEL.test(String(article.title || '')) ||
   PRESS_RELEASE_SOURCES.has(normalizeHeadline(article.source));
 
+// Auto-generated investor-wire posts ("<Fund LLC> Buys 1,240 Shares of NVIDIA", "(NASDAQ:NVDA) Price Target Raised")
+// flood NVIDIA/AMD/gaming-stock queries without reporting anything about the products.
+const INSTITUTION_NAME = /\b(llc|l\.?p\.?|capital|advis(?:o|e)rs?|advisory|management|partners|wealth|investments?|asset|holdings|trust|financial|securities|fund|bancorp|associates)\b/i;
+const HOLDINGS_MOVE = /\b(buys?|bought|sells?|sold|acquires?|acquired|purchases?|adds?|trims?|lifts?|boosts?|cuts?|raises?|lowers?|reduces?|grows?|increases?|decreases?|opens?)\b[^|]{0,60}\b(shares|stake|position)\b/i;
+const EXCHANGE_TICKER_TAG = /\((?:nasdaq|nyse|nysearca|otcmkts?|otcqx|tsx)\s*:\s*[a-z.]+\)/i;
+const STOCK_TICKER_CHATTER = /\b(shares|stock price|price target|rating|gap (?:up|down)|trading (?:up|down)|stock position)\b/i;
+
+export const isInvestorWirePost = (article: NewsQualityArticle) => {
+  const title = String(article.title || '');
+  return (INSTITUTION_NAME.test(title) && HOLDINGS_MOVE.test(title)) ||
+    (EXCHANGE_TICKER_TAG.test(title) && STOCK_TICKER_CHATTER.test(title));
+};
+
 // Every non-news category the feed drops (spam, promotion, link bait, daily filler) in one predicate,
 // so a new filter is added in a single place and cannot be missed by a caller.
 const LOW_VALUE_FILTERS = [
@@ -359,6 +372,7 @@ const LOW_VALUE_FILTERS = [
   isDailyPuzzlePost,
   isDailyUtilityPost,
   isSponsoredOrPressRelease,
+  isInvestorWirePost,
 ];
 
 export const isLowValueArticle = (article: NewsQualityArticle) =>
