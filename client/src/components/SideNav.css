@@ -154,12 +154,8 @@ body.light .sidenav-icon {
 }
 
 @media (max-width: 500px) {
+  /* Five items (Home, Gaming, Tech, Saved, Trending) all fit, so none are hidden on phones. */
   .sidenav-links {
     grid-template-columns: repeat(5, 1fr);
-  }
-
-  .sidenav-link:nth-child(3),
-  .sidenav-link:nth-child(6) {
-    display: none;
   }
 }

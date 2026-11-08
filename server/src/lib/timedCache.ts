@@ -34,7 +34,7 @@ export class TimedCache<T> {
     return entry.value;
   }
 
-  set(key: string, value: T, now = Date.now()) {
+  set(key: string, value: T, now = Date.now(), ttlMs = this.ttlMs) {
     if (this.maxEntries <= 0) return;
 
     if (!this.store.has(key) && this.store.size >= this.maxEntries) {
@@ -54,7 +54,7 @@ export class TimedCache<T> {
     this.store.set(key, {
       value,
       createdAt: now,
-      expiresAt: now + this.ttlMs,
+      expiresAt: now + ttlMs,
     });
   }
 }

@@ -1,9 +1,11 @@
+import { formatSourceName } from '../utils/articleSource.js';
 import { useEffect, useState } from 'react';
 import { FiArrowUpRight, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import ArticleImage from '../components/ArticleImage';
 import { getSavedArticles, removeSavedArticle, SavedArticlePayload } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
+import { getNewsViewState } from '../utils/newsViewState';
 import './Saved.css';
 
 const formatDate = (value?: string) => {
@@ -16,16 +18,26 @@ const formatDate = (value?: string) => {
 export default function Saved() {
   const [articles, setArticles] = useState<SavedArticlePayload[]>([]);
   const [loading, setLoading] = useState(auth.loggedIn());
+  const [loadError, setLoadError] = useState('');
   const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!auth.loggedIn()) return;
 
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
     getSavedArticles()
-      .then(setArticles)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load saved stories.'))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((items) => { if (!cancelled) setArticles(items); })
+      .catch((err) => {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Unable to load saved stories.');
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [attempt]);
+
+  const viewState = getNewsViewState({ loading, error: loadError, articleCount: articles.length });
 
   const remove = async (url: string) => {
     try {
@@ -59,10 +71,15 @@ export default function Saved() {
         <Link to="/">Back to the feed</Link>
       </header>
 
-      {error && <div className="saved-message error">{error}</div>}
-      {loading ? (
-        <div className="saved-message">Loading saved stories...</div>
-      ) : articles.length === 0 ? (
+      {error && <div className="saved-message error" role="alert">{error}</div>}
+      {viewState === 'loading' ? (
+        <div className="saved-message" role="status">Loading saved stories...</div>
+      ) : viewState === 'error' ? (
+        <div className="saved-message error" role="alert">
+          {loadError}{' '}
+          <button type="button" className="saved-retry" onClick={() => setAttempt((n) => n + 1)}>Try again</button>
+        </div>
+      ) : viewState === 'empty' ? (
         <div className="saved-empty-state inline">
           <FiBookmark />
           <h2>Nothing saved yet.</h2>
@@ -79,7 +96,7 @@ export default function Saved() {
               </div>
               <div className="saved-card-body">
                 <div className="saved-card-meta">
-                  <span>{article.source || 'News source'}</span>
+                  <span>{formatSourceName(article.source)}</span>
                   <span>•</span>
                   <span>{formatDate(article.publishedAt || article.savedAt)}</span>
                 </div>

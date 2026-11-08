@@ -127,6 +127,77 @@ body.light .db-search {
   color: var(--db-text);
 }
 
+.db-chip-label {
+  display: block;
+  margin-top: 16px;
+  color: var(--db-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.db-chip-label + .db-topic-chips,
+.db-chip-label-row + .db-topic-chips {
+  margin-top: 8px;
+}
+
+.db-chip-label-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.db-chip-label-row .db-chip-label {
+  margin-top: 0;
+}
+
+.db-all-games {
+  padding: 6px 12px;
+  border: 1px solid var(--db-accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--db-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.db-all-games:hover,
+.db-all-games.active {
+  background: var(--db-accent-soft);
+}
+
+/* 16 games: even rows at every width (8 + 8, 4 x 4, 2 x 8) instead of a ragged last row. */
+.db-my-games {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.db-my-games button {
+  color: var(--db-text);
+  border-color: rgba(255, 255, 255, 0.14);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1100px) {
+  .db-my-games {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .db-my-games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .db-dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
@@ -604,4 +675,39 @@ body.light .db-search {
   .db-priority-list {
     grid-template-columns: 1fr;
   }
+}
+
+.db-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.db-load-more p {
+  margin: 0;
+  color: var(--db-muted);
+}
+
+.db-load-more button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-panel);
+  color: var(--db-text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.db-load-more button:hover:not(:disabled) {
+  border-color: var(--db-accent);
+}
+
+.db-load-more button:disabled {
+  opacity: 0.7;
+  cursor: progress;
 }

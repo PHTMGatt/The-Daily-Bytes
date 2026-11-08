@@ -1,10 +1,13 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { getNewsWindow } from '../../lib/newsPagination.js';
-import { rankAndDedupeArticles } from '../../lib/newsQuality.js';
+import { getRankingQuery, rankAndDedupeArticles } from '../../lib/newsQuality.js';
+import { parseNewsCategory } from '../../lib/newsCategory.js';
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
+import { resolveFetchedBlock } from '../../lib/feedBlock.js';
+import { ProviderCooldown, shouldCooldownOnError } from '../../lib/providerCooldown.js';
 
 const router = express.Router();
 
@@ -19,7 +22,13 @@ interface NewsBlock {
 }
 
 const newsCache = new TimedCache<NewsBlock>(NEWS_CACHE_TTL_MS, 100);
-const inflightFetches = new InflightRequests<NewsBlock>();
+const inflightFetches = new InflightRequests<{ block: NewsBlock; stale: boolean }>();
+// After a provider failure (e.g. Mediastack rate limiting) stop calling it for a while
+// and serve stale cache instead of retrying on every request.
+const providerCooldown = new ProviderCooldown(30 * 1000, 10 * 60 * 1000);
+const PROVIDER_COOLDOWN_MESSAGE = 'News provider is temporarily unavailable.';
+
+class ProviderCooldownError extends Error {}
 
 router.get('/:category?', async (req: Request, res: Response) => {
   if (!MEDIASTACK_API_KEY) {
@@ -30,7 +39,11 @@ router.get('/:category?', async (req: Request, res: Response) => {
   let respond: ((block: NewsBlock, extra: Record<string, boolean>) => Response) | undefined;
 
   try {
-    const category = (req.params.category || '').trim().toLowerCase();
+    const parsedCategory = parseNewsCategory(req.params.category);
+    if (!parsedCategory.ok) {
+      return res.status(400).json({ message: 'Unknown news category.' });
+    }
+    const { category } = parsedCategory;
     const keywords = typeof req.query.keywords === 'string'
       ? req.query.keywords.trim().slice(0, 120)
       : '';
@@ -64,21 +77,33 @@ router.get('/:category?', async (req: Request, res: Response) => {
     if (providerKeywords) params.keywords = providerKeywords;
 
     const block = await inflightFetches.run(cacheKey, async () => {
-      const response = await axios.get(BASE_URL, { params, timeout: 12000 });
+      if (providerCooldown.isOpen()) throw new ProviderCooldownError(PROVIDER_COOLDOWN_MESSAGE);
+      let response;
+      try {
+        response = await axios.get(BASE_URL, { params, timeout: 12000 });
+      } catch (fetchError) {
+        if (shouldCooldownOnError(fetchError)) providerCooldown.recordFailure();
+        throw fetchError;
+      }
+      providerCooldown.recordSuccess();
       const raw = Array.isArray(response.data?.data) ? response.data.data : [];
       const reportedTotal = Number(response.data?.pagination?.total) || raw.length;
       const fetched: NewsBlock = {
-        articles: rankAndDedupeArticles(raw, keywords),
+        articles: rankAndDedupeArticles(raw, getRankingQuery(category, keywords)),
         totalResults: reportedTotal,
       };
-      newsCache.set(cacheKey, fetched);
-      return fetched;
+      const decision = resolveFetchedBlock(fetched, newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS));
+      // A stale fallback keeps its original cache entry so it still ages out; only fresh data is stored.
+      if (!decision.stale) newsCache.set(cacheKey, decision.block, Date.now(), decision.cacheTtlMs);
+      return decision;
     });
 
-    return respond(block, { cached: false });
+    return respond(block.block, block.stale ? { cached: true, stale: true } : { cached: false });
   } catch (error: any) {
     const apiMessage = error?.response?.data?.error?.message;
-    console.error('Mediastack API error:', apiMessage || error.message);
+    if (!(error instanceof ProviderCooldownError)) {
+      console.error('Mediastack API error:', apiMessage || error.message);
+    }
 
     const stale = cacheKey ? newsCache.getStale(cacheKey, NEWS_STALE_MAX_MS) : undefined;
     if (stale && respond) {
@@ -86,7 +111,7 @@ router.get('/:category?', async (req: Request, res: Response) => {
     }
 
     return res.status(502).json({
-      message: apiMessage || 'News provider is temporarily unavailable.',
+      message: PROVIDER_COOLDOWN_MESSAGE,
     });
   }
 });
