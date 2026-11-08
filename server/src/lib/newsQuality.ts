@@ -515,6 +515,16 @@ const resolveProfile = (normalizedQuery: string) => {
   return undefined;
 };
 
+// Terms that make a story relevant to a query: the curated profile when one exists,
+// otherwise the query's own meaningful words. Used to filter feeds that are not keyword-searchable.
+export const getQueryTerms = (query: string): string[] => {
+  const normalized = normalizeHeadline(query);
+  if (!normalized) return [];
+  const profile = resolveProfile(normalized);
+  if (profile) return [normalized, ...profile];
+  return normalized.split(' ').filter((word) => word.length > 2 && !STOP_WORDS.has(word));
+};
+
 const profileBonus = (
   title: string,
   description: string,
