@@ -339,6 +339,22 @@ export const isSponsoredOrPressRelease = (article: NewsQualityArticle) =>
   SPONSORED_LABEL.test(String(article.title || '')) ||
   PRESS_RELEASE_SOURCES.has(normalizeHeadline(article.source));
 
+// Every non-news category the feed drops (spam, promotion, link bait, daily filler) in one predicate,
+// so a new filter is added in a single place and cannot be missed by a caller.
+const LOW_VALUE_FILTERS = [
+  isMarketReportSpam,
+  isGamblingPromo,
+  isCouponPromo,
+  isShoppingRoundup,
+  isRetailDealPost,
+  isDailyPuzzlePost,
+  isDailyUtilityPost,
+  isSponsoredOrPressRelease,
+];
+
+export const isLowValueArticle = (article: NewsQualityArticle) =>
+  LOW_VALUE_FILTERS.some((filter) => filter(article));
+
 const headlineTokens = (headline: string) =>
   new Set(headline.split(' ').filter((token) => token && !STOP_WORDS.has(token)));
 
@@ -535,7 +551,7 @@ export const rankAndDedupeArticles = <T extends NewsQualityArticle>(
     const url = canonicalizeUrl(article.url);
     const headline = normalizeHeadline(stripSourceSuffix(article.title, article.source));
 
-    if (!headline || !url || !isHttpUrl(article.url) || isMarketReportSpam(article) || isGamblingPromo(article) || isCouponPromo(article) || isShoppingRoundup(article) || isRetailDealPost(article) || isDailyPuzzlePost(article) || isDailyUtilityPost(article) || isSponsoredOrPressRelease(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
+    if (!headline || !url || !isHttpUrl(article.url) || isLowValueArticle(article) || seenUrls.has(url) || seenHeadlines.has(headline)) return;
 
     seenUrls.add(url);
     seenHeadlines.add(headline);

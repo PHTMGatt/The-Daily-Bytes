@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { canonicalizeUrl, diversifySources, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
+import { canonicalizeUrl, diversifySources, isLowValueArticle, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
 
 const article = (overrides = {}) => ({
   title: 'Story',
@@ -786,4 +786,20 @@ test('rankAndDedupeArticles drops recurring lottery, mortgage-rate and horoscope
     'https://example.com/keep-2',
     'https://example.com/keep-3',
   ]);
+});
+
+test('isLowValueArticle flags every dropped category and keeps real news', () => {
+  const dropped = [
+    'Global Gaming Market Size, Share and CAGR 2025-2032',
+    'Best online casino sites with no deposit bonus',
+    'Newegg coupon codes for November',
+    'Best Black Friday gaming monitor deals 2026',
+    'Deal alert: SSD drops to $119',
+    'Wordle today: hints and answer for November 8',
+    'Powerball winning numbers for Saturday jackpot',
+    'Sponsored: Try this new VPN',
+  ];
+  for (const title of dropped) assert.equal(isLowValueArticle(article({ title })), true, title);
+  assert.equal(isLowValueArticle(article({ title: 'Nvidia confirms RTX 5090 supply constraints' })), false);
+  assert.equal(isLowValueArticle(article({ title: 'Press release headline', source: 'PR Newswire' })), true);
 });
