@@ -45,7 +45,7 @@ No deploy step exists in any workflow, and the repo has no `render.yaml`, so pus
 | 23 | Exposed files / source maps | PASS | Only `client/dist` is served (`server.ts:19`). |
 | 24 | Git history secret scan | UNVERIFIED | CI scans the working tree. A full-history scan is not set up here. |
 | 25 | Revoke/rotate plan | N/A | No leaked secret found. |
-| 26 | Full review (IDOR, boundaries) | PASS (partial) | Saved articles are keyed by the username from the verified token (`routes/api/savedArticles.ts:40,58`). **Note (medium):** the seeded `demo` user falls back to the password `dailybytes` when `DEMO_PASSWORD` is unset (`config/mongo.ts:60`). Fine for a public demo; confirm the demo account holds no real data and that Render sets `DEMO_PASSWORD` if it should be private. |
+| 26 | Full review (IDOR, boundaries) | PASS (partial) | Saved articles are keyed by the username from the verified token (`routes/api/savedArticles.ts:40,58`). **Fixed:** in production an unset `DEMO_PASSWORD` now seeds the `demo` user with a random password instead of `dailybytes` (`config/mongo.ts`, test: `demoPassword.test.mjs`). An already-seeded demo user keeps its old password; confirm it in Render. |
 | 27 | Rerun tests, report | PASS | `npm run build`: client 42/42, server 125/125, build ok. This file is the report. |
 
 ## Outcome

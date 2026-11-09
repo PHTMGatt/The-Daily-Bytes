@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { Db, MongoClient } from 'mongodb';
 
 const databaseName = process.env.MONGODB_DB || 'daily-bytes';
@@ -57,7 +58,7 @@ export const connectMongo = async () => {
 
   const demoUsername = 'demo';
   const demoEmail = 'demo@dailybytes.local';
-  const demoPassword = process.env.DEMO_PASSWORD || 'dailybytes';
+  const demoPassword = resolveDemoPassword();
   const existingDemo = await users.findOne({ usernameNormalized: demoUsername });
 
   if (!existingDemo) {
@@ -72,6 +73,17 @@ export const connectMongo = async () => {
   }
 
   return database;
+};
+
+/**
+ * Password for seeding the demo user. Demo sign-in goes through the demo-session route, so the
+ * password is never needed by the client. In production an unset DEMO_PASSWORD gets a random
+ * value instead of a guessable fixed one; local development keeps the old default.
+ */
+export const resolveDemoPassword = (env: NodeJS.ProcessEnv = process.env): string => {
+  if (env.DEMO_PASSWORD) return env.DEMO_PASSWORD;
+  if (env.NODE_ENV === 'production') return randomBytes(24).toString('base64url');
+  return 'dailybytes';
 };
 
 export const getDb = () => {
