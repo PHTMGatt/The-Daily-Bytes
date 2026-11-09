@@ -159,3 +159,23 @@ body.light .sidenav-icon {
     grid-template-columns: repeat(5, 1fr);
   }
 }
+
+/* Phones: show a short label under each tab icon so the bar is self-explanatory. */
+@media (max-width: 760px) {
+  .sidenav-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .sidenav-link span {
+    display: block;
+    font-size: 0.66rem;
+  }
+
+  .sidenav-link {
+    padding: 0 2px;
+    font-weight: 700;
+    line-height: 1;
+  }
+}
