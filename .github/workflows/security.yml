@@ -71,7 +71,8 @@ jobs:
       - name: Dependency audit (client, dev tools: report only)
         # Known high in a dev tool whose fix is a major upgrade; tracked in SECURITY_REPORT.md. Remove this exemption once upgraded.
         working-directory: client
-        run: npm audit --audit-level=high || echo "::warning::client: high-severity advisory in dev dependencies (see SECURITY_REPORT.md)"
+        run: |
+          npm audit --audit-level=high || echo "::warning::client has a high-severity advisory in dev dependencies, see SECURITY_REPORT.md"
 
       - name: Dependency audit (server)
         working-directory: server
