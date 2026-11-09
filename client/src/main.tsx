@@ -1,17 +1,13 @@
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import './index.css';
 
 import App from './App';
 import ErrorPage from './pages/ErrorPage';
-import Entertainment from './pages/Entertainment';
-import Technology from './pages/Technology';
 import Horoscope from './pages/Horoscope';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import Sports from './pages/Sports';
 import Trending from './pages/Trending';
-import Health from './pages/Health';
 import DailyByte from './pages/DailyByte';
 import Saved from './pages/Saved';
 
@@ -26,13 +22,14 @@ const router = createBrowserRouter([
       { path: 'signup', element: <SignUp /> },
       { path: 'dailybyte', element: <DailyByte /> },
       { path: 'saved', element: <Saved /> },
-      { path: 'entertainment', element: <Entertainment /> },
-      { path: 'sports', element: <Sports /> },
-      { path: 'health', element: <Health /> },
+      // Old general-news pages from the original class project: Daily Bytes is gaming + tech now.
+      { path: 'entertainment', element: <Navigate to="/" replace /> },
+      { path: 'sports', element: <Navigate to="/" replace /> },
+      { path: 'health', element: <Navigate to="/" replace /> },
       { path: 'trending', element: <Trending /> },
       { path: 'horoscope', element: <Horoscope /> },
       { path: 'tech', element: <DailyByte key="tech" hub="tech" /> },
-      { path: 'technology', element: <Technology /> },
+      { path: 'technology', element: <Navigate to="/tech" replace /> },
     ],
   },
 ]);

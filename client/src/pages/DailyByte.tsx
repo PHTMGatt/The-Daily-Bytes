@@ -425,7 +425,7 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
                 {latest.map((article) => (
                   <article className="db-news-card" key={article.url}>
                     <div className="db-card-media">
-                      <ArticleImage src={getImage(article)} />
+                      <ArticleImage src={getImage(article)} fallbackLabel={getArticleSource(article) || 'Daily Bytes'} />
                       <span>{activeTopic}</span>
                     </div>
                     <div className="db-card-body">
@@ -473,8 +473,8 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
           <div className="db-priority-heading">
             <FiZap />
             <div>
-              <span>YOUR DEFAULT BEAT</span>
-              <h2>Priority Watch</h2>
+              <span>ONE TAP</span>
+              <h2>Jump to</h2>
             </div>
           </div>
 
@@ -492,7 +492,7 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
           </div>
 
           <div className="db-priority-note">
-            <strong>Built around your feed.</strong>
+            <strong>Tap any row to filter the feed.</strong>
             <p>{hub.note}</p>
           </div>
         </aside>

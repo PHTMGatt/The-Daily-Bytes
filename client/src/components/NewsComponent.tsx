@@ -200,6 +200,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
                 <div className="news-card-media">
                   <ArticleImage
                     src={getImage(article)}
+                    fallbackLabel={getArticleSource(article) || 'Daily Bytes'}
                     fallbackClassName="news-image-fallback"
                   />
                   <span>{category || keywords || 'Latest'}</span>
