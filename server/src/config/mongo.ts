@@ -26,6 +26,8 @@ export interface DailyBytesSavedArticle {
   publishedAt: string;
   topic: string;
   savedAt: Date;
+  /** Guest saves only: removed by the TTL index when the guest session ends. */
+  expiresAt?: Date;
 }
 
 export const connectMongo = async () => {
@@ -46,6 +48,11 @@ export const connectMongo = async () => {
     users.createIndex({ emailNormalized: 1 }, { unique: true }),
     savedArticles.createIndex({ usernameNormalized: 1, url: 1 }, { unique: true }),
     savedArticles.createIndex({ usernameNormalized: 1, savedAt: -1 }),
+    // Additive: TTL only for documents that carry expiresAt (guest saves).
+    savedArticles.createIndex(
+      { expiresAt: 1 },
+      { expireAfterSeconds: 0, partialFilterExpression: { expiresAt: { $exists: true } } }
+    ),
   ]);
 
   const demoUsername = 'demo';

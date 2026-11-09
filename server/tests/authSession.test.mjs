@@ -41,3 +41,25 @@ test('verifySessionToken rejects unsigned and non-HS256 tokens', async () => {
   const hs512 = jwt.sign({ username: 'demo' }, TEST_SECRET, { algorithm: 'HS512' });
   assert.throws(() => verifySessionToken(hs512, TEST_SECRET));
 });
+
+import {
+  createGuestSessionToken,
+  isGuestUsername,
+  isReservedUsername,
+  GUEST_SESSION_SECONDS,
+} from '../dist/lib/authSession.js';
+
+test('every demo visitor gets their own private guest identity (no shared account)', () => {
+  const a = jwt.verify(createGuestSessionToken(TEST_SECRET), TEST_SECRET);
+  const b = jwt.verify(createGuestSessionToken(TEST_SECRET), TEST_SECRET);
+  assert.notEqual(a.username, b.username);
+  assert.ok(isGuestUsername(a.username));
+  assert.equal(a.guest, true);
+  assert.ok(Math.abs((a.exp - a.iat) - GUEST_SESSION_SECONDS) <= 1);
+});
+
+test('demo and guest-* names are reserved for registration and login', () => {
+  assert.equal(isReservedUsername('demo'), true);
+  assert.equal(isReservedUsername('guest-abc'), true);
+  assert.equal(isReservedUsername('bryen'), false);
+});

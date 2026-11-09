@@ -1,9 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { DailyBytesSavedArticle, getDb } from '../../config/mongo.js';
-import { verifySessionToken } from '../../lib/authSession.js';
+import { GUEST_SESSION_SECONDS, isGuestUsername, verifySessionToken } from '../../lib/authSession.js';
 import { normalizeSavedArticle } from '../../lib/savedArticles.js';
 
 const router = Router();
+
+const MAX_SAVED_GUEST = 50;
+const MAX_SAVED_ACCOUNT = 500;
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_KEY;
@@ -39,7 +42,7 @@ router.get('/', async (req: Request, res: Response) => {
       .collection<DailyBytesSavedArticle>('saved_articles')
       .find({ usernameNormalized })
       .sort({ savedAt: -1 })
-      .project({ _id: 0, usernameNormalized: 0 })
+      .project({ _id: 0, usernameNormalized: 0, expiresAt: 0 })
       .toArray();
 
     return res.json({ articles });
@@ -57,15 +60,28 @@ router.post('/', async (req: Request, res: Response) => {
     const savedAt = new Date();
 
     const collection = getDb().collection<DailyBytesSavedArticle>('saved_articles');
+    const guest = isGuestUsername(usernameNormalized);
+    const cap = guest ? MAX_SAVED_GUEST : MAX_SAVED_ACCOUNT;
+    const alreadySaved = await collection.countDocuments({ usernameNormalized, url: article.url }, { limit: 1 });
+    if (!alreadySaved && (await collection.countDocuments({ usernameNormalized }, { limit: cap })) >= cap) {
+      return res.status(400).json({ message: `You can save up to ${cap} articles. Remove some to save more.` });
+    }
     const result = await collection.updateOne(
       { usernameNormalized, url: article.url },
-      { $setOnInsert: { usernameNormalized, ...article, savedAt } },
+      {
+        $setOnInsert: {
+          usernameNormalized,
+          ...article,
+          savedAt,
+          ...(guest ? { expiresAt: new Date(savedAt.getTime() + GUEST_SESSION_SECONDS * 1000) } : {}),
+        },
+      },
       { upsert: true }
     );
 
     const saved = await collection.findOne(
       { usernameNormalized, url: article.url },
-      { projection: { _id: 0, usernameNormalized: 0 } }
+      { projection: { _id: 0, usernameNormalized: 0, expiresAt: 0 } }
     );
 
     return res.status(result.upsertedCount ? 201 : 200).json({ article: saved });

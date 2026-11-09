@@ -49,7 +49,7 @@ const Login = () => {
       const data = await demoLogin();
       completeLogin(data?.token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to start demo access.');
+      setError(err instanceof Error ? err.message : 'Could not start a guest session. Try again.');
       setLoading(false);
     }
   };
@@ -61,7 +61,7 @@ const Login = () => {
           <span className="auth-eyebrow">READER ACCESS</span>
           <h1>Welcome back</h1>
           <p>
-            Sign in to keep a Mongo-backed reading list of the gaming and hardware stories you want to revisit.
+            Sign in to keep your saved stories on every device. Or just browse as a guest: it's private to you and clears after a day.
           </p>
         </div>
 
@@ -71,10 +71,10 @@ const Login = () => {
           onClick={handleDemoLogin}
           disabled={loading}
         >
-          {loading ? 'Connecting…' : 'Continue with demo access'}
+          {loading ? 'Starting…' : 'Browse as a guest'}
         </button>
 
-        <div className="auth-divider"><span>or use your account</span></div>
+        <div className="auth-divider"><span>or sign in</span></div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">

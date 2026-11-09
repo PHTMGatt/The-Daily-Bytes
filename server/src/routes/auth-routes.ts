@@ -7,7 +7,7 @@ import {
   normalizeAccountText,
   readPassword,
 } from '../lib/authInputs.js';
-import { createSessionToken, DEMO_USERNAME } from '../lib/authSession.js';
+import { createGuestSessionToken, createSessionToken, isReservedUsername } from '../lib/authSession.js';
 import { createRateLimitMiddleware } from '../lib/rateLimit.js';
 
 const router = Router();
@@ -42,14 +42,8 @@ const createToken = (username: string) => createSessionToken(username, getJwtSec
 
 router.post('/demo', async (_req: Request, res: Response) => {
   try {
-    const users = getDb().collection<DailyBytesUser>('users');
-    const user = await users.findOne({ usernameNormalized: DEMO_USERNAME });
-
-    if (!user) {
-      return res.status(503).json({ message: 'Demo access is temporarily unavailable.' });
-    }
-
-    return res.json({ token: createToken(user.username) });
+    // A fresh private guest per visitor (no shared account, nothing to collide with).
+    return res.json({ token: createGuestSessionToken(getJwtSecret()) });
   } catch (error) {
     console.error('Daily Bytes demo session failed:', error instanceof Error ? error.message : 'unknown error');
     return res.status(500).json({ message: 'Unable to start demo access right now.' });
@@ -62,6 +56,10 @@ router.post('/login', async (req: Request, res: Response) => {
 
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  if (isReservedUsername(normalizeAccountKey(username))) {
+    return res.status(401).json({ message: 'Invalid username or password.' });
   }
 
   try {
@@ -100,8 +98,8 @@ router.post('/register', async (req: Request, res: Response) => {
     });
   }
 
-  if (normalizeAccountKey(username) === DEMO_USERNAME) {
-    return res.status(409).json({ message: 'That username is reserved for the demo account.' });
+  if (isReservedUsername(normalizeAccountKey(username))) {
+    return res.status(409).json({ message: 'That username is reserved.' });
   }
 
   try {

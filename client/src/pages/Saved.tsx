@@ -54,7 +54,7 @@ export default function Saved() {
         <FiBookmark />
         <span className="saved-kicker">YOUR READING LIST</span>
         <h1>Save the stories you want to come back to.</h1>
-        <p>Sign in and Daily Bytes will keep your saved gaming and hardware stories in MongoDB.</p>
+        <p>Sign in (or browse as a guest) and tap Save on any story to keep it here.</p>
         <Link to="/login">Sign in to save stories</Link>
       </section>
     );

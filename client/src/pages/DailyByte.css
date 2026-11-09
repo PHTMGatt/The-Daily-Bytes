@@ -711,3 +711,64 @@ body.light .db-search {
   opacity: 0.7;
   cursor: progress;
 }
+
+/* ===== Phones: news first, chips in one swipeable row ===== */
+@media (max-width: 760px) {
+  /* The top bar already has a search box; drop the duplicate and the intro line. */
+  .db-header-panel .db-search,
+  .db-heading-copy p {
+    display: none;
+  }
+
+  .db-heading-copy h1 {
+    font-size: 1.6rem;
+  }
+
+  .db-topic-chips,
+  .db-my-games {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-right: -16px;
+    padding-right: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .db-topic-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .db-topic-chips button,
+  .db-my-games button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    overflow: visible;
+    scroll-snap-align: start;
+  }
+}
+
+/* Phones: stories first; the Priority Watch list follows the feed. */
+@media (max-width: 760px) {
+  .db-priority-panel {
+    order: 1;
+  }
+}
+
+/* Phones: the lead story fits on one screen (shorter headline, 3-line summary). */
+@media (max-width: 760px) {
+  .db-feature-content h2 {
+    font-size: 1.45rem;
+    line-height: 1.15;
+  }
+
+  .db-feature-content p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}

@@ -8,6 +8,7 @@ import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
 import { resolveFetchedBlock } from '../../lib/feedBlock.js';
 import { ProviderCooldown, shouldCooldownOnError } from '../../lib/providerCooldown.js';
+import { createRateLimitMiddleware } from '../../lib/rateLimit.js';
 import { getRssArticles } from '../../lib/rssFeeds.js';
 
 const router = express.Router();
@@ -30,6 +31,15 @@ const providerCooldown = new ProviderCooldown(30 * 1000, 10 * 60 * 1000);
 const PROVIDER_COOLDOWN_MESSAGE = 'News provider is temporarily unavailable.';
 
 class ProviderCooldownError extends Error {}
+
+// Every uncached query costs Mediastack quota, so cap requests per client.
+router.use(
+  createRateLimitMiddleware({
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+    message: 'Too many news requests. Please wait a few minutes and try again.',
+  })
+);
 
 router.get('/:category?', async (req: Request, res: Response) => {
   if (!MEDIASTACK_API_KEY) {
@@ -103,7 +113,8 @@ router.get('/:category?', async (req: Request, res: Response) => {
           const rss = await getRssArticles(keywords || 'gaming');
           raw = rss.slice(offset, offset + fetchLimit);
           reportedTotal = rss.length;
-          if (raw.length) providerError = undefined;
+          // RSS answered: even zero matches is a real (empty) result, not a provider failure.
+          providerError = undefined;
         } catch (rssError) {
           console.error('RSS fallback error:', rssError instanceof Error ? rssError.message : rssError);
         }
