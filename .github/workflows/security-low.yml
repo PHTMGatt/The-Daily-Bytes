@@ -1,0 +1,37 @@
+# security-low
+# LOW: every PR and every claude-forge push. Secrets scan, npm audit, config check, build and tests (a few minutes).
+# Logic lives in security-pipeline.yml; this file only picks the level.
+name: security-low
+
+on:
+  pull_request:
+  push:
+    branches: [claude-forge]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-low-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    uses: ./.github/workflows/security-pipeline.yml
+    with:
+      level: "low"
+      node-version: "20"
+      audit-dirs: ". client server"
+      audit-omit-dev-dirs: "client"
+      mongo: true
+      prepare-command: "npm ci --no-fund && npm run client:build && (cd server && npx tsc)"
+      start-command: "cd server && node dist/server.js"
+      target-url: "http://127.0.0.1:3001"
+      start-env: |
+        MONGODB_URI=mongodb://127.0.0.1:27017
+        MONGODB_DB=zap-ci
+        JWT_SECRET_KEY=ci-fake-secret-not-real
+        PORT=3001
+        NODE_ENV=production
+      fuzz-get-paths: "/api/health /api/saved?x={}"
+      fuzz-post-paths: "/api/auth/login /api/auth/register /api/saved"

@@ -1,0 +1,40 @@
+# security-high
+# HIGH: manual or pre-launch only. Adds ZAP baseline and safe API fuzzing against a LOCAL instance started in CI
+# with fake data (never production), then a GO / NO-GO verdict. Unresolved high or critical findings mean NO-GO.
+# Until this file is on the default branch it also runs when claude-forge changes this file.
+# Logic lives in security-pipeline.yml; this file only picks the level.
+name: security-high
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude-forge]
+    paths: ['.github/workflows/security-high.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-high-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    uses: ./.github/workflows/security-pipeline.yml
+    with:
+      level: "high"
+      node-version: "20"
+      audit-dirs: ". client server"
+      audit-omit-dev-dirs: "client"
+      mongo: true
+      prepare-command: "npm ci --no-fund && npm run client:build && (cd server && npx tsc)"
+      start-command: "cd server && node dist/server.js"
+      target-url: "http://127.0.0.1:3001"
+      start-env: |
+        MONGODB_URI=mongodb://127.0.0.1:27017
+        MONGODB_DB=zap-ci
+        JWT_SECRET_KEY=ci-fake-secret-not-real
+        PORT=3001
+        NODE_ENV=production
+      fuzz-get-paths: "/api/health /api/saved?x={}"
+      fuzz-post-paths: "/api/auth/login /api/auth/register /api/saved"
