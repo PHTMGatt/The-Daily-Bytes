@@ -1,8 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
 
-// Headers that are safe for every response. No CSP on purpose: article images come
-// from arbitrary publisher hosts, so a strict img-src would break the feed.
+// Headers that are safe for every response. The CSP only restricts framing, plugins,
+// <base> and form targets: article images come from arbitrary publisher hosts, so
+// img-src/script-src stay open.
 const BASE_HEADERS: Record<string, string> = {
+  'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',

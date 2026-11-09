@@ -30,3 +30,10 @@ test('marks API responses no-store but not static assets', () => {
   assert.equal(run({ path: '/assets/app.js', secure: true }).headers['Cache-Control'], undefined);
   assert.equal(run({ path: '/apiary', secure: true }).headers['Cache-Control'], undefined);
 });
+
+test('CSP blocks framing/plugins but leaves publisher images alone', () => {
+  const csp = run({ path: '/', secure: true }).headers['Content-Security-Policy'];
+  assert.match(csp, /frame-ancestors 'none'/);
+  assert.match(csp, /object-src 'none'/);
+  assert.doesNotMatch(csp, /img-src/);
+});
