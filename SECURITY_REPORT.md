@@ -40,7 +40,7 @@ No deploy step exists in any workflow, and the repo has no `render.yaml`, so pus
 | 18 | File uploads | N/A | No upload route. |
 | 19 | Price verification | N/A | No commerce. |
 | 20 | Debug off in production | PASS | `x-powered-by` disabled (`server.ts:16`). |
-| 21 | Vulnerable dependencies | PASS (production) / **FINDING** | Server 0 vulns, root 2 moderate. **Client: 1 high (`vite`, dev server) and 6 moderate in dev tools.** The fix is a major upgrade (vite 8, typescript-eslint). It is not small or safe, so it was not applied. CI gates production deps strictly and warns on dev tools. |
+| 21 | Vulnerable dependencies | PASS (production) / **FINDING** | Server 0 vulns, root 2 moderate. **Update 2026-11-10: vite upgraded to 7.3.8 (plugin-react 5); the client high is gone, build and tests pass (test: `client/tests/toolingVersions.test.mjs`). 6 moderate remain in typescript-eslint/minimatch dev tools.** Original note: the client had 1 high (`vite`). CI gates production deps strictly and warns on dev tools. |
 | 22 | Unused packages | UNVERIFIED | Not checked. |
 | 23 | Exposed files / source maps | PASS | Only `client/dist` is served (`server.ts:19`). |
 | 24 | Git history secret scan | UNVERIFIED | CI scans the working tree. A full-history scan is not set up here. |
