@@ -1,12 +1,8 @@
 # Daily Bytes
 
-Daily Bytes is a gaming-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA and RTX hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
+Daily Bytes is a gaming- and tech-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA/RTX and AMD/Radeon hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
 
-The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/main/src/assets/photos/Daily%20Bytes.png" alt="Daily Bytes gaming news dashboard" width="900" />
-</p>
+The app is a React + Express project with a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
 
 ## Live App
 
@@ -14,14 +10,15 @@ The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-b
 
 ## Highlights
 
-- **Gaming-first home feed** with Witcher 3, NVIDIA/RTX, GPU prices, RAM/SSD, PC hardware, and game-release shortcuts.
+- **Gaming and Tech hubs** with quick-jump shortcuts for the games and hardware topics I follow (Witcher 3, NVIDIA/RTX, AMD/Radeon, GPU prices, RAM/SSD, PC hardware).
 - **One-request default feed expansion** so the homepage can surface gaming and priority PC-hardware stories without multiplying provider calls.
 - **Server-side relevance ranking and deduplication** for stronger keyword matches, duplicate headlines, URL duplicates, and freshness tie-breaking.
 - **Global search** with focused query routes and synchronized navigation state.
 - **MongoDB authentication** with bcrypt password hashing and 12-hour JWT sessions.
 - **Passwordless portfolio demo access** issued server-side without exposing the demo credential in React.
 - **MongoDB saved articles** with per-user unique URL protection.
-- **15-minute bounded news cache** to reduce repeat Mediastack requests.
+- **15-minute bounded news cache** to reduce repeat Mediastack requests, with a stale-cache fallback so a provider hiccup does not blank the page.
+- **Free RSS fallback** (IGN, PC Gamer, GameSpot, Eurogamer and others) for gaming and tech queries when Mediastack is rate limited, failing, or empty.
 - **Resilient article images** that fall back to branded card art instead of browser broken-image icons.
 - **Trending Watch and category feeds** with real loading, error, empty, retry, and pagination states.
 - **Daily Horoscope extra** using a server-side API proxy with validated zodiac input and honest provider-backed fields.
@@ -46,7 +43,7 @@ The app uses a dark navy / red dashboard UI, a server-side news proxy, MongoDB-b
 - Axios
 
 ### External Services
-- Mediastack for news data
+- Mediastack for news data (plus free RSS feeds as a fallback)
 - API Ninjas for horoscope data
 - Render for deployment
 
@@ -93,7 +90,7 @@ Create `server/.env` and provide your own values:
 MONGODB_URI=
 MONGODB_DB=daily-bytes
 JWT_SECRET_KEY=
-DEMO_PASSWORD=
+DEMO_PASSWORD=          # optional; if unset in production, a random password is generated
 MEDIASTACK_API_KEY=
 API_NINJAS_KEY=
 ```
