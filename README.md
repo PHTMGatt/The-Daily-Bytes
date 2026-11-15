@@ -84,16 +84,19 @@ npm install
 
 ### 3. Configure environment variables
 
-Create `server/.env` and provide your own values:
+Requires **Node.js 20+** and a MongoDB database (Atlas or local).
 
-```env
-MONGODB_URI=
-MONGODB_DB=daily-bytes
-JWT_SECRET_KEY=
-DEMO_PASSWORD=          # optional; if unset in production, a random password is generated
-MEDIASTACK_API_KEY=
-API_NINJAS_KEY=
-```
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `MONGODB_URI` | yes | Server exits with `MONGODB_URI is required` without it |
+| `MONGODB_DB` | no | Defaults to `daily-bytes` |
+| `JWT_SECRET_KEY` | yes | Signs reader sessions |
+| `MEDIASTACK_API_KEY` | yes, for news | Without it `/api/news` answers `503 News service is not configured` (RSS is only a fallback when Mediastack fails) |
+| `API_NINJAS_KEY` | no | Without it `/api/horoscope` answers `503` |
+| `DEMO_PASSWORD` | no | Production generates a random one when unset; local dev uses a built-in default |
+| `PORT` | no | Defaults to `3001` |
+
+Set `MONGODB_URI`, `MONGODB_DB` and `MEDIASTACK_API_KEY` as real environment variables (in your shell, or in the Render dashboard). The server reads those three while its modules load, before `dotenv` loads `server/.env`, so values for them in that file are ignored. `JWT_SECRET_KEY`, `API_NINJAS_KEY`, `DEMO_PASSWORD` and `PORT` can live in `server/.env`.
 
 Do not commit real credentials.
 
@@ -103,16 +106,16 @@ Do not commit real credentials.
 npm run start:dev
 ```
 
-The Express server defaults to port `3001` when `PORT` is not supplied. Vite runs the client development server separately.
+This runs the Express API on port `3001` (nodemon) and, once it is up, the Vite dev server on `http://localhost:3000`, which proxies `/api` to the server.
 
 ### 5. Production build
 
 ```bash
 npm run build
-npm start
+npm start         # node server/dist/server.js on PORT (default 3001)
 ```
 
-The production build runs the client regression suite, builds the React app, compiles the server, and runs the server regression suite before startup.
+`npm run build` is also the test gate: it runs the client tests, builds the React app, then compiles the server and runs the server tests. `npm start` does not rebuild, so run `npm run build` first. Render runs `npm run render-build`, then `npm start`.
 
 ## API Overview
 
@@ -145,7 +148,9 @@ The demo account is seeded during server startup and receives the same ordinary 
 npm test
 ```
 
-The root test command runs both client and server native Node test suites. Render also runs these tests as part of the production build gate.
+The root test command runs both client and server native Node test suites (the server suite compiles the TypeScript first). Lint the client with `cd client && npm run lint`.
+
+CI: `validate.yml` runs `npm ci` and `npm run build` on every pull request; the `security-*` workflows add secrets, audit and deeper scans.
 
 ## Deployment
 
