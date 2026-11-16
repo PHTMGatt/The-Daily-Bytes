@@ -1,7 +1,12 @@
-import test from 'node:test';
+import test, { after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { canonicalizeUrl, diversifySources, isLowValueArticle, normalizeHeadline, rankAndDedupeArticles } from '../dist/lib/newsQuality.js';
+
+// Ranking applies freshness and staleness tiers against Date.now() when no clock is passed. Freeze
+// the clock at the fixtures' era so results do not drift as the real date moves past tier edges.
+mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-27T12:00:00Z') });
+after(() => mock.timers.reset());
 
 const article = (overrides = {}) => ({
   title: 'Story',
