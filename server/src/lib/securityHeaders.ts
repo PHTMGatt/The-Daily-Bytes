@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
 
-// Headers that are safe for every response. The CSP only restricts framing, plugins,
-// <base> and form targets: article images come from arbitrary publisher hosts, so
-// img-src/script-src stay open.
+// Headers that are safe for every response. The CSP restricts scripts to same-origin (the Vite
+// build emits only external module scripts, no inline ones), plus framing, plugins, <base> and
+// form targets. Article images come from arbitrary publisher hosts, so img-src stays open.
 const BASE_HEADERS: Record<string, string> = {
-  'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+  'Content-Security-Policy': "script-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',

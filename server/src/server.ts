@@ -5,6 +5,7 @@ import express from 'express';
 import path from 'path';
 import { connectMongo } from './config/mongo.js';
 import apiRoutes from './routes/api/index.js';
+import { assertJwtSecret } from './lib/jwtSecret.js';
 import { securityHeaders } from './lib/securityHeaders.js';
 
 const app = express();
@@ -25,6 +26,7 @@ app.get('*', (_req, res) => {
 
 const start = async () => {
   try {
+    assertJwtSecret();
     await connectMongo();
     app.listen(PORT, () => {
       console.log(`Daily Bytes running on port ${PORT}`);

@@ -1,0 +1,25 @@
+# gitleaks config for The Daily Bytes: the default rules, minus the paths below.
+# The security pipeline builds fake tokens at run time and requires gitleaks to flag them with the plain
+# default rules, so this allowlist can't hide a broken scanner.
+title = "The Daily Bytes gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake-secret fixtures, three old commits, and known false-positive identifiers"
+paths = [
+  '''(^|/)\.github/security/fixtures/''',
+]
+# Old news-provider keys in client/src/pages/DailyByte.tsx (history is not rewritten; rotation must be confirmed at the provider).
+# Only these commits are skipped, so a new secret pasted into that file is still caught.
+commits = [
+  "ca73892264aa333161b1dc79826ab0b4a42b7459",
+  "5ed14a038c94adbdb7ca6e11f2ce029f612145ba",
+  "373781d964bf5e95aaaaff0a3f9b80f3d0fc3d65",
+]
+# generic-api-key false positives in that file: the hubKey prop and requestGuard token variables.
+regexes = [
+  '''hubKey''',
+  '''requestGuard''',
+]

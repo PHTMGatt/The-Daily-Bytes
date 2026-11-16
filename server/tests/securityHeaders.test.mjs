@@ -37,3 +37,9 @@ test('CSP blocks framing/plugins but leaves publisher images alone', () => {
   assert.match(csp, /object-src 'none'/);
   assert.doesNotMatch(csp, /img-src/);
 });
+
+test('CSP restricts scripts to same-origin without inline or eval', () => {
+  const csp = run({ path: '/', secure: true }).headers['Content-Security-Policy'];
+  assert.match(csp, /script-src 'self'(;|$)/);
+  assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval/);
+});

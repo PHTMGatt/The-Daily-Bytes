@@ -1,0 +1,43 @@
+# security-med
+# MED: nightly and manual. Adds full-history secret scan, dependency review and the red-team tests.
+# Schedule and manual runs only exist once this file is on the default branch; until then it also runs
+# when claude-forge changes this file, so it is proven green first.
+# Logic lives in security-pipeline.yml; this file only picks the level.
+name: security-med
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [claude-forge]
+    paths: ['.github/workflows/security-med.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-med-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    uses: ./.github/workflows/security-pipeline.yml
+    with:
+      level: "med"
+      node-version: "20"
+      audit-dirs: ". client server"
+      audit-omit-dev-dirs: "client"
+      mongo: true
+      prepare-command: "npm ci --no-fund && npm run client:build && (cd server && npx tsc)"
+      start-command: "cd server && node dist/server.js"
+      target-url: "http://127.0.0.1:3001"
+      start-env: |
+        MONGODB_URI=mongodb://127.0.0.1:27017
+        MONGODB_DB=zap-ci
+        JWT_SECRET_KEY=ci-fake-secret-not-real
+        PORT=3001
+        NODE_ENV=production
+      fuzz-get-paths: "/api/health /api/saved?x={}"
+      fuzz-post-paths: "/api/auth/login /api/auth/register /api/saved"
+# rerun to verify pipeline revision 2

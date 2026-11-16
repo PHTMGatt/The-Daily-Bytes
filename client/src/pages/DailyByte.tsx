@@ -234,6 +234,8 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
     setTopic(urlTopic);
     fetchTopic(urlTopic);
     return () => requestGuard.invalidate();
+    // Intentionally keyed to the route only: fetchTopic is recreated each render and must not retrigger the load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, hubKey]);
 
   useEffect(() => {
