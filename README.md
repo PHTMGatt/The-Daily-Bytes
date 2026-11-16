@@ -1,5 +1,11 @@
 # Daily Bytes
 
+Games. Hardware. Tech. A gaming and tech news dashboard.
+
+[![Live demo](https://img.shields.io/badge/live%20demo-online-2ea44f)](https://the-daily-bytes-o4jo.onrender.com)
+
+![Daily Bytes home page](docs/screenshot.png)
+
 Daily Bytes is a gaming- and tech-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA/RTX and AMD/Radeon hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
 
 The app is a React + Express project with a server-side news proxy, MongoDB-backed reader accounts and saved articles, and a one-click demo session for portfolio visitors.
