@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { Db, MongoClient } from 'mongodb';
+import { Db, MongoClient, type MongoClientOptions } from 'mongodb';
 
 const databaseName = process.env.MONGODB_DB || 'daily-bytes';
 const mongoUri = process.env.MONGODB_URI;
@@ -31,6 +31,14 @@ export interface DailyBytesSavedArticle {
   expiresAt?: Date;
 }
 
+/** Fail in seconds instead of hanging on an unreachable cluster, and cap the connection pool. */
+export const mongoClientOptions: MongoClientOptions = {
+  serverSelectionTimeoutMS: 10_000,
+  connectTimeoutMS: 10_000,
+  maxPoolSize: 10,
+  appName: 'the-daily-bytes',
+};
+
 export const connectMongo = async () => {
   if (database) return database;
 
@@ -38,7 +46,7 @@ export const connectMongo = async () => {
     throw new Error('MONGODB_URI is required');
   }
 
-  client = new MongoClient(mongoUri);
+  client = new MongoClient(mongoUri, mongoClientOptions);
   await client.connect();
   database = client.db(databaseName);
 
