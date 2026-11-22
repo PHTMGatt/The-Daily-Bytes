@@ -14,6 +14,25 @@ The app is a React + Express project with a server-side news proxy, MongoDB-back
 
 **https://the-daily-bytes-o4jo.onrender.com**
 
+The app runs on Render's free plan, so the first visit after a quiet spell can take up to a minute to wake up.
+
+## At a Glance
+
+- **What it is:** a full-stack news dashboard (React + Express + MongoDB) with accounts, saved articles and a no-signup demo session.
+- **News source:** [Mediastack](https://mediastack.com/), called only from the server with the key in the `MEDIASTACK_API_KEY` environment variable. The key is never in the repo or the browser. Free RSS feeds are the fallback.
+- **Quality gate:** `npm run build` runs the client tests, builds the app, then compiles and tests the server. CI runs it on every pull request.
+- **Try it:** open the live link and use the demo or guest option on the login page. No account is needed.
+
+## Security Approach
+
+- **Passwords:** hashed with bcrypt (cost 12). Plain passwords are never stored.
+- **Sessions:** signed JWTs with an expiry (12 hours for readers) sent as a bearer token. There are no cookies, so no CSRF surface.
+- **Secrets:** every provider key and the JWT secret are server-side environment variables. `.env` is gitignored and CI fails if a secret file is tracked.
+- **Abuse limits:** rate limiting on login, register, demo and news routes. Request bodies are capped at 100 KB.
+- **Headers:** a restrictive set (frame-ancestors none, nosniff, referrer and permissions policies, HSTS on secure requests). There is no CORS middleware, so the API is same-origin only.
+- **Data access:** saved articles are keyed by the username from the verified token. Queries use fixed fields with normalized input.
+- **Automated checks:** gitleaks secret scan, `npm audit` on production dependencies, and a config check on every pull request. The full checklist, including what was not verified, is in [SECURITY_REPORT.md](SECURITY_REPORT.md).
+
 ## Highlights
 
 - **Gaming and Tech hubs** with quick-jump shortcuts for the games and hardware topics I follow (Witcher 3, NVIDIA/RTX, AMD/Radeon, GPU prices, RAM/SSD, PC hardware).
