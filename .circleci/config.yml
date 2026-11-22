@@ -13,7 +13,7 @@ parameters:
 executors:
   node:
     docker:
-      - image: cimg/node:20
+      - image: cimg/node:20.19
     resource_class: small
   local-vm:
     machine:
