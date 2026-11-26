@@ -25,8 +25,9 @@ test('image slot shows a skeleton while loading, the picture once loaded, and th
   assert.equal(getImageSlotState('https://example.com/gpu.jpg', 'failed'), 'fallback');
   assert.equal(getImageSlotState('', 'loaded'), 'fallback');
   assert.equal(getImageSlotState(null), 'fallback');
+  assert.equal(getImageSlotState('https://example.com/gpu.jpg', 'stalled'), 'stalled');
 });
 
 test('a stalled image gives up within a reasonable time', () => {
-  assert.ok(IMAGE_STALL_MS >= 5000 && IMAGE_STALL_MS <= 20000);
+  assert.ok(IMAGE_STALL_MS >= 3000 && IMAGE_STALL_MS <= 10000);
 });

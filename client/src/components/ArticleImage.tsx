@@ -10,7 +10,7 @@ interface ArticleImageProps {
   priority?: boolean;
 }
 
-type LoadStatus = 'loading' | 'loaded' | 'failed';
+type LoadStatus = 'loading' | 'stalled' | 'loaded' | 'failed';
 
 const ArticleImage = ({
   src,
@@ -41,7 +41,7 @@ const ArticleImage = ({
     if (!img) return undefined;
     let timer: number | undefined;
     const startTimer = () => {
-      if (timer === undefined) timer = window.setTimeout(() => setStatus('failed'), IMAGE_STALL_MS);
+      if (timer === undefined) timer = window.setTimeout(() => setStatus((current) => (current === 'loading' ? 'stalled' : current)), IMAGE_STALL_MS);
     };
     if (priority || typeof IntersectionObserver === 'undefined') {
       startTimer();
@@ -67,11 +67,12 @@ const ArticleImage = ({
   return (
     <>
       {slot === 'loading' && <div className="db-image-skeleton" aria-hidden="true" />}
+      {slot === 'stalled' && <div className={fallbackClassName}>{fallbackLabel}</div>}
       <img
         ref={imgRef}
         src={src || undefined}
         alt={alt}
-        className={slot === 'loading' ? 'db-image-pending' : 'db-image-ready'}
+        className={slot === 'ready' ? 'db-image-ready' : 'db-image-pending'}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         {...(priority ? { fetchpriority: 'high' } : {})}

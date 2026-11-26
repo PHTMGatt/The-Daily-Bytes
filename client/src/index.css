@@ -1731,7 +1731,7 @@ body {
 .db-image-skeleton {
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, #0c1b2a 30%, #16304a 50%, #0c1b2a 70%);
+  background: linear-gradient(100deg, var(--db-panel) 30%, #16304a 50%, var(--db-panel) 70%);
   background-size: 200% 100%;
   animation: db-image-shimmer 1.4s ease-in-out infinite;
 }
@@ -1741,13 +1741,16 @@ body.light .db-image-skeleton {
   background-size: 200% 100%;
 }
 
+/* Kept mounted (absolutely, under the skeleton or fallback) so a slow download can still land. */
 img.db-image-pending {
+  position: absolute;
+  inset: 0;
   opacity: 0;
 }
 
 img.db-image-ready {
   opacity: 1;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.25s ease;
 }
 
 @keyframes db-image-shimmer {
