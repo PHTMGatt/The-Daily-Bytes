@@ -22,7 +22,10 @@
   .db-front.has-rail .db-top-rail {
     contain: size;
     min-height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-bottom: 32px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
   }
