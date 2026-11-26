@@ -23,7 +23,7 @@ jobs:
     uses: ./.github/workflows/security-pipeline.yml
     with:
       level: "high"
-      node-version: "20"
+      node-version: "22"
       audit-dirs: ". client server"
       audit-omit-dev-dirs: "client"
       mongo: true
