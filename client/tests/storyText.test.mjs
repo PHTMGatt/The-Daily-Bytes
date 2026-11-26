@@ -30,9 +30,13 @@ test('cleanSummary handles empty and whitespace input', () => {
 const chips = [
   ['Witcher 3', 'The Witcher 3'],
   ['AC Shadows', 'Assassins Creed Shadows'],
+  ['Elden Ring', 'Elden Ring'],
+  ['Far Cry', 'Far Cry'],
   ['GTA 6', 'GTA 6'],
+  ['ARK', 'ARK Survival'],
   ['DOOM', 'DOOM'],
   ['Xbox', 'Xbox'],
+  ['Steam', 'Steam'],
 ];
 
 test('matchStoryTag names the matched game from the headline', () => {
@@ -41,10 +45,25 @@ test('matchStoryTag names the matched game from the headline', () => {
   assert.equal(matchStoryTag({ title: 'Witcher 3 mod adds ray tracing' }, chips, 'Gaming'), 'Witcher 3');
 });
 
-test('matchStoryTag prefers the headline over the summary and earlier chips over later ones', () => {
+test('matchStoryTag prefers the headline over the summary', () => {
   const article = { title: 'New Xbox showcase date', description: 'Expect GTA 6 and DOOM news.' };
   assert.equal(matchStoryTag(article, chips, 'Gaming'), 'Xbox');
-  assert.equal(matchStoryTag({ title: 'Showcase recap', description: 'DOOM and GTA 6 both appeared.' }, chips, 'Gaming'), 'GTA 6');
+});
+
+test('matchStoryTag picks the game named earliest, chip order only breaks ties', () => {
+  const title = 'GTA 6 trailer watched more than Elden Ring, Diablo 4, Valorant, and Lost Ark combined';
+  assert.equal(matchStoryTag({ title }, chips, 'Gaming'), 'GTA 6');
+  assert.equal(matchStoryTag({ title: 'Showcase recap', description: 'DOOM and GTA 6 both appeared.' }, chips, 'Gaming'), 'DOOM');
+});
+
+test('matchStoryTag ignores everyday words that share a game name', () => {
+  assert.equal(matchStoryTag({ title: 'Lost Ark returns with a new class' }, chips, 'Gaming'), 'Gaming');
+  assert.equal(matchStoryTag({ title: 'Analysts see doom and gloom for retail' }, chips, 'Gaming'), 'Gaming');
+  assert.equal(matchStoryTag({ title: 'Indie hit picks up steam on Switch' }, chips, 'Gaming'), 'Gaming');
+  assert.equal(matchStoryTag({ title: 'The sequel is a far cry from the original' }, chips, 'Gaming'), 'Gaming');
+  assert.equal(matchStoryTag({ title: 'ARK 2 delayed again' }, chips, 'Gaming'), 'ARK');
+  assert.equal(matchStoryTag({ title: 'Far Cry 7 leak shows map' }, chips, 'Gaming'), 'Far Cry');
+  assert.equal(matchStoryTag({ title: 'Steam Next Fest dates set' }, chips, 'Gaming'), 'Steam');
 });
 
 test('matchStoryTag matches whole words only and falls back to the topic', () => {

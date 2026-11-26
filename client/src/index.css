@@ -1731,7 +1731,7 @@ body {
 .db-image-skeleton {
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, var(--db-panel) 30%, #16304a 50%, var(--db-panel) 70%);
+  background: linear-gradient(100deg, var(--db-panel) 30%, var(--db-border) 50%, var(--db-panel) 70%);
   background-size: 200% 100%;
   animation: db-image-shimmer 1.4s ease-in-out infinite;
 }
@@ -1745,6 +1745,9 @@ body.light .db-image-skeleton {
 img.db-image-pending {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
 }
 

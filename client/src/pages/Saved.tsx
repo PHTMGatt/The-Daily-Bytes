@@ -91,7 +91,7 @@ export default function Saved() {
           {articles.map((article) => (
             <article className="saved-card" key={article.url}>
               <div className="saved-card-media">
-                <ArticleImage src={article.image} fallbackClassName="saved-image-fallback" />
+                <ArticleImage src={article.image} fallbackLabel={formatSourceName(article.source)} fallbackClassName="saved-image-fallback" />
                 <span>{article.topic || 'Saved'}</span>
               </div>
               <div className="saved-card-body">

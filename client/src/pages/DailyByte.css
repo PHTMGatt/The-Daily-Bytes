@@ -203,7 +203,7 @@
 }
 
 /* Phones: everything stacks; compact rows sit flush (StoryCard draws the dividers). */
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .db-news-grid,
   .db-cluster-body {
     grid-template-columns: 1fr;

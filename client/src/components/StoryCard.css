@@ -19,7 +19,7 @@
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
 }
 
-.story:focus-within {
+.story:has(.story-link:focus-visible) {
   outline: 2px solid var(--db-accent);
   outline-offset: 2px;
 }
@@ -28,7 +28,7 @@
   position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #0c1b2a;
+  background: var(--db-panel-raised);
 }
 
 .story-media > img {
@@ -36,10 +36,6 @@
   height: 100%;
   display: block;
   object-fit: cover;
-}
-
-.story:hover .story-media > img {
-  transform: scale(1.025);
 }
 
 .story-image-fallback {
@@ -183,6 +179,10 @@ body.light .story-tag {
   color: #071421;
 }
 
+.story-save .filled {
+  fill: currentColor;
+}
+
 .story-save:disabled {
   opacity: 0.6;
   cursor: wait;
@@ -202,19 +202,14 @@ body.light .story-tag {
   aspect-ratio: 2 / 1;
 }
 
-.story-lead .story-media::after {
-  content: '';
-  position: absolute;
-  inset: 55% 0 0;
-  background: linear-gradient(0deg, rgba(1, 6, 12, 0.94), rgba(1, 6, 12, 0));
-  pointer-events: none;
-}
-
+/* The gradient lives on the text block, so it always covers exactly the text however
+   many lines the headline and summary take. */
 .story-lead .story-body {
   position: absolute;
   inset: auto 0 0;
-  padding: 0 28px 24px;
+  padding: 72px 28px 24px;
   gap: 9px;
+  background: linear-gradient(0deg, rgba(1, 6, 12, 0.95) 0%, rgba(1, 6, 12, 0.85) 55%, rgba(1, 6, 12, 0));
 }
 
 .story-lead .story-title {
@@ -269,8 +264,14 @@ body.light .story-tag {
   grid-column: 1;
   grid-row: 1;
   min-height: 96px;
-  padding: 0 48px 0 0;
+  padding: 0;
   gap: 6px;
+}
+
+/* Only the meta row sits beside Save, so only it leaves room for it. */
+.story-compact .story-meta {
+  min-height: 44px;
+  padding-right: 52px;
 }
 
 .story-compact .story-title {
@@ -353,17 +354,13 @@ body.light .story-tag {
   grid-column: 3;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .story-lead .story-media {
     aspect-ratio: 4 / 3;
   }
 
-  .story-lead .story-media::after {
-    inset: 35% 0 0;
-  }
-
   .story-lead .story-body {
-    padding: 0 16px 16px;
+    padding: 56px 16px 16px;
   }
 
   .story-lead .story-title {
@@ -377,7 +374,7 @@ body.light .story-tag {
 }
 
 /* Phone feed: compact rows sit flush with 1px dividers; the every-5th image card keeps its box. */
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .story-compact {
     border: 0;
     border-bottom: 1px solid var(--db-border);
@@ -396,5 +393,26 @@ body.light .story-tag {
 
   .story-standard {
     margin: 12px 0;
+  }
+}
+
+/* No double line where a compact row meets an image card or ends the list. */
+@media (max-width: 760px), (max-height: 480px) {
+  .story-compact:has(+ .story-standard),
+  .story-compact:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* Landscape phones: the lead fits between the strip and the bottom nav. */
+@media (max-height: 480px) and (min-width: 600px) {
+  .story-lead .story-media {
+    aspect-ratio: auto;
+    height: max(180px, calc(100vh - 200px));
+  }
+
+  .story-lead .story-title {
+    font-size: 1.3rem;
+    -webkit-line-clamp: 2;
   }
 }

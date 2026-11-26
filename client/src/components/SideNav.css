@@ -117,7 +117,7 @@ body.light .sidenav-icon {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .sidenav {
     top: auto;
     right: 0;
@@ -161,7 +161,7 @@ body.light .sidenav-icon {
 }
 
 /* Phones: show a short label under each tab icon so the bar is self-explanatory. */
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .sidenav-link {
     flex-direction: column;
     justify-content: center;

@@ -140,7 +140,7 @@ body.light .nav-search button {
 
 .theme-icon-button,
 .account-button {
-  height: 42px;
+  height: 44px;
   border: 1px solid var(--db-border);
   background: var(--db-panel);
   color: var(--db-text);
@@ -155,7 +155,7 @@ body.light .nav-search button {
 }
 
 .theme-icon-button {
-  width: 42px;
+  width: 44px;
   padding: 0;
   font-size: 1.15rem;
 }
@@ -202,7 +202,7 @@ body.light .nav-search button {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .navbar {
     height: 132px;
   }
@@ -231,10 +231,16 @@ body.light .nav-search button {
     width: 100%;
     height: 48px;
   }
+
+  .nav-search button {
+    width: 44px;
+    height: 44px;
+    margin-right: 2px;
+  }
 }
 
 /* Phones: hide while reading down, back on scroll up (Navbar.tsx toggles the class). */
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .navbar-hidden {
     transform: translateY(-100%);
   }
@@ -243,5 +249,38 @@ body.light .nav-search button {
 @media (prefers-reduced-motion: reduce) {
   .navbar {
     transition: none;
+  }
+}
+
+/* Landscape phones: one 60px row (logo | search | actions) so news gets the height. */
+@media (max-height: 480px) and (min-width: 600px) {
+  .navbar {
+    height: 60px;
+  }
+
+  .navbar-inner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: 60px;
+    column-gap: 12px;
+    padding: 0 12px;
+  }
+
+  .brand-lockup,
+  .nav-search,
+  .nav-actions {
+    grid-row: 1;
+  }
+
+  .nav-search {
+    grid-column: 2;
+    height: 44px;
+  }
+
+  .nav-actions {
+    grid-column: 3;
+  }
+
+  .brand-tagline {
+    display: none;
   }
 }

@@ -182,7 +182,7 @@
 }
 
 /* Phones: compact rows stack flush (StoryCard draws the dividers). */
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .news-grid {
     grid-template-columns: 1fr;
     gap: 0;
@@ -199,7 +199,7 @@
   list-style: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .news-rank-list {
     gap: 0;
   }

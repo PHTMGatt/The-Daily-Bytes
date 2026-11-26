@@ -169,7 +169,7 @@ body.light .error-actions a:not(.error-primary) {
   background: #f8fbfd;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .error-page {
     min-height: 100vh;
     margin-top: -132px;

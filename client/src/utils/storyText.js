@@ -30,30 +30,61 @@ const normalize = (value) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()} `;
 
+// Same cleanup but keeps case, for names that are also everyday words ("ARK" vs "Lost Ark",
+// "DOOM" vs "doom and gloom", "Steam" vs "picks up steam", "Far Cry" vs "a far cry from").
+const normalizeCased = (value) =>
+  ` ${String(value ?? '')
+    .replace(/['’]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, ' ')
+    .trim()} `;
+
+// Multi-word labels that are also ordinary English phrases.
+const PHRASE_NAMES = new Set(['far cry', 'black ops']);
+
 const needlesFor = ([label, query]) => {
-  const set = new Set();
-  for (const raw of [label, query]) {
-    const needle = normalize(raw).trim();
-    if (needle) set.add(needle);
+  const needles = [];
+  const seen = new Set();
+  const add = (raw) => {
+    const lower = normalize(raw).trim();
+    if (!lower || seen.has(lower)) return;
+    seen.add(lower);
+    const cased = !lower.includes(' ') || PHRASE_NAMES.has(lower);
+    needles.push(cased ? { text: normalizeCased(raw).trim(), cased: true } : { text: lower, cased: false });
     // "The Witcher 3" should also match "Witcher 3".
-    if (needle.startsWith('the ')) set.add(needle.slice(4));
+    if (lower.startsWith('the ')) add(String(raw).replace(/^\s*the\s+/i, ''));
+  };
+  add(label);
+  add(query);
+  return needles;
+};
+
+const firstIndex = (haystacks, needles) => {
+  let best = -1;
+  for (const needle of needles) {
+    const haystack = needle.cased ? haystacks.cased : haystacks.lower;
+    const index = haystack.indexOf(` ${needle.text} `);
+    if (index !== -1 && (best === -1 || index < best)) best = index;
   }
-  return [...set];
+  return best;
 };
 
 /**
- * Pick the badge for a story: the first chip (games/gear first, then topics) whose label or query
- * appears in the headline, then in the summary. Falls back to `fallback`, never an empty badge.
+ * Pick the badge for a story: the chip named EARLIEST in the headline (chip order breaks ties),
+ * then the same in the summary. One-word names and phrase-like names ("Far Cry") must match
+ * case too, so everyday words do not count. Falls back to `fallback`, never an empty badge.
  * @param {{ title?: string, description?: string | null }} article
  * @param {Array<[string, string]>} chips ordered [label, query] pairs
  * @param {string} fallback label used when nothing matches
  */
 export const matchStoryTag = (article, chips, fallback) => {
-  const haystacks = [normalize(article?.title), normalize(article?.description)];
-  for (const haystack of haystacks) {
+  for (const text of [article?.title, article?.description]) {
+    const haystacks = { lower: normalize(text), cased: normalizeCased(text) };
+    let best = null;
     for (const chip of chips || []) {
-      if (needlesFor(chip).some((needle) => haystack.includes(` ${needle} `))) return chip[0];
+      const index = firstIndex(haystacks, needlesFor(chip));
+      if (index !== -1 && (!best || index < best.index)) best = { index, label: chip[0] };
     }
+    if (best) return best.label;
   }
   return String(fallback || '').trim() || 'News';
 };

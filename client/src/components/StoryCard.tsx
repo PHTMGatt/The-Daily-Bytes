@@ -1,4 +1,4 @@
-import { FiBookmark, FiCheck } from 'react-icons/fi';
+import { FiBookmark } from 'react-icons/fi';
 import ArticleImage from './ArticleImage';
 import { formatPublishedLabel } from '../utils/articleTime';
 import { getArticleSource } from '../utils/articleSource.js';
@@ -52,6 +52,9 @@ const StoryCard = ({
   const source = getArticleSource(article);
   const age = formatPublishedLabel(article.publishedAt || article.published_at);
   const summary = variant === 'compact' ? '' : cleanSummary(article.description);
+  const Heading = variant === 'lead' ? 'h2' : 'h3';
+  // Compact rows keep the tag inline with source and age, so a row stays one tight block.
+  const inlineTag = variant === 'compact';
 
   const saveButton = onToggleSave && (
     <button
@@ -63,7 +66,7 @@ const StoryCard = ({
       aria-label={`${saved ? 'Remove' : 'Save'} ${article.title}`}
       title={saved ? 'Saved' : 'Save'}
     >
-      {saved ? <FiCheck aria-hidden="true" /> : <FiBookmark aria-hidden="true" />}
+      <FiBookmark aria-hidden="true" className={saved ? 'filled' : ''} />
     </button>
   );
 
@@ -83,8 +86,8 @@ const StoryCard = ({
         </div>
       )}
       <div className="story-body">
-        {tag && <span className="story-tag">{tag}</span>}
-        <h3 className="story-title">
+        {tag && !inlineTag && <span className="story-tag">{tag}</span>}
+        <Heading className="story-title">
           <a
             href={article.url}
             target="_blank"
@@ -94,9 +97,10 @@ const StoryCard = ({
           >
             {article.title}
           </a>
-        </h3>
+        </Heading>
         {summary && <p className="story-summary">{summary}</p>}
         <div className="story-meta">
+          {tag && inlineTag && <span className="story-tag">{tag}</span>}
           <span>{source}</span>
           {age && <span aria-hidden="true">·</span>}
           {age && <span>{age}</span>}
