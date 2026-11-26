@@ -81,3 +81,10 @@ test('brands match any case; DOOM and ARK also match their title-case headline f
   assert.equal(matchStoryTag({ title: 'Ark: Survival Ascended adds a new map' }, chips, 'Gaming'), 'ARK');
   assert.equal(matchStoryTag({ title: 'Doom and gloom for retail' }, chips, 'Gaming'), 'DOOM');
 });
+
+test('generic topics lose to a specific chip in the same headline', () => {
+  const chips = [['Gaming', 'gaming'], ['Industry', 'game industry'], ['Elden Ring', 'Elden Ring'], ['Razer', 'Razer']];
+  assert.equal(matchStoryTag({ title: 'A gaming handheld mod for Elden Ring' }, chips, 'X'), 'Elden Ring');
+  assert.equal(matchStoryTag({ title: 'New gaming mouse from Razer' }, chips, 'X'), 'Razer');
+  assert.equal(matchStoryTag({ title: 'Why gaming is booming' }, chips, 'X'), 'Gaming');
+});

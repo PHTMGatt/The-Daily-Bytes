@@ -43,6 +43,9 @@ const normalizeCased = (value) =>
 const CASED_NAMES = new Set(['ark', 'doom', 'steam', 'vr', 'far cry', 'black ops']);
 
 // Title-case forms outlets use for the all-caps names: "Doom: The Dark Ages", "Ark: Survival".
+// Broad topics that only win when no specific game, brand or product is named in the same text.
+const GENERIC_LABELS = new Set(['gaming', 'game releases', 'industry', 'esports', 'tech', 'hardware', 'pc gaming']);
+
 const titleCase = (text) => text.replace(/\b([A-Z])([A-Z]+)\b/g, (_, first, rest) => first + rest.toLowerCase());
 
 const needlesFor = ([label, query]) => {
@@ -100,11 +103,16 @@ export const matchStoryTag = (article, chips, fallback) => {
   for (const text of [article?.title, article?.description]) {
     const haystacks = { lower: normalize(text), cased: normalizeCased(text), raw: String(text ?? '') };
     let best = null;
+    let generic = null;
     for (const chip of chips || []) {
       const index = firstIndex(haystacks, needlesFor(chip));
-      if (index !== -1 && (!best || index < best.index)) best = { index, label: chip[0] };
+      if (index === -1) continue;
+      if (GENERIC_LABELS.has(String(chip[0]).trim().toLowerCase())) {
+        if (!generic || index < generic.index) generic = { index, label: chip[0] };
+      } else if (!best || index < best.index) best = { index, label: chip[0] };
     }
     if (best) return best.label;
+    if (generic) return generic.label;
   }
   return String(fallback || '').trim() || 'News';
 };
