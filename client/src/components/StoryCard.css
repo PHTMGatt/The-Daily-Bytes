@@ -434,31 +434,6 @@ body.light .story-tag {
   }
 }
 
-/* Desktop: the lead stretches to the Top stories rail so both end on the same line. */
-@media (min-width: 1001px) and (min-height: 481px) {
-  .db-front.has-rail .story-lead {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .db-front.has-rail .story-lead .story-media {
-    flex: 1;
-    min-height: 0;
-    aspect-ratio: auto;
-  }
-
-  .db-front.has-rail .story-lead .story-media > * {
-    position: absolute;
-    inset: 0;
-  }
-
-  .db-front.has-rail .story-lead .story-media::before {
-    content: '';
-    display: block;
-    padding-top: 50%;
-  }
-}
 
 /* Source and age stay together; the meta row wraps between the tag and that byline. */
 .story-byline {

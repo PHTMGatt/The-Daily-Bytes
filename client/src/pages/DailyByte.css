@@ -16,6 +16,18 @@
   align-items: stretch;
 }
 
+/* Desktop: the lead sets the row height (headline stays high on the first screen); the rail
+   fills that height without adding to it, and its overflow fades out at the bottom. */
+@media (min-width: 1001px) and (min-height: 481px) {
+  .db-front.has-rail .db-top-rail {
+    contain: size;
+    min-height: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
+  }
+}
+
 .db-top-rail {
   padding: 16px 18px 6px;
   background: var(--db-panel);
