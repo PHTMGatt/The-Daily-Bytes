@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { FiRefreshCw, FiZap } from 'react-icons/fi';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
 import { buildSavedPayload } from '../utils/savedPayload';
-import ArticleImage from './ArticleImage';
-import { formatPublishedLabel } from '../utils/articleTime';
-import { getArticleSource } from '../utils/articleSource.js';
-import { getStoryLinkLabel } from '../utils/storyLinkLabel.js';
+import StoryCard from './StoryCard';
+import { ALL_CHIPS } from '../config/hubs';
+import { matchStoryTag } from '../utils/storyText.js';
 import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
@@ -36,11 +35,6 @@ interface NewsComponentProps {
   subtitle?: string;
   keywords?: string;
 }
-
-const formatPublishedDate = (article: Article) =>
-  formatPublishedLabel(article.publishedAt || article.published_at);
-
-const getImage = (article: Article) => article.image || article.urlToImage || '';
 
 const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentProps) => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -133,6 +127,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
     setSaveNotice('');
   }, [feedKey]);
 
+  const fallbackTag = category || keywords || 'Latest';
   const totalPages = Math.max(1, Math.ceil(totalArticles / articlesPerPage));
   const viewState = getNewsViewState({ loading, error, articleCount: articles.length });
   const emptyCopy = getEmptyStateCopy(page);
@@ -196,49 +191,15 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
           {saveNotice && <p className="news-save-notice" role="status">{saveNotice}</p>}
           <div className="news-grid">
             {articles.map((article) => (
-              <article key={article.url} className="news-card">
-                <div className="news-card-media">
-                  <ArticleImage
-                    src={getImage(article)}
-                    fallbackLabel={getArticleSource(article) || 'Daily Bytes'}
-                    fallbackClassName="news-image-fallback"
-                  />
-                  <span>{category || keywords || 'Latest'}</span>
-                </div>
-                <div className="news-card-content">
-                  <div className="news-card-meta">
-                    <span>{getArticleSource(article)}</span>
-                    <span>•</span>
-                    <span>{formatPublishedDate(article)}</span>
-                  </div>
-                  <h2 className="news-title">{article.title}</h2>
-                  <p className="news-summary">
-                    {article.description?.trim() || 'Open the original story for the latest details.'}
-                  </p>
-                  <div className="news-card-actions">
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="read-more"
-                      aria-label={getStoryLinkLabel(article.title, getArticleSource(article))}
-                    >
-                      Open story <FiArrowUpRight />
-                    </a>
-                    <button
-                      type="button"
-                      className={`news-save${savedUrls.has(article.url) ? ' saved' : ''}`}
-                      disabled={savingUrl === article.url}
-                      onClick={() => toggleSaved(article)}
-                      aria-pressed={savedUrls.has(article.url)}
-                      aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
-                    >
-                      {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
-                      {savedUrls.has(article.url) ? 'Saved' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              </article>
+              <StoryCard
+                key={article.url}
+                article={article}
+                variant="standard"
+                tag={matchStoryTag(article, ALL_CHIPS, fallbackTag)}
+                saved={savedUrls.has(article.url)}
+                saving={savingUrl === article.url}
+                onToggleSave={toggleSaved}
+              />
             ))}
           </div>
 

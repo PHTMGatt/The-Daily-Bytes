@@ -14,3 +14,6 @@ export const getImageSlotState = (src, status = 'loading') => {
   if (status === 'loaded') return 'ready';
   return status === 'stalled' ? 'stalled' : 'loading';
 };
+
+// Feeds spell the picture field as `image` (mediastack) or `urlToImage` (NewsAPI).
+export const getArticleImage = (article) => article?.image || article?.urlToImage || '';

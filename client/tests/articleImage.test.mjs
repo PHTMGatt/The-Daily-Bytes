@@ -31,3 +31,11 @@ test('image slot shows a skeleton while loading, the picture once loaded, and th
 test('a stalled image gives up within a reasonable time', () => {
   assert.ok(IMAGE_STALL_MS >= 3000 && IMAGE_STALL_MS <= 10000);
 });
+
+test('getArticleImage reads either feed spelling', async () => {
+  const { getArticleImage } = await import('../src/utils/articleImage.js');
+  assert.equal(getArticleImage({ image: 'a.jpg', urlToImage: 'b.jpg' }), 'a.jpg');
+  assert.equal(getArticleImage({ urlToImage: 'b.jpg' }), 'b.jpg');
+  assert.equal(getArticleImage({}), '');
+  assert.equal(getArticleImage(null), '');
+});

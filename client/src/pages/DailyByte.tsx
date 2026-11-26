@@ -1,162 +1,25 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
-import ArticleImage from '../components/ArticleImage';
+import { FiArrowUpRight, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
+import StoryCard, { StoryArticle } from '../components/StoryCard';
+import { getArticleImage } from '../utils/articleImage';
+import { HUBS } from '../config/hubs';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
-import { formatPublishedLabel } from '../utils/articleTime';
 import { getArticleSource } from '../utils/articleSource.js';
 import { createLatestRequestGuard } from '../utils/latestRequest.js';
 import { isStaleFeed } from '../utils/newsViewState.js';
 import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
+import { cleanSummary, matchStoryTag } from '../utils/storyText.js';
 import './DailyByte.css';
 import './Bookmarks.css';
 
-interface SearchArticle {
-  source?: string | { name?: string };
-  author?: string | null;
-  title: string;
-  description?: string | null;
-  url: string;
-  image?: string | null;
-  urlToImage?: string | null;
-  published_at?: string;
-  publishedAt?: string;
-}
+type SearchArticle = StoryArticle;
 
 const PAGE_SIZE = 12;
 
-type Chip = [label: string, query: string];
-
-interface HubConfig {
-  path: string;
-  kicker: string;
-  title: string;
-  intro: string;
-  placeholder: string;
-  searchLabel: string;
-  // The hub opens on one combined feed of everything in the "mine" row.
-  defaultTopic: string;
-  mineLabel: string;
-  allLabel: string;
-  mine: Chip[];
-  topics: Chip[];
-  priority: Array<{ label: string; query: string; copy: string }>;
-  note: string;
-}
-
-const HUBS: Record<'gaming' | 'tech', HubConfig> = {
-  gaming: {
-    path: '/dailybyte',
-    kicker: 'GAMING',
-    title: 'Your gaming pulse.',
-    intro: 'Every game you play in one feed. Tap a game to zoom in, or search anything.',
-    placeholder: 'Try Witcher 3, Crimson Desert, Apex...',
-    searchLabel: 'Search gaming news',
-    defaultTopic: 'my games',
-    mineLabel: 'My games',
-    allLabel: 'All my games',
-    // Bryen's own library: what he is playing now first, then the franchises he keeps coming back to.
-    mine: [
-      ['Witcher 3', 'The Witcher 3'],
-      ['AC Black Flag', 'Assassins Creed Black Flag'],
-      ['Crimson Desert', 'Crimson Desert'],
-      ['AC Shadows', 'Assassins Creed Shadows'],
-      ['Cyberpunk 2077', 'Cyberpunk 2077'],
-      ['Elden Ring', 'Elden Ring'],
-      ['Apex Legends', 'Apex Legends'],
-      ['Black Ops', 'Call of Duty Black Ops'],
-      ['Hitman', 'Hitman'],
-      ['Batman Arkham', 'Batman Arkham'],
-      ['Far Cry', 'Far Cry'],
-      ['GTA 6', 'GTA 6'],
-      ['ARK', 'ARK Survival'],
-      ['Rocket League', 'Rocket League'],
-      ['CS2', 'Counter Strike 2'],
-      ['DOOM', 'DOOM'],
-    ],
-    topics: [
-      ['Gaming', 'gaming'],
-      ['Game Releases', 'video game releases'],
-      ['Xbox', 'Xbox'],
-      ['PlayStation', 'PlayStation'],
-      ['Nintendo', 'Nintendo'],
-      ['Steam', 'Steam'],
-      ['Industry', 'game industry'],
-      ['Esports', 'esports'],
-    ],
-    priority: [
-      { label: 'Witcher 3', query: 'The Witcher 3', copy: 'CDPR updates, mods, visuals, and everything around the Continent.' },
-      { label: 'Crimson Desert', query: 'Crimson Desert', copy: 'Pearl Abyss updates, patches, and Pywel news.' },
-      { label: 'AC Black Flag', query: 'Assassins Creed Black Flag', copy: 'Black Flag Resynced, Kenway, and Ubisoft news.' },
-      { label: 'Apex Legends', query: 'Apex Legends', copy: 'Seasons, ranked, legends, and Respawn updates.' },
-      { label: 'Game Releases', query: 'video game releases', copy: 'What is launching and what just dropped.' },
-    ],
-    note: 'Your games load first. Pick one to focus, or tap All my games to see everything again.',
-  },
-  tech: {
-    path: '/tech',
-    kicker: 'TECH + PC HARDWARE',
-    title: 'Your gear and hardware pulse.',
-    intro: 'Everything in your setup in one feed. Tap a part to zoom in, or search anything.',
-    placeholder: 'Try RTX 5090, Dominator Titanium, Corsair...',
-    searchLabel: 'Search tech and hardware news',
-    defaultTopic: 'my gear',
-    mineLabel: 'My gear',
-    allLabel: 'All my gear',
-    // Bryen's build and desk: GPUs, CPU, memory, storage, brands and the gear around it.
-    mine: [
-      ['RTX 5090', 'RTX 5090'],
-      ['RTX 5080', 'RTX 5080'],
-      ['Ryzen 9950X3D', 'Ryzen 9 9950X3D'],
-      ['Dominator Ti', 'Corsair Dominator Titanium'],
-      ['RAM Prices', 'RAM prices'],
-      ['9100 Pro SSD', 'Samsung 9100 Pro'],
-      ['Corsair', 'Corsair'],
-      ['XENEON EDGE', 'Corsair XENEON EDGE'],
-      ['Razer', 'Razer'],
-      ['ASUS ROG', 'ASUS ROG'],
-      ['ROG OLED', 'ROG Swift OLED'],
-      ['EK Cooling', 'EK water cooling'],
-      ['Raspberry Pi', 'Raspberry Pi'],
-      ['Elgato', 'Elgato Stream Deck'],
-      ['NVIDIA Drivers', 'NVIDIA driver'],
-      ['Logitech G', 'Logitech G'],
-    ],
-    topics: [
-      ['NVIDIA', 'NVIDIA GPU'],
-      ['AMD', 'AMD GPU'],
-      ['Intel', 'Intel CPU'],
-      ['GPU Prices', 'GPU prices'],
-      ['RAM + SSD', 'RAM SSD prices'],
-      ['PC Hardware', 'PC hardware'],
-      ['CPUs', 'CPU'],
-      ['Monitors', 'gaming monitor'],
-      ['Handhelds', 'handheld PC'],
-      ['VR', 'VR'],
-      ['AI Chips', 'AI chips'],
-      ['Next-gen Consoles', 'next gen consoles'],
-    ],
-    priority: [
-      { label: 'NVIDIA', query: 'NVIDIA GPU', copy: 'GeForce launches, drivers, DLSS, RTX hardware, and GPU moves.' },
-      { label: 'GPU Prices', query: 'GPU prices', copy: 'Graphics card pricing, availability, market shifts, and new deals.' },
-      { label: 'RAM + SSD', query: 'RAM SSD prices', copy: 'Memory, storage, DDR5, SSD pricing, and component market changes.' },
-      { label: 'Corsair', query: 'Corsair', copy: 'Dominator, XENEON, cases, iCUE, and the rest of your build.' },
-      { label: 'PC Hardware', query: 'PC hardware', copy: 'CPUs, cooling, cases, displays, builds, and enthusiast hardware.' },
-    ],
-    note: 'Your gear loads first. Pick a part to focus, or tap All my gear to see everything again.',
-  },
-};
-
-const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
-
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
-
-const formatDate = (article: SearchArticle) => formatPublishedLabel(getPublishedAt(article));
-
-const articleSummary = (article: SearchArticle) =>
-  article.description?.trim() || 'Open the full story for the latest details.';
 
 export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof typeof HUBS }) {
   const hub = HUBS[hubKey];
@@ -277,8 +140,8 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
         const saved = await saveArticle({
           title: article.title,
           url: article.url,
-          description: articleSummary(article),
-          image: getImage(article),
+          description: cleanSummary(article.description),
+          image: getArticleImage(article),
           source: getArticleSource(article),
           publishedAt: getPublishedAt(article),
           topic: activeTopic,
@@ -292,6 +155,12 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
       setSavingUrl('');
     }
   };
+
+  // Badge = the game/part/topic the story is actually about, falling back to the focused chip.
+  const chips = [...hub.mine, ...hub.topics];
+  const activeChip = chips.find(([, query]) => query.toLowerCase() === activeTopic.toLowerCase());
+  const tagFor = (article: SearchArticle) =>
+    matchStoryTag(article, chips, activeChip?.[0] || hub.fallbackTag);
 
   const featured = articles[0];
   const latest = articles.slice(1);
@@ -384,36 +253,14 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
             </div>
           ) : (
             <>
-              <article
-                className={`db-feature ${getImage(featured) ? 'has-image' : ''}`}
-                style={getImage(featured) ? { backgroundImage: `url("${getImage(featured)}")` } : undefined}
-              >
-                <div className="db-feature-overlay" />
-                <div className="db-feature-content">
-                  <span className="db-article-tag">{activeTopic}</span>
-                  <h2>{featured.title}</h2>
-                  <p>{articleSummary(featured)}</p>
-                  <div className="db-article-meta">
-                    <span>{getArticleSource(featured)}</span>
-                    <span>•</span>
-                    <span>{formatDate(featured)}</span>
-                  </div>
-                  <div className="db-feature-actions">
-                    <a href={featured.url} target="_blank" rel="noopener noreferrer">
-                      Read story <FiArrowUpRight />
-                    </a>
-                    <button
-                      type="button"
-                      className={savedUrls.has(featured.url) ? 'saved' : ''}
-                      disabled={savingUrl === featured.url}
-                      onClick={() => toggleSaved(featured)}
-                    >
-                      {savedUrls.has(featured.url) ? <FiCheck /> : <FiBookmark />}
-                      {savedUrls.has(featured.url) ? 'Saved' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              </article>
+              <StoryCard
+                article={featured}
+                variant="lead"
+                tag={tagFor(featured)}
+                saved={savedUrls.has(featured.url)}
+                saving={savingUrl === featured.url}
+                onToggleSave={toggleSaved}
+              />
 
               <div className="db-section-title">
                 <div>
@@ -425,36 +272,15 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
 
               <div className="db-news-grid">
                 {latest.map((article) => (
-                  <article className="db-news-card" key={article.url}>
-                    <div className="db-card-media">
-                      <ArticleImage src={getImage(article)} fallbackLabel={getArticleSource(article) || 'Daily Bytes'} />
-                      <span>{activeTopic}</span>
-                    </div>
-                    <div className="db-card-body">
-                      <h3>{article.title}</h3>
-                      <p>{articleSummary(article)}</p>
-                      <div className="db-article-meta">
-                        <span>{getArticleSource(article)}</span>
-                        <span>•</span>
-                        <span>{formatDate(article)}</span>
-                      </div>
-                      <div className="db-card-actions">
-                        <a href={article.url} target="_blank" rel="noopener noreferrer">
-                          Open story <FiArrowUpRight />
-                        </a>
-                        <button
-                          type="button"
-                          className={savedUrls.has(article.url) ? 'saved' : ''}
-                          disabled={savingUrl === article.url}
-                          onClick={() => toggleSaved(article)}
-                          aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
-                        >
-                          {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
-                          {savedUrls.has(article.url) ? 'Saved' : 'Save'}
-                        </button>
-                      </div>
-                    </div>
-                  </article>
+                  <StoryCard
+                    key={article.url}
+                    article={article}
+                    variant="standard"
+                    tag={tagFor(article)}
+                    saved={savedUrls.has(article.url)}
+                    saving={savingUrl === article.url}
+                    onToggleSave={toggleSaved}
+                  />
                 ))}
               </div>
 
