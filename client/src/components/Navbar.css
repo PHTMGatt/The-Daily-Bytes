@@ -197,7 +197,7 @@ body.light .nav-search button {
   }
 
   .account-button {
-    width: 42px;
+    width: 44px;
     padding: 0;
   }
 }
@@ -282,5 +282,15 @@ body.light .nav-search button {
 
   .brand-tagline {
     display: none;
+  }
+}
+
+/* Phones: the logo link is a full 44px tap target. */
+@media (max-width: 760px), (max-height: 480px) {
+  .brand-lockup {
+    min-height: 44px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
   }
 }

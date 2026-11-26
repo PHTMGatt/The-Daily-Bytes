@@ -38,8 +38,12 @@ const normalizeCased = (value) =>
     .replace(/[^A-Za-z0-9]+/g, ' ')
     .trim()} `;
 
-// Multi-word labels that are also ordinary English phrases.
-const PHRASE_NAMES = new Set(['far cry', 'black ops']);
+// Names that are also everyday words ("doom and gloom", "Lost Ark", "picks up steam", "a far cry
+// from"). Only these match case-sensitively; brands like NVIDIA or PlayStation match any case.
+const CASED_NAMES = new Set(['ark', 'doom', 'steam', 'vr', 'far cry', 'black ops']);
+
+// Title-case forms outlets use for the all-caps names: "Doom: The Dark Ages", "Ark: Survival".
+const titleCase = (text) => text.replace(/\b([A-Z])([A-Z]+)\b/g, (_, first, rest) => first + rest.toLowerCase());
 
 const needlesFor = ([label, query]) => {
   const needles = [];
@@ -48,8 +52,15 @@ const needlesFor = ([label, query]) => {
     const lower = normalize(raw).trim();
     if (!lower || seen.has(lower)) return;
     seen.add(lower);
-    const cased = !lower.includes(' ') || PHRASE_NAMES.has(lower);
-    needles.push(cased ? { text: normalizeCased(raw).trim(), cased: true } : { text: lower, cased: false });
+    if (CASED_NAMES.has(lower)) {
+      const cased = normalizeCased(raw).trim();
+      needles.push({ text: cased, cased: true });
+      const title = titleCase(cased);
+      // "Doom"/"Ark" in title case only counts at the start of a headline or before a colon.
+      if (title !== cased) needles.push({ text: title, cased: true, titleForm: true });
+    } else {
+      needles.push({ text: lower, cased: false });
+    }
     // "The Witcher 3" should also match "Witcher 3".
     if (lower.startsWith('the ')) add(String(raw).replace(/^\s*the\s+/i, ''));
   };
@@ -61,8 +72,17 @@ const needlesFor = ([label, query]) => {
 const firstIndex = (haystacks, needles) => {
   let best = -1;
   for (const needle of needles) {
-    const haystack = needle.cased ? haystacks.cased : haystacks.lower;
-    const index = haystack.indexOf(` ${needle.text} `);
+    let index;
+    if (needle.titleForm) {
+      // Title case ("Doom", "Ark") counts only as the headline's first word or right before a colon.
+      const raw = haystacks.raw.trim();
+      const atStart = new RegExp(`^${needle.text}(?![A-Za-z0-9])`).test(raw);
+      const colon = raw.search(new RegExp(`(?<![A-Za-z0-9])${needle.text}\\s*:`));
+      index = atStart ? 0 : colon;
+    } else {
+      const haystack = needle.cased ? haystacks.cased : haystacks.lower;
+      index = haystack.indexOf(` ${needle.text} `);
+    }
     if (index !== -1 && (best === -1 || index < best)) best = index;
   }
   return best;
@@ -78,7 +98,7 @@ const firstIndex = (haystacks, needles) => {
  */
 export const matchStoryTag = (article, chips, fallback) => {
   for (const text of [article?.title, article?.description]) {
-    const haystacks = { lower: normalize(text), cased: normalizeCased(text) };
+    const haystacks = { lower: normalize(text), cased: normalizeCased(text), raw: String(text ?? '') };
     let best = null;
     for (const chip of chips || []) {
       const index = firstIndex(haystacks, needlesFor(chip));

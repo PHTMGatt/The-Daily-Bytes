@@ -37,6 +37,8 @@ const chips = [
   ['DOOM', 'DOOM'],
   ['Xbox', 'Xbox'],
   ['Steam', 'Steam'],
+  ['NVIDIA', 'NVIDIA GPU'],
+  ['PlayStation', 'PlayStation'],
 ];
 
 test('matchStoryTag names the matched game from the headline', () => {
@@ -70,4 +72,12 @@ test('matchStoryTag matches whole words only and falls back to the topic', () =>
   assert.equal(matchStoryTag({ title: 'Doomscrolling is bad for you' }, chips, 'Gaming'), 'Gaming');
   assert.equal(matchStoryTag({ title: 'Nothing here' }, chips, ''), 'News');
   assert.equal(matchStoryTag({}, [], 'Industry'), 'Industry');
+});
+
+test('brands match any case; DOOM and ARK also match their title-case headline form', () => {
+  assert.equal(matchStoryTag({ title: 'Nvidia confirms RTX 50 Super refresh' }, chips, 'Gaming'), 'NVIDIA');
+  assert.equal(matchStoryTag({ title: 'Playstation Plus price rises in Europe' }, chips, 'Gaming'), 'PlayStation');
+  assert.equal(matchStoryTag({ title: 'Doom: The Dark Ages gets a free update' }, chips, 'Gaming'), 'DOOM');
+  assert.equal(matchStoryTag({ title: 'Ark: Survival Ascended adds a new map' }, chips, 'Gaming'), 'ARK');
+  assert.equal(matchStoryTag({ title: 'Doom and gloom for retail' }, chips, 'Gaming'), 'DOOM');
 });

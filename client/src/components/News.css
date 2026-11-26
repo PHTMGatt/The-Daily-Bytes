@@ -220,3 +220,12 @@
     margin: 0;
   }
 }
+
+/* Trending: the header lines up with the ranked list instead of spanning the page. */
+.news-container:has(.news-rank-list) .news-header {
+  max-width: 760px;
+}
+
+.pagination button {
+  min-height: 44px;
+}
