@@ -26,6 +26,7 @@
     overscroll-behavior: contain;
     scrollbar-width: thin;
     padding-bottom: 48px;
+    scroll-padding-bottom: 48px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(180deg, #000 calc(100% - 40px), transparent);
   }
