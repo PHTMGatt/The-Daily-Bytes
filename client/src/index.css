@@ -1725,3 +1725,37 @@ body.dark {
 body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
+
+/* Article image slot: skeleton while a publisher image downloads, then a short fade-in.
+   The parent media box is position: relative with a fixed aspect ratio, so nothing jumps. */
+.db-image-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, #0c1b2a 30%, #16304a 50%, #0c1b2a 70%);
+  background-size: 200% 100%;
+  animation: db-image-shimmer 1.4s ease-in-out infinite;
+}
+
+body.light .db-image-skeleton {
+  background: linear-gradient(100deg, #e3e9f0 30%, #f3f6f9 50%, #e3e9f0 70%);
+  background-size: 200% 100%;
+}
+
+img.db-image-pending {
+  opacity: 0;
+}
+
+img.db-image-ready {
+  opacity: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+@keyframes db-image-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-image-skeleton { animation: none; }
+  img.db-image-ready { transition: none; }
+}
