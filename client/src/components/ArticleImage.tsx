@@ -23,7 +23,11 @@ const ArticleImage = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const slot = getImageSlotState(src, status);
 
+  // Reset only when src really changes, never on mount: a fast onError must not be undone.
+  const prevSrc = useRef(src);
   useEffect(() => {
+    if (prevSrc.current === src) return;
+    prevSrc.current = src;
     setStatus('loading');
   }, [src]);
 

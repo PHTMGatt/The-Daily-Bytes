@@ -221,9 +221,23 @@
   }
 }
 
-/* Trending: the header lines up with the ranked list instead of spanning the page. */
+/* Trending: one column (header matches it); two columns of six (1-6 | 7-12) at 1100px+. */
 .news-container:has(.news-rank-list) .news-header {
   max-width: 760px;
+}
+
+@media (min-width: 1100px) and (min-height: 481px) {
+  .news-rank-list {
+    max-width: none;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(6, auto);
+    column-gap: 14px;
+  }
+
+  .news-container:has(.news-rank-list) .news-header {
+    max-width: none;
+  }
 }
 
 .pagination button {
