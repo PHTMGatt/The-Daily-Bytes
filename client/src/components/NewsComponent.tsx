@@ -8,6 +8,8 @@ import { buildSavedPayload } from '../utils/savedPayload';
 import StoryCard from './StoryCard';
 import { ALL_CHIPS } from '../config/hubs';
 import { matchStoryTag } from '../utils/storyText.js';
+import { feedVariant } from '../utils/feedLayout.js';
+import { useIsPhone } from '../utils/useIsPhone';
 import { feedKeyFor, getEmptyStateCopy, getNewsViewState, isStaleFeed, resolvePage } from '../utils/newsViewState';
 import './News.css';
 
@@ -52,6 +54,7 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
   const [savingUrl, setSavingUrl] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
   const navigate = useNavigate();
+  const isPhone = useIsPhone();
   const articlesPerPage = 12;
 
   useEffect(() => {
@@ -190,11 +193,11 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
           )}
           {saveNotice && <p className="news-save-notice" role="status">{saveNotice}</p>}
           <div className="news-grid">
-            {articles.map((article) => (
+            {articles.map((article, index) => (
               <StoryCard
                 key={article.url}
                 article={article}
-                variant="standard"
+                variant={feedVariant(index, isPhone)}
                 tag={matchStoryTag(article, ALL_CHIPS, fallbackTag)}
                 saved={savedUrls.has(article.url)}
                 saving={savingUrl === article.url}

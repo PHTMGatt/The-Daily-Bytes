@@ -182,3 +182,11 @@
   color: var(--db-muted);
   font-size: 0.82rem;
 }
+
+/* Phones: compact rows stack flush (StoryCard draws the dividers). */
+@media (max-width: 760px) {
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

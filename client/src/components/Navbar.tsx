@@ -1,8 +1,9 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
 import { getNavigationSearchValue, getSearchTargetPath } from '../utils/navigationSearch';
+import { nextHeaderHidden } from '../utils/feedLayout.js';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -20,6 +21,30 @@ const Navbar = () => {
     setSearch(getNavigationSearchValue(location.search));
   }, [location.pathname, location.search]);
 
+  // Phones: the header slides away while reading down and comes back on any scroll up.
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setHidden((current) => nextHeaderHidden(lastY.current, y, current));
+        lastY.current = y;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    setHidden(false);
+  }, [location.pathname, location.search]);
+
   useEffect(() => {
     document.body.classList.toggle('dark', theme === 'dark');
     document.body.classList.toggle('light', theme === 'light');
@@ -34,7 +59,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="navbar">
+    <header className={`navbar${hidden ? ' navbar-hidden' : ''}`} onFocusCapture={() => setHidden(false)}>
       <div className="navbar-inner">
         <Link className="brand-lockup" to="/" aria-label="Daily Bytes home">
           <span className="brand-name">Daily <strong>Bytes</strong></span>

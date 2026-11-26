@@ -351,3 +351,26 @@ body.light .story-tag {
     display: none;
   }
 }
+
+/* Phone feed: compact rows sit flush with 1px dividers; the every-5th image card keeps its box. */
+@media (max-width: 760px) {
+  .story-compact {
+    border: 0;
+    border-bottom: 1px solid var(--db-border);
+    border-radius: 0;
+    background: transparent;
+    padding: 12px 2px;
+  }
+
+  .story-compact:focus-within {
+    outline-offset: -2px;
+  }
+
+  .story-compact .story-save {
+    right: 110px;
+  }
+
+  .story-standard {
+    margin: 12px 0;
+  }
+}

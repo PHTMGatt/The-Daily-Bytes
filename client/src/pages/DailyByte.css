@@ -282,3 +282,11 @@
     order: 1;
   }
 }
+
+/* Phones: compact rows stack flush (StoryCard draws the dividers). */
+@media (max-width: 760px) {
+  .db-news-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

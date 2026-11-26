@@ -13,6 +13,8 @@ import { createLatestRequestGuard } from '../utils/latestRequest.js';
 import { isStaleFeed } from '../utils/newsViewState.js';
 import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
 import { cleanSummary, matchStoryTag } from '../utils/storyText.js';
+import { feedVariant } from '../utils/feedLayout.js';
+import { useIsPhone } from '../utils/useIsPhone';
 import './DailyByte.css';
 import './Bookmarks.css';
 
@@ -41,6 +43,7 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState('');
   const requestGuard = useRef(createLatestRequestGuard()).current;
+  const isPhone = useIsPhone();
 
   const fetchTopic = async (query: string) => {
     const token = requestGuard.start();
@@ -215,11 +218,11 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
               </div>
 
               <div className="db-news-grid">
-                {latest.map((article) => (
+                {latest.map((article, index) => (
                   <StoryCard
                     key={article.url}
                     article={article}
-                    variant="standard"
+                    variant={feedVariant(index, isPhone)}
                     tag={tagFor(article)}
                     saved={savedUrls.has(article.url)}
                     saving={savingUrl === article.url}
