@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
+import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
+import ChipStrip from '../components/ChipStrip';
 import StoryCard, { StoryArticle } from '../components/StoryCard';
 import { getArticleImage } from '../utils/articleImage';
 import { HUBS } from '../config/hubs';
@@ -27,7 +28,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   const location = useLocation();
   const navigate = useNavigate();
   const urlTopic = new URLSearchParams(location.search).get('q')?.trim() || DEFAULT_TOPIC;
-  const [topic, setTopic] = useState(urlTopic);
   const [activeTopic, setActiveTopic] = useState(urlTopic);
   const [articles, setArticles] = useState<SearchArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +94,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   };
 
   useEffect(() => {
-    setTopic(urlTopic);
     fetchTopic(urlTopic);
     return () => requestGuard.invalidate();
     // Intentionally keyed to the route only: fetchTopic is recreated each render and must not retrigger the load.
@@ -110,12 +109,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
 
   const openTopic = (query: string) => {
     navigate(`${hub.path}?q=${encodeURIComponent(query)}`);
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    const query = topic.trim();
-    if (query) openTopic(query);
   };
 
   const toggleSaved = async (article: SearchArticle) => {
@@ -167,70 +160,21 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
 
   return (
     <div className="dailybyte-page">
-      <section className="db-header-panel">
-        <div className="db-heading-copy">
-          <span className="db-kicker"><FiZap /> {hub.kicker}</span>
-          <h1>{hub.title}</h1>
-          <p>{hub.intro}</p>
+      <h1 className="sr-only">{hub.title}</h1>
+      <ChipStrip
+        label={hub.mineLabel}
+        allQuery={DEFAULT_TOPIC}
+        mine={hub.mine}
+        topics={hub.topics}
+        active={activeTopic}
+        onSelect={openTopic}
+      />
+      {stale && (
+        <div className="db-save-notice" role="status">
+          The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
         </div>
-
-        <form className="db-search" onSubmit={handleSubmit} role="search">
-          <FiSearch aria-hidden="true" />
-          <input
-            value={topic}
-            onChange={(event) => setTopic(event.target.value)}
-            placeholder={hub.placeholder}
-            aria-label={hub.searchLabel}
-          />
-          <button type="submit">Search</button>
-        </form>
-
-        <div className="db-chip-label-row">
-          <span className="db-chip-label" id="db-my-games-label">{hub.mineLabel}</span>
-          <button
-            type="button"
-            className={`db-all-games ${activeTopic.toLowerCase() === DEFAULT_TOPIC ? 'active' : ''}`}
-            aria-pressed={activeTopic.toLowerCase() === DEFAULT_TOPIC}
-            onClick={() => openTopic(DEFAULT_TOPIC)}
-          >
-            {hub.allLabel}
-          </button>
-        </div>
-        <div className="db-topic-chips db-my-games" aria-labelledby="db-my-games-label">
-          {hub.mine.map(([label, query]) => (
-            <button
-              type="button"
-              key={label}
-              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
-              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
-              onClick={() => openTopic(query)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <span className="db-chip-label" id="db-topics-label">Topics</span>
-        <div className="db-topic-chips" aria-labelledby="db-topics-label">
-          {hub.topics.map(([label, query]) => (
-            <button
-              type="button"
-              key={label}
-              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
-              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
-              onClick={() => openTopic(query)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {stale && (
-          <div className="db-save-notice" role="status">
-            The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
-          </div>
-        )}
-        {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
-      </section>
+      )}
+      {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
 
       <div className="db-dashboard">
         <div className="db-feed">

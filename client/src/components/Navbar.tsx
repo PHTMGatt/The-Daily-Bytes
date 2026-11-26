@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
+import { FiArrowRight, FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
-import { getNavigationSearchValue } from '../utils/navigationSearch';
+import { getNavigationSearchValue, getSearchTargetPath } from '../utils/navigationSearch';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -30,7 +30,7 @@ const Navbar = () => {
     event.preventDefault();
     const query = search.trim();
     if (!query) return;
-    navigate(`/dailybyte?q=${encodeURIComponent(query)}`);
+    navigate(`${getSearchTargetPath(location.pathname)}?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -49,7 +49,9 @@ const Navbar = () => {
             placeholder="Search games, GPUs, RAM, hardware..."
             aria-label="Search Daily Bytes"
           />
-          <button type="submit">Search</button>
+          <button type="submit" aria-label="Search">
+            <FiArrowRight aria-hidden="true" />
+          </button>
         </form>
 
         <div className="nav-actions">
@@ -58,7 +60,6 @@ const Navbar = () => {
               <FiBookmark /> Saved
             </Link>
           )}
-          <Link className="nav-text-link" to="/trending">Trending</Link>
           <button
             className="theme-icon-button"
             type="button"

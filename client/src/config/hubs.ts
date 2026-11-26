@@ -4,11 +4,7 @@ export type Chip = [label: string, query: string];
 
 export interface HubConfig {
   path: string;
-  kicker: string;
   title: string;
-  intro: string;
-  placeholder: string;
-  searchLabel: string;
   // The hub opens on one combined feed of everything in the "mine" row.
   defaultTopic: string;
   mineLabel: string;
@@ -24,12 +20,8 @@ export interface HubConfig {
 export const HUBS: Record<'gaming' | 'tech', HubConfig> = {
   gaming: {
     path: '/dailybyte',
-    kicker: 'GAMING',
     fallbackTag: 'Gaming',
     title: 'Your gaming pulse.',
-    intro: 'Every game you play in one feed. Tap a game to zoom in, or search anything.',
-    placeholder: 'Try Witcher 3, Crimson Desert, Apex...',
-    searchLabel: 'Search gaming news',
     defaultTopic: 'my games',
     mineLabel: 'My games',
     allLabel: 'All my games',
@@ -73,12 +65,8 @@ export const HUBS: Record<'gaming' | 'tech', HubConfig> = {
   },
   tech: {
     path: '/tech',
-    kicker: 'TECH + PC HARDWARE',
     fallbackTag: 'Tech',
     title: 'Your gear and hardware pulse.',
-    intro: 'Everything in your setup in one feed. Tap a part to zoom in, or search anything.',
-    placeholder: 'Try RTX 5090, Dominator Titanium, Corsair...',
-    searchLabel: 'Search tech and hardware news',
     defaultTopic: 'my gear',
     mineLabel: 'My gear',
     allLabel: 'All my gear',
