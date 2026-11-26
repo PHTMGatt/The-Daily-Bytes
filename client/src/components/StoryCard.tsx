@@ -31,6 +31,8 @@ interface StoryCardProps {
   onToggleSave?: (article: StoryArticle) => void;
   /** Rank numeral for ranked lists (Trending, Top right now). */
   rank?: number;
+  /** Text-only row (the Top right now rail). */
+  showImage?: boolean;
 }
 
 /**
@@ -45,6 +47,7 @@ const StoryCard = ({
   saving = false,
   onToggleSave,
   rank,
+  showImage = true,
 }: StoryCardProps) => {
   const source = getArticleSource(article);
   const age = formatPublishedLabel(article.publishedAt || article.published_at);
@@ -65,16 +68,20 @@ const StoryCard = ({
   );
 
   return (
-    <article className={`story story-${variant}${rank !== undefined ? ' story-ranked' : ''}`}>
+    <article
+      className={`story story-${variant}${rank !== undefined ? ' story-ranked' : ''}${showImage ? '' : ' story-text-only'}`}
+    >
       {rank !== undefined && <span className="story-rank" aria-hidden="true">{rank}</span>}
-      <div className="story-media">
-        <ArticleImage
-          src={getArticleImage(article)}
-          fallbackLabel={source}
-          fallbackClassName="story-image-fallback"
-          priority={variant === 'lead'}
-        />
-      </div>
+      {showImage && (
+        <div className="story-media">
+          <ArticleImage
+            src={getArticleImage(article)}
+            fallbackLabel={source}
+            fallbackClassName="story-image-fallback"
+            priority={variant === 'lead'}
+          />
+        </div>
+      )}
       <div className="story-body">
         {tag && <span className="story-tag">{tag}</span>}
         <h3 className="story-title">

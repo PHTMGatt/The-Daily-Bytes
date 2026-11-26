@@ -4,8 +4,9 @@ const Trending = () => {
   return (
     <NewsComponent
       keywords="gaming"
-      heading="Trending Watch"
-      subtitle="The newest gaming and enthusiast hardware stories moving through the Daily Bytes priority feed."
+      ranked
+      heading="Trending"
+      subtitle="The gaming and hardware stories moving fastest right now, ranked."
     />
   );
 };

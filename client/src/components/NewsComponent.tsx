@@ -36,9 +36,11 @@ interface NewsComponentProps {
   heading?: string;
   subtitle?: string;
   keywords?: string;
+  /** Numbered ranking list (Trending) instead of the card grid. */
+  ranked?: boolean;
 }
 
-const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentProps) => {
+const NewsComponent = ({ category, heading, subtitle, keywords, ranked = false }: NewsComponentProps) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -192,19 +194,37 @@ const NewsComponent = ({ category, heading, subtitle, keywords }: NewsComponentP
             </p>
           )}
           {saveNotice && <p className="news-save-notice" role="status">{saveNotice}</p>}
-          <div className="news-grid">
-            {articles.map((article, index) => (
-              <StoryCard
-                key={article.url}
-                article={article}
-                variant={feedVariant(index, isPhone)}
-                tag={matchStoryTag(article, ALL_CHIPS, fallbackTag)}
-                saved={savedUrls.has(article.url)}
-                saving={savingUrl === article.url}
-                onToggleSave={toggleSaved}
-              />
-            ))}
-          </div>
+          {ranked ? (
+            <ol className="news-rank-list">
+              {articles.map((article, index) => (
+                <li key={article.url}>
+                  <StoryCard
+                    article={article}
+                    variant="compact"
+                    rank={(page - 1) * articlesPerPage + index + 1}
+                    tag={matchStoryTag(article, ALL_CHIPS, fallbackTag)}
+                    saved={savedUrls.has(article.url)}
+                    saving={savingUrl === article.url}
+                    onToggleSave={toggleSaved}
+                  />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="news-grid">
+              {articles.map((article, index) => (
+                <StoryCard
+                  key={article.url}
+                  article={article}
+                  variant={feedVariant(index, isPhone)}
+                  tag={matchStoryTag(article, ALL_CHIPS, fallbackTag)}
+                  saved={savedUrls.has(article.url)}
+                  saving={savingUrl === article.url}
+                  onToggleSave={toggleSaved}
+                />
+              ))}
+            </div>
+          )}
 
           {totalPages > 1 && (
             <nav className="pagination" aria-label="News pagination">

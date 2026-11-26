@@ -307,6 +307,30 @@ body.light .story-tag {
   transform: none;
 }
 
+/* Text-only compact rows (Top right now rail): no thumb, flush with dividers. */
+.story-compact.story-text-only {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--db-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.story-compact.story-text-only:last-child {
+  border-bottom: 0;
+}
+
+.story-compact.story-text-only .story-body {
+  min-height: 0;
+  padding: 0;
+}
+
+.story-ranked.story-text-only {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
 /* Ranked compact rows (Trending, Top right now) */
 .story-ranked {
   grid-template-columns: 34px minmax(0, 1fr) 96px;

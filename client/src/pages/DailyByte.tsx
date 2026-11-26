@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { FiArrowRight, FiRefreshCw } from 'react-icons/fi';
 import ChipStrip from '../components/ChipStrip';
-import StoryCard, { StoryArticle } from '../components/StoryCard';
+import StoryCard, { StoryArticle, StoryVariant } from '../components/StoryCard';
 import { getArticleImage } from '../utils/articleImage';
 import { HUBS } from '../config/hubs';
 import { retrieveNews } from '../api/mainNewsAPI';
@@ -14,6 +14,7 @@ import { isStaleFeed } from '../utils/newsViewState.js';
 import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
 import { cleanSummary, matchStoryTag } from '../utils/storyText.js';
 import { feedVariant } from '../utils/feedLayout.js';
+import { buildFrontPage } from '../utils/frontPage.js';
 import { useIsPhone } from '../utils/useIsPhone';
 import './DailyByte.css';
 import './Bookmarks.css';
@@ -158,8 +159,31 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   const tagFor = (article: SearchArticle) =>
     matchStoryTag(article, chips, activeChip?.[0] || hub.fallbackTag);
 
-  const featured = articles[0];
-  const latest = articles.slice(1);
+  const combinedFeed = activeTopic.toLowerCase() === DEFAULT_TOPIC;
+  const front = buildFrontPage(articles, {
+    tagFor,
+    withRail: !isPhone,
+    withCluster: combinedFeed,
+    genericTags: [hub.fallbackTag, ...hub.topics.map(([label]) => label)],
+  });
+  const featured = front.lead;
+
+  const card = (
+    article: SearchArticle,
+    variant: StoryVariant,
+    extra?: { rank?: number; showImage?: boolean; onToggleSave?: undefined },
+  ) => (
+    <StoryCard
+      key={article.url}
+      article={article}
+      variant={variant}
+      tag={tagFor(article)}
+      saved={savedUrls.has(article.url)}
+      saving={savingUrl === article.url}
+      onToggleSave={toggleSaved}
+      {...extra}
+    />
+  );
 
   return (
     <div className="dailybyte-page">
@@ -179,99 +203,81 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
       )}
       {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
 
-      <div className="db-dashboard">
-        <div className="db-feed">
-          {loading && !featured ? (
-            <div className="db-loading-card">
-              <FiRefreshCw className="spin" />
-              <span>Loading the latest {activeTopic} stories...</span>
-            </div>
-          ) : error ? (
-            <div className="db-state-card">
-              <h2>Feed unavailable</h2>
-              <p>{error}</p>
-              <button type="button" onClick={() => fetchTopic(activeTopic)}>Try again</button>
-            </div>
-          ) : !featured ? (
-            <div className="db-state-card">
-              <h2>No stories found</h2>
-              <p>Try another priority topic or a broader search.</p>
-              <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to {hub.allLabel.toLowerCase()}</button>
-            </div>
-          ) : (
-            <>
-              <StoryCard
-                article={featured}
-                variant="lead"
-                tag={tagFor(featured)}
-                saved={savedUrls.has(featured.url)}
-                saving={savingUrl === featured.url}
-                onToggleSave={toggleSaved}
-              />
+      {loading && !featured ? (
+        <div className="db-loading-card">
+          <FiRefreshCw className="spin" />
+          <span>Loading the latest {activeTopic} stories...</span>
+        </div>
+      ) : error ? (
+        <div className="db-state-card">
+          <h2>Feed unavailable</h2>
+          <p>{error}</p>
+          <button type="button" onClick={() => fetchTopic(activeTopic)}>Try again</button>
+        </div>
+      ) : !featured ? (
+        <div className="db-state-card">
+          <h2>No stories found</h2>
+          <p>Try another game or topic, or a broader search.</p>
+          <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to {hub.allLabel.toLowerCase()}</button>
+        </div>
+      ) : (
+        <>
+          <div className={`db-front${front.rail.length ? ' has-rail' : ''}`}>
+            {card(featured, 'lead')}
+            {front.rail.length > 0 && (
+              <section className="db-top-rail" aria-labelledby="db-top-heading">
+                <h2 id="db-top-heading" className="db-rail-heading">
+                  <span className="db-live-dot" aria-hidden="true" />
+                  Top right now
+                </h2>
+                {front.rail.map((article, index) => card(article, 'compact', { rank: index + 1, showImage: false, onToggleSave: undefined }))}
+              </section>
+            )}
+          </div>
 
+          {front.cluster && (
+            <section className="db-cluster" aria-labelledby="db-cluster-heading">
               <div className="db-section-title">
-                <div>
-                  <span>LATEST NEWS</span>
-                  <h2>{activeTopic}</h2>
+                <h2 id="db-cluster-heading">{front.cluster.tag}</h2>
+                <button type="button" className="db-see-all" onClick={() => {
+                  const chip = chips.find(([label]) => label === front.cluster?.tag);
+                  if (chip) openTopic(chip[1]);
+                }}>
+                  More {front.cluster.tag} <FiArrowRight aria-hidden="true" />
+                </button>
+              </div>
+              <div className="db-cluster-body">
+                {card(front.cluster.items[0], 'standard')}
+                <div className="db-cluster-list">
+                  {front.cluster.items.slice(1).map((article) => card(article, 'compact'))}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {front.latest.length > 0 && (
+            <section aria-labelledby="db-latest-heading">
+              <div className="db-section-title">
+                <h2 id="db-latest-heading">{combinedFeed ? 'Latest' : activeTopic}</h2>
                 {loading && <FiRefreshCw className="spin" aria-label="Refreshing" />}
               </div>
-
               <div className="db-news-grid">
-                {latest.map((article, index) => (
-                  <StoryCard
-                    key={article.url}
-                    article={article}
-                    variant={feedVariant(index, isPhone)}
-                    tag={tagFor(article)}
-                    saved={savedUrls.has(article.url)}
-                    saving={savingUrl === article.url}
-                    onToggleSave={toggleSaved}
-                  />
-                ))}
+                {front.latest.map((article, index) => card(article, feedVariant(index, isPhone)))}
               </div>
-
-              {(hasMore || moreError) && (
-                <div className="db-load-more">
-                  {moreError && <p role="alert">{moreError}</p>}
-                  <button type="button" onClick={loadMore} disabled={loadingMore}>
-                    {loadingMore ? <FiRefreshCw className="spin" aria-hidden="true" /> : null}
-                    {loadingMore ? 'Loading...' : moreError ? 'Try again' : 'Load more stories'}
-                  </button>
-                </div>
-              )}
-            </>
+            </section>
           )}
-        </div>
 
-        <aside className="db-priority-panel">
-          <div className="db-priority-heading">
-            <FiZap />
-            <div>
-              <span>ONE TAP</span>
-              <h2>Jump to</h2>
-            </div>
-          </div>
-
-          <div className="db-priority-list">
-            {hub.priority.map((item, index) => (
-              <button type="button" key={item.label} onClick={() => openTopic(item.query)}>
-                <span className="db-priority-number">{index + 1}</span>
-                <span className="db-priority-copy">
-                  <strong>{item.label}</strong>
-                  <small>{item.copy}</small>
-                </span>
-                <FiArrowUpRight />
+          {(hasMore || moreError) && (
+            <div className="db-load-more">
+              {moreError && <p role="alert">{moreError}</p>}
+              <button type="button" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? <FiRefreshCw className="spin" aria-hidden="true" /> : null}
+                {loadingMore ? 'Loading...' : moreError ? 'Try again' : 'Load more stories'}
               </button>
-            ))}
-          </div>
-
-          <div className="db-priority-note">
-            <strong>Tap any row to filter the feed.</strong>
-            <p>{hub.note}</p>
-          </div>
-        </aside>
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

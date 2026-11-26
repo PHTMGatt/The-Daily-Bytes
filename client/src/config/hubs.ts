@@ -1,4 +1,4 @@
-// Hub config for the Gaming (/dailybyte, home) and Tech (/tech) pages: chips, priority rows, copy.
+// Hub config for the Gaming (/dailybyte, home) and Tech (/tech) pages: chips and copy.
 
 export type Chip = [label: string, query: string];
 
@@ -11,8 +11,6 @@ export interface HubConfig {
   allLabel: string;
   mine: Chip[];
   topics: Chip[];
-  priority: Array<{ label: string; query: string; copy: string }>;
-  note: string;
   /** Badge shown when a story matches no chip. */
   fallbackTag: string;
 }
@@ -54,14 +52,6 @@ export const HUBS: Record<'gaming' | 'tech', HubConfig> = {
       ['Industry', 'game industry'],
       ['Esports', 'esports'],
     ],
-    priority: [
-      { label: 'Witcher 3', query: 'The Witcher 3', copy: 'CDPR updates, mods, visuals, and everything around the Continent.' },
-      { label: 'Crimson Desert', query: 'Crimson Desert', copy: 'Pearl Abyss updates, patches, and Pywel news.' },
-      { label: 'AC Black Flag', query: 'Assassins Creed Black Flag', copy: 'Black Flag Resynced, Kenway, and Ubisoft news.' },
-      { label: 'Apex Legends', query: 'Apex Legends', copy: 'Seasons, ranked, legends, and Respawn updates.' },
-      { label: 'Game Releases', query: 'video game releases', copy: 'What is launching and what just dropped.' },
-    ],
-    note: 'Your games load first. Pick one to focus, or tap All my games to see everything again.',
   },
   tech: {
     path: '/tech',
@@ -103,14 +93,6 @@ export const HUBS: Record<'gaming' | 'tech', HubConfig> = {
       ['AI Chips', 'AI chips'],
       ['Next-gen Consoles', 'next gen consoles'],
     ],
-    priority: [
-      { label: 'NVIDIA', query: 'NVIDIA GPU', copy: 'GeForce launches, drivers, DLSS, RTX hardware, and GPU moves.' },
-      { label: 'GPU Prices', query: 'GPU prices', copy: 'Graphics card pricing, availability, market shifts, and new deals.' },
-      { label: 'RAM + SSD', query: 'RAM SSD prices', copy: 'Memory, storage, DDR5, SSD pricing, and component market changes.' },
-      { label: 'Corsair', query: 'Corsair', copy: 'Dominator, XENEON, cases, iCUE, and the rest of your build.' },
-      { label: 'PC Hardware', query: 'PC hardware', copy: 'CPUs, cooling, cases, displays, builds, and enthusiast hardware.' },
-    ],
-    note: 'Your gear loads first. Pick a part to focus, or tap All my gear to see everything again.',
   },
 };
 

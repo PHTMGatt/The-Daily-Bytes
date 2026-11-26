@@ -3,38 +3,94 @@
   margin: 0 auto;
 }
 
-.db-dashboard {
+/* ---- Front: lead (2/3) + Top right now (1/3) ---- */
+.db-front {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
-.db-feed {
-  min-width: 0;
+.db-front.has-rail {
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
 }
 
-.db-section-title {
-  margin: 20px 3px 10px;
+.db-top-rail {
+  padding: 16px 18px 6px;
+  background: var(--db-panel);
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+}
+
+.db-rail-heading {
+  margin: 0 0 4px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  gap: 8px;
+  color: var(--db-text);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The one red thing in the content area: the live dot. */
+.db-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--db-accent);
+  box-shadow: 0 0 0 4px var(--db-accent-soft);
+}
+
+/* ---- Section headings ---- */
+.db-section-title {
+  margin: 26px 2px 12px;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
 
-.db-section-title span {
-  color: var(--db-accent);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+.db-section-title h2 {
+  margin: 0;
+  color: var(--db-text);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  text-transform: capitalize;
 }
 
-.db-section-title h2 {
-  margin: 3px 0 0;
+.db-see-all {
+  min-height: 44px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--db-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.db-see-all:hover {
   color: var(--db-text);
-  font-size: 1.55rem;
-  line-height: 1.15;
-  text-transform: capitalize;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- Cluster: one standard card + compact headlines on the same game ---- */
+.db-cluster-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.db-cluster-list {
+  display: grid;
+  gap: 10px;
 }
 
 .db-news-grid {
@@ -43,121 +99,7 @@
   gap: 14px;
 }
 
-.db-priority-panel {
-  position: sticky;
-  top: 106px;
-  overflow: hidden;
-  background: var(--db-panel);
-  border: 1px solid var(--db-border);
-  border-radius: 12px;
-  box-shadow: var(--db-shadow);
-}
-
-.db-priority-heading {
-  padding: 20px 20px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--db-border);
-}
-
-.db-priority-heading > svg {
-  flex: 0 0 auto;
-  color: var(--db-accent);
-  font-size: 1.4rem;
-}
-
-.db-priority-heading span {
-  color: var(--db-accent);
-  font-size: 0.64rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-}
-
-.db-priority-heading h2 {
-  margin: 2px 0 0;
-  color: var(--db-text);
-  font-size: 1.28rem;
-}
-
-.db-priority-list {
-  padding: 5px 16px;
-}
-
-.db-priority-list button {
-  width: 100%;
-  padding: 14px 3px;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  border: 0;
-  border-bottom: 1px solid var(--db-border);
-  background: transparent;
-  color: var(--db-text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.db-priority-list button:last-child {
-  border-bottom: 0;
-}
-
-.db-priority-list button:hover strong,
-.db-priority-list button:hover > svg {
-  color: var(--db-accent);
-}
-
-.db-priority-number {
-  color: var(--db-accent);
-  font-size: 1.55rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.db-priority-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.db-priority-copy strong {
-  font-size: 0.9rem;
-  transition: color 0.16s ease;
-}
-
-.db-priority-copy small {
-  color: var(--db-muted);
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-
-.db-priority-list button > svg {
-  color: #698097;
-  transition: color 0.16s ease;
-}
-
-.db-priority-note {
-  margin: 10px 16px 16px;
-  padding: 14px;
-  background: var(--db-accent-soft);
-  border: 1px solid rgba(255, 23, 60, 0.18);
-  border-radius: 9px;
-}
-
-.db-priority-note strong {
-  color: var(--db-text);
-  font-size: 0.82rem;
-}
-
-.db-priority-note p {
-  margin: 5px 0 0;
-  color: var(--db-muted);
-  font-size: 0.76rem;
-  line-height: 1.42;
-}
-
+/* ---- States ---- */
 .db-loading-card,
 .db-state-card {
   min-height: 360px;
@@ -175,7 +117,7 @@
 }
 
 .db-loading-card > svg {
-  color: var(--db-accent);
+  color: var(--db-text);
   font-size: 1.5rem;
 }
 
@@ -189,12 +131,13 @@
 }
 
 .db-state-card button {
+  min-height: 44px;
   margin-top: 4px;
-  padding: 10px 14px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 7px;
-  background: var(--db-accent);
-  color: #fff;
+  border-radius: 8px;
+  background: var(--db-text);
+  color: var(--db-panel);
   font-weight: 800;
   cursor: pointer;
 }
@@ -205,40 +148,6 @@
 
 @keyframes db-spin {
   to { transform: rotate(360deg); }
-}
-
-@media (max-width: 1250px) {
-  .db-dashboard {
-    grid-template-columns: minmax(0, 1fr) 290px;
-  }
-
-  .db-news-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 930px) {
-  .db-dashboard {
-    grid-template-columns: 1fr;
-  }
-
-  .db-priority-panel {
-    position: static;
-    order: -1;
-  }
-
-  .db-priority-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 16px;
-  }
-}
-
-@media (max-width: 620px) {
-  .db-news-grid,
-  .db-priority-list {
-    grid-template-columns: 1fr;
-  }
 }
 
 .db-load-more {
@@ -255,10 +164,11 @@
 }
 
 .db-load-more button {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 20px;
+  padding: 0 20px;
   border: 1px solid var(--db-border);
   border-radius: 8px;
   background: var(--db-panel);
@@ -268,7 +178,7 @@
 }
 
 .db-load-more button:hover:not(:disabled) {
-  border-color: var(--db-accent);
+  border-color: var(--db-border-strong);
 }
 
 .db-load-more button:disabled {
@@ -276,17 +186,36 @@
   cursor: progress;
 }
 
-/* Phones: stories first; the Priority Watch list follows the feed. */
-@media (max-width: 760px) {
-  .db-priority-panel {
-    order: 1;
+@media (max-width: 1250px) {
+  .db-news-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .db-cluster-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
-/* Phones: compact rows stack flush (StoryCard draws the dividers). */
+@media (max-width: 1000px) {
+  .db-front.has-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones: everything stacks; compact rows sit flush (StoryCard draws the dividers). */
 @media (max-width: 760px) {
-  .db-news-grid {
+  .db-news-grid,
+  .db-cluster-body {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .db-cluster-list {
+    gap: 0;
+  }
+
+  .db-section-title {
+    margin-top: 20px;
+    margin-bottom: 4px;
   }
 }
