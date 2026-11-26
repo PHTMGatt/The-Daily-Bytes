@@ -6,7 +6,7 @@ const Trending = () => {
       keywords="gaming"
       ranked
       heading="Trending"
-      subtitle="The gaming and hardware stories moving fastest right now, ranked."
+      subtitle="The newest gaming and hardware stories, top of the feed first."
     />
   );
 };

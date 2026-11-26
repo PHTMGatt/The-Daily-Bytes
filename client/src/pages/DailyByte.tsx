@@ -160,12 +160,15 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
     matchStoryTag(article, chips, activeChip?.[0] || hub.fallbackTag);
 
   const combinedFeed = activeTopic.toLowerCase() === DEFAULT_TOPIC;
-  const front = buildFrontPage(articles, {
+  // Lead, rail and cluster come from the first page only, so "Load more" never reshuffles
+  // stories above the reader; later pages append to Latest.
+  const firstPage = buildFrontPage(articles.slice(0, PAGE_SIZE), {
     tagFor,
     withRail: !isPhone,
     withCluster: combinedFeed,
     genericTags: [hub.fallbackTag, ...hub.topics.map(([label]) => label)],
   });
+  const front = { ...firstPage, latest: [...firstPage.latest, ...articles.slice(PAGE_SIZE)] };
   const featured = front.lead;
 
   const card = (
@@ -227,8 +230,8 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
             {front.rail.length > 0 && (
               <section className="db-top-rail" aria-labelledby="db-top-heading">
                 <h2 id="db-top-heading" className="db-rail-heading">
-                  <span className="db-live-dot" aria-hidden="true" />
-                  Top right now
+                  {!stale && <span className="db-live-dot" aria-hidden="true" />}
+                  Top stories
                 </h2>
                 {front.rail.map((article, index) => card(article, 'compact', { rank: index + 1, showImage: false, onToggleSave: undefined }))}
               </section>
@@ -258,7 +261,7 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
           {front.latest.length > 0 && (
             <section aria-labelledby="db-latest-heading">
               <div className="db-section-title">
-                <h2 id="db-latest-heading">{combinedFeed ? 'Latest' : activeTopic}</h2>
+                <h2 id="db-latest-heading">{combinedFeed ? 'Latest' : activeChip?.[0] || activeTopic}</h2>
                 {loading && <FiRefreshCw className="spin" aria-label="Refreshing" />}
               </div>
               <div className="db-news-grid">

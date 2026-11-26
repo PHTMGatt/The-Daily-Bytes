@@ -1,4 +1,4 @@
-// Turn one ranked feed into a front page: lead, "Top right now" rail, one topic cluster, the rest.
+// Turn one ranked feed into a front page: lead, "Top stories" rail, one topic cluster, the rest.
 
 /**
  * @template T

@@ -191,7 +191,7 @@
 
 /* Trending: one numbered column of compact rows. */
 .news-rank-list {
-  max-width: 900px;
+  max-width: 760px;
   margin: 0;
   padding: 0;
   display: grid;
@@ -202,5 +202,21 @@
 @media (max-width: 760px), (max-height: 480px) {
   .news-rank-list {
     gap: 0;
+  }
+}
+
+/* Phones: the page header is one line so the list starts on the first screen. */
+@media (max-width: 760px), (max-height: 480px) {
+  .news-header {
+    padding: 14px 16px;
+  }
+
+  .news-header p,
+  .news-kicker {
+    display: none;
+  }
+
+  .news-heading {
+    margin: 0;
   }
 }

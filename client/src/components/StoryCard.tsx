@@ -29,9 +29,9 @@ interface StoryCardProps {
   saved?: boolean;
   saving?: boolean;
   onToggleSave?: (article: StoryArticle) => void;
-  /** Rank numeral for ranked lists (Trending, Top right now). */
+  /** Rank numeral for ranked lists (Trending, Top stories). */
   rank?: number;
-  /** Text-only row (the Top right now rail). */
+  /** Text-only row (the Top stories rail). */
   showImage?: boolean;
 }
 
@@ -101,9 +101,11 @@ const StoryCard = ({
         {summary && <p className="story-summary">{summary}</p>}
         <div className="story-meta">
           {tag && inlineTag && <span className="story-tag">{tag}</span>}
-          <span>{source}</span>
-          {age && <span aria-hidden="true">·</span>}
-          {age && <span>{age}</span>}
+          <span className="story-byline">
+            <span>{source}</span>
+            {age && <span aria-hidden="true">·</span>}
+            {age && <span>{age}</span>}
+          </span>
         </div>
       </div>
       {saveButton}

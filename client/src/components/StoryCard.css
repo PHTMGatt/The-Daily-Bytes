@@ -308,7 +308,7 @@ body.light .story-tag {
   transform: none;
 }
 
-/* Text-only compact rows (Top right now rail): no thumb, flush with dividers. */
+/* Text-only compact rows (Top stories rail): no thumb, flush with dividers. */
 .story-compact.story-text-only {
   min-height: 0;
   grid-template-columns: minmax(0, 1fr);
@@ -332,7 +332,7 @@ body.light .story-tag {
   grid-template-columns: 30px minmax(0, 1fr);
 }
 
-/* Ranked compact rows (Trending, Top right now) */
+/* Ranked compact rows (Trending, Top stories) */
 .story-ranked {
   grid-template-columns: 34px minmax(0, 1fr) 96px;
 }
@@ -414,5 +414,29 @@ body.light .story-tag {
   .story-lead .story-title {
     font-size: 1.3rem;
     -webkit-line-clamp: 2;
+  }
+
+  .story-standard .story-media {
+    aspect-ratio: auto;
+    height: 45vh;
+  }
+}
+
+/* Source and age stay together; the meta row wraps between the tag and that byline. */
+.story-byline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px), (max-height: 480px) {
+  .story-ranked {
+    grid-template-columns: 22px minmax(0, 1fr) 96px;
+    gap: 10px;
+  }
+
+  .story-ranked .story-rank {
+    font-size: 1.3rem;
   }
 }

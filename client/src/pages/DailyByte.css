@@ -3,7 +3,7 @@
   margin: 0 auto;
 }
 
-/* ---- Front: lead (2/3) + Top right now (1/3) ---- */
+/* ---- Front: lead (2/3) + Top stories (1/3) ---- */
 .db-front {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
