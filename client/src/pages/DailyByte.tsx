@@ -21,6 +21,9 @@ import './Bookmarks.css';
 
 type SearchArticle = StoryArticle;
 
+/** Height of the Top stories rail's bottom fade (DailyByte.css), plus a little air. */
+const RAIL_FADE = 44;
+
 const PAGE_SIZE = 12;
 
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
@@ -228,7 +231,21 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
           <div className={`db-front${front.rail.length ? ' has-rail' : ''}`}>
             {card(featured, 'lead')}
             {front.rail.length > 0 && (
-              <section className="db-top-rail" aria-labelledby="db-top-heading">
+              <section
+                className="db-top-rail"
+                aria-labelledby="db-top-heading"
+                onFocus={(event) => {
+                  // Keyboard focus brings the whole story into view, clear of the bottom fade.
+                  const rail = event.currentTarget;
+                  const story = (event.target as HTMLElement).closest('.story');
+                  if (!story) return;
+                  const box = story.getBoundingClientRect();
+                  const frame = rail.getBoundingClientRect();
+                  const below = box.bottom + RAIL_FADE - frame.bottom;
+                  if (box.top < frame.top) rail.scrollTop -= frame.top - box.top;
+                  else if (below > 0) rail.scrollTop += below;
+                }}
+              >
                 <h2 id="db-top-heading" className="db-rail-heading">
                   {!stale && <span className="db-live-dot" aria-hidden="true" />}
                   Top stories
