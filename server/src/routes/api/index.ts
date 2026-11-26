@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { apiNotFound } from '../../lib/apiNotFound.js';
 import authRoutes from '../auth-routes.js';
 import horoscopeRoutes from './horoscope.js';
 import mainNewsRoutes from './mainNews.js';
@@ -14,5 +15,7 @@ router.use('/saved', savedArticlesRoutes);
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'daily-bytes' });
 });
+
+router.use(apiNotFound);
 
 export default router;
