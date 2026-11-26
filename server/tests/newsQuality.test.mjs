@@ -871,3 +871,21 @@ test('"My gear" tech hub queries reuse their curated hardware profiles', () => {
   assert.equal(pick('EK water cooling', 'EKWB custom loop water block for RTX cards', 'Shares dip on quarterly forecast'), 'https://example.com/on');
   assert.equal(pick('Raspberry Pi', 'Raspberry Pi 5 gets new single board kit', 'Retail chain names new chairman'), 'https://example.com/on');
 });
+
+test('rankAndDedupeArticles drops shopping-event product listings but keeps event and price reporting', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: "Alienware Makes Some of the Best OLED Gaming Monitors Around and They're All on Sale for Black Friday", url: 'https://example.com/ev-1' }),
+    article({ title: 'Save Up to $1,100 Off the 2026 65" Hisense UR8 RGB Mini-LED Gaming TVs for Black Friday', url: 'https://example.com/ev-2' }),
+    article({ title: 'Digital Nintendo Switch and Switch 2 Games Are $30 for Black Friday', url: 'https://example.com/ev-3' }),
+    article({ title: 'Forget the turkey, the best thing on your plate this Thanksgiving is this RTX 5070 laptop for just $1,300', url: 'https://example.com/ev-4' }),
+    article({ title: 'The Beats Studio Pro Headphones Drop Below $100 For the First Time for Cyber Monday', url: 'https://example.com/ev-5' }),
+    article({ title: "Steam isn't doing an official Black Friday fest, but it does have a discounts page", url: 'https://example.com/real-1' }),
+    article({ title: 'Nvidia RTX 5090 price drops to $1,999 at retailers', url: 'https://example.com/real-2' }),
+    article({ title: 'FTC warns of fake Black Friday deals selling GPUs for $99', url: 'https://example.com/real-3' }),
+  ], 'gaming');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});

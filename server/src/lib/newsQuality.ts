@@ -408,9 +408,18 @@ const RETAIL_DISCOUNT = new RegExp(
   'i',
 );
 
+// Shopping-event product listings ("Alienware monitors are on sale for Black Friday", "Save $1,100 off
+// this TV for Black Friday") and bargain phrasing ("this laptop for just $1,300") carry no retailer or
+// "deal" label, so they need their own rule: a shopping event plus a price signal. Event coverage with
+// no price ("Steam isn't doing an official Black Friday fest") survives.
+const SHOPPING_EVENT = /\b(black friday|cyber monday|prime (big deal )?days?|boxing day)\b/i;
+const PRICE_SIGNAL = /\$\d|\b\d{1,2}%\s+off\b|\bon sale\b|\b(?:drops?|falls?|dips?)\s+(?:below|under|to)\b/i;
+const BARGAIN_PRICE = /\bfor\s+(?:just|only)\s+\$\d/i;
+
 export const isRetailDealPost = (article: NewsQualityArticle) => {
   const title = String(article.title || '');
-  return (DEAL_LABEL.test(title) || RETAIL_DISCOUNT.test(title)) &&
+  return (DEAL_LABEL.test(title) || RETAIL_DISCOUNT.test(title) ||
+    (SHOPPING_EVENT.test(title) && PRICE_SIGNAL.test(title)) || BARGAIN_PRICE.test(title)) &&
     !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc|antitrust|acquir\w*)\b/i.test(title);
 };
 
