@@ -4,7 +4,11 @@ Games. Hardware. Tech. A gaming and tech news dashboard.
 
 [![Live demo](https://img.shields.io/badge/live%20demo-online-2ea44f)](https://the-daily-bytes-o4jo.onrender.com)
 
-![Daily Bytes home page](docs/screenshot.png)
+![Daily Bytes gaming hub on desktop](docs/screenshot.png)
+
+<img src="docs/screenshot-phone.png" alt="Daily Bytes gaming hub on a phone" width="300">
+
+Screenshots use sample headlines and the app's own fallback art, not live news.
 
 Daily Bytes is a gaming- and tech-first news dashboard built around the topics I actually follow: games, Witcher/CDPR, NVIDIA/RTX and AMD/Radeon hardware, GPU pricing, RAM/DDR5/SSD pricing, and enthusiast PC hardware.
 
@@ -35,7 +39,13 @@ The app runs on Render's free plan, so the first visit after a quiet spell can t
 
 ## Highlights
 
-- **Gaming and Tech hubs** with quick-jump shortcuts for the games and hardware topics I follow (Witcher 3, NVIDIA/RTX, AMD/Radeon, GPU prices, RAM/SSD, PC hardware).
+- **Gaming and Tech hubs** with one chip strip for the games and gear I follow (Witcher 3, RTX, Ryzen, RAM prices) and a Topics button for the broader ones.
+- **Front page built to scan:** a lead story, a ranked Top stories rail (wider screens), a topic cluster and a Latest list. "Load more" never reshuffles what is already on screen.
+- **Story cards that explain themselves:** the whole card is one link, and its tag names the game or part the story is about.
+- **Trending page** as one numbered list, two columns on wide screens.
+- **Phone layout:** compact rows, a header that hides while reading, a bottom tab bar and 44px tap targets.
+- **Keyboard friendly:** skip link, and focus is not left hidden behind the header, tab bar or chip row.
+- **Feed cleanup:** shopping listings are filtered out of the news.
 - **One-request default feed expansion** so the homepage can surface gaming and priority PC-hardware stories without multiplying provider calls.
 - **Server-side relevance ranking and deduplication** for stronger keyword matches, duplicate headlines, URL duplicates, and freshness tie-breaking.
 - **Global search** with focused query routes and synchronized navigation state.
@@ -44,8 +54,8 @@ The app runs on Render's free plan, so the first visit after a quiet spell can t
 - **MongoDB saved articles** with per-user unique URL protection.
 - **15-minute bounded news cache** to reduce repeat Mediastack requests, with a stale-cache fallback so a provider hiccup does not blank the page.
 - **Free RSS fallback** (IGN, PC Gamer, GameSpot, Eurogamer and others) for gaming and tech queries when Mediastack is rate limited, failing, or empty.
-- **Resilient article images** that fall back to branded card art instead of browser broken-image icons.
-- **Trending Watch and category feeds** with real loading, error, empty, retry, and pagination states.
+- **Resilient article images:** a skeleton while loading, then branded card art if an image fails or stalls, never a broken-image icon.
+- **Real loading, error, empty, retry and pagination states** on the feeds.
 - **Daily Horoscope extra** using a server-side API proxy with validated zodiac input and honest provider-backed fields.
 - **Responsive dark/light presentation** with a compact mobile navigation layout.
 
@@ -79,7 +89,8 @@ The-Daily-Bytes/
 ├── client/                 React/Vite application
 │   ├── src/api/            Browser API clients
 │   ├── src/components/     Shared navigation/news UI
-│   ├── src/pages/          Feed, auth, saved, horoscope, category pages
+│   ├── src/config/         Hub chips and copy (gaming, tech)
+│   ├── src/pages/          Hubs, trending, saved, auth, horoscope
 │   ├── src/utils/          Small testable client utilities
 │   └── tests/              Native Node regression tests
 ├── server/                 Express API and production server
@@ -109,7 +120,7 @@ npm install
 
 ### 3. Configure environment variables
 
-Requires **Node.js 20+** and a MongoDB database (Atlas or local).
+Requires **Node.js 22** (the version CI runs) and a MongoDB database (Atlas or local).
 
 | Variable | Required | Notes |
 | --- | --- | --- |
@@ -156,7 +167,13 @@ GET  /api/horoscope
 GET  /api/health
 ```
 
+`/api/news` with no category returns the gaming feed, and unknown `/api` paths answer with a JSON `404`.
+
 News provider credentials stay server-side; the React client never receives the Mediastack API key.
+
+### App routes
+
+`/` and `/dailybyte` (gaming), `/tech`, `/trending`, `/saved`, `/horoscope`, `/login`, `/signup`.
 
 ## Data
 
