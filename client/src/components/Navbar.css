@@ -81,6 +81,8 @@ body.light .nav-search {
 }
 
 .nav-search input {
+  /* Fill the field, so a tap anywhere on it (not just the line of text) focuses the input. */
+  align-self: stretch;
   width: 100%;
   min-width: 0;
   margin: 0;

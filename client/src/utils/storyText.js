@@ -46,6 +46,9 @@ const CASED_NAMES = new Set(['ark', 'doom', 'steam', 'vr', 'far cry', 'black ops
 // Broad topics that only win when no specific game, brand or product is named in the same text.
 const GENERIC_LABELS = new Set(['gaming', 'game releases', 'industry', 'esports', 'tech', 'hardware', 'pc gaming']);
 
+// Stock phrases that contain a game name and are never about the game.
+const IDIOMS = /\bdoom\s*(?:and|&)\s*gloom\b/gi;
+
 const titleCase = (text) => text.replace(/\b([A-Z])([A-Z]+)\b/g, (_, first, rest) => first + rest.toLowerCase());
 
 const needlesFor = ([label, query]) => {
@@ -100,8 +103,9 @@ const firstIndex = (haystacks, needles) => {
  * @param {string} fallback label used when nothing matches
  */
 export const matchStoryTag = (article, chips, fallback) => {
-  for (const text of [article?.title, article?.description]) {
-    const haystacks = { lower: normalize(text), cased: normalizeCased(text), raw: String(text ?? '') };
+  for (const source of [article?.title, article?.description]) {
+    const text = String(source ?? '').replace(IDIOMS, ' ');
+    const haystacks = { lower: normalize(text), cased: normalizeCased(text), raw: text };
     let best = null;
     let generic = null;
     for (const chip of chips || []) {

@@ -79,7 +79,6 @@ test('brands match any case; DOOM and ARK also match their title-case headline f
   assert.equal(matchStoryTag({ title: 'Playstation Plus price rises in Europe' }, chips, 'Gaming'), 'PlayStation');
   assert.equal(matchStoryTag({ title: 'Doom: The Dark Ages gets a free update' }, chips, 'Gaming'), 'DOOM');
   assert.equal(matchStoryTag({ title: 'Ark: Survival Ascended adds a new map' }, chips, 'Gaming'), 'ARK');
-  assert.equal(matchStoryTag({ title: 'Doom and gloom for retail' }, chips, 'Gaming'), 'DOOM');
 });
 
 test('generic topics lose to a specific chip in the same headline', () => {
@@ -87,4 +86,11 @@ test('generic topics lose to a specific chip in the same headline', () => {
   assert.equal(matchStoryTag({ title: 'A gaming handheld mod for Elden Ring' }, chips, 'X'), 'Elden Ring');
   assert.equal(matchStoryTag({ title: 'New gaming mouse from Razer' }, chips, 'X'), 'Razer');
   assert.equal(matchStoryTag({ title: 'Why gaming is booming' }, chips, 'X'), 'Gaming');
+});
+
+test('the idiom "doom and gloom" never earns the DOOM tag, in any case', () => {
+  for (const title of ['Doom and gloom for retail', 'DOOM AND GLOOM for retail', 'Doom & Gloom: layoffs continue']) {
+    assert.equal(matchStoryTag({ title }, chips, 'Gaming'), 'Gaming', title);
+  }
+  assert.equal(matchStoryTag({ title: 'Doom and gloom aside, DOOM sales are up' }, chips, 'Gaming'), 'DOOM');
 });
