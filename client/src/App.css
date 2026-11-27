@@ -19,6 +19,8 @@
 
 html {
   background: var(--db-bg);
+  /* Keyboard focus scrolls clear of the fixed header (88px) and its focus ring. */
+  scroll-padding-top: 100px;
 }
 
 body {
@@ -107,6 +109,12 @@ a {
 }
 
 @media (max-width: 760px), (max-height: 480px) {
+  html {
+    /* Taller header on top, tab bar underneath. */
+    scroll-padding-top: 144px;
+    scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
   body {
     padding-top: 132px;
   }
@@ -123,7 +131,8 @@ a {
   position: absolute;
   left: 12px;
   top: -64px;
-  z-index: 1000;
+  /* Above the fixed header (1000), which comes later in the page. */
+  z-index: 1001;
   padding: 10px 16px;
   border-radius: 8px;
   background: var(--db-accent);
@@ -154,6 +163,10 @@ a {
 }
 
 @media (max-height: 480px) and (min-width: 600px) {
+  html {
+    scroll-padding-top: 72px;
+  }
+
   body {
     padding-top: 60px;
   }

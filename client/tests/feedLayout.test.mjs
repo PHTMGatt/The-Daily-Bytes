@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { feedVariant, nextHeaderHidden } from '../src/utils/feedLayout.js';
+import { feedVariant, nextHeaderHidden, rowScrollDelta } from '../src/utils/feedLayout.js';
 
 test('desktop feed is all standard cards', () => {
   for (let i = 0; i < 12; i += 1) assert.equal(feedVariant(i, false), 'standard');
@@ -29,4 +29,11 @@ test('header hides on scroll down and returns on scroll up', () => {
 test('small jitter keeps the current state', () => {
   assert.equal(nextHeaderHidden(500, 504, true), true);
   assert.equal(nextHeaderHidden(500, 496, false), false);
+});
+
+test('rowScrollDelta brings a half-hidden chip fully into its row, clear of the edge fade', () => {
+  const row = { left: 100, right: 500 };
+  assert.equal(rowScrollDelta({ left: 200, right: 300 }, row, 28), 0);
+  assert.equal(rowScrollDelta({ left: 450, right: 560 }, row, 28), 88);
+  assert.equal(rowScrollDelta({ left: 60, right: 140 }, row, 28), -68);
 });

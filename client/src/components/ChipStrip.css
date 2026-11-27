@@ -22,6 +22,11 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Snapping would pull a keyboard-focused chip back under the fade. */
+.chip-row:has(:focus-visible) {
+  scroll-snap-type: none;
+}
+
 .chip-row::-webkit-scrollbar {
   display: none;
 }

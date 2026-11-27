@@ -7,6 +7,16 @@ export const feedVariant = (index, isPhone) => {
   return index % 5 === 4 ? 'standard' : 'compact';
 };
 
+/**
+ * How far a horizontal row must scroll so `item` sits fully inside `row`, `clear` px from each
+ * edge (the edge fade). Both are viewport boxes; 0 means it is already clear.
+ */
+export const rowScrollDelta = (item, row, clear) => {
+  if (item.left - clear < row.left) return item.left - clear - row.left;
+  if (item.right + clear > row.right) return item.right + clear - row.right;
+  return 0;
+};
+
 const TOP_ZONE = 120; // always show the header near the top of the page
 const JITTER = 8; // ignore tiny scroll movements (momentum, address-bar resize)
 

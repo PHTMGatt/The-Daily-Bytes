@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FiChevronDown, FiSliders, FiX } from 'react-icons/fi';
 import type { Chip } from '../config/hubs';
+import { rowScrollDelta } from '../utils/feedLayout.js';
 import './ChipStrip.css';
 
 interface ChipStripProps {
@@ -13,6 +14,9 @@ interface ChipStripProps {
   active: string;
   onSelect: (query: string) => void;
 }
+
+// Width of the row's edge fade (24px) plus the chip focus ring.
+const CHIP_EDGE = 28;
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -107,6 +111,16 @@ const ChipStrip = ({ label, allQuery, mine, topics, active, onSelect }: ChipStri
           className={`chip-row${edges.start ? ' fade-start' : ''}${edges.end ? ' fade-end' : ''}`}
           role="group"
           aria-label={label}
+          onFocus={(event) => {
+            // Tab can land on a half-hidden chip (under the fade or beside Topics): show all of it.
+            if (!event.target.matches(':focus-visible')) return;
+            const row = event.currentTarget;
+            row.scrollLeft += rowScrollDelta(
+              event.target.getBoundingClientRect(),
+              row.getBoundingClientRect(),
+              CHIP_EDGE,
+            );
+          }}
         >
           {extraLabel && (
             <button
