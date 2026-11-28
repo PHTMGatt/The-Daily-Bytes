@@ -195,7 +195,15 @@ body.light .story-tag {
 
 /* ---- Lead: image-led, headline over a bottom gradient (not a full wash) ---- */
 .story-lead {
+  /* Image and text share one cell, so a tall headline grows the card instead of being clipped. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   border-color: var(--db-border-strong);
+}
+
+.story-lead .story-media,
+.story-lead .story-body {
+  grid-area: 1 / 1;
 }
 
 .story-lead .story-media {
@@ -205,8 +213,9 @@ body.light .story-tag {
 /* The gradient lives on the text block, so it always covers exactly the text however
    many lines the headline and summary take. */
 .story-lead .story-body {
-  position: absolute;
-  inset: auto 0 0;
+  /* Not positioned: the stretched headline link has to cover the whole card, image included. */
+  z-index: 1;
+  align-self: end;
   padding: 72px 28px 24px;
   gap: 9px;
   background: linear-gradient(0deg, rgba(1, 6, 12, 0.95) 0%, rgba(1, 6, 12, 0.85) 55%, rgba(1, 6, 12, 0));
@@ -370,6 +379,24 @@ body.light .story-tag {
   .story-lead .story-summary,
   .story-standard .story-summary {
     display: none;
+  }
+}
+
+/* Portrait phones: the lead headline is never cut. */
+@media (max-width: 760px) and (min-height: 481px) {
+  .story-lead .story-title {
+    -webkit-line-clamp: unset;
+  }
+
+  /* The image keeps its 4:3 size as a minimum and stretches when the headline needs more. */
+  .story-lead .story-media {
+    aspect-ratio: auto;
+    min-height: calc(75vw - 20px);
+  }
+
+  .story-lead .story-media > img {
+    position: absolute;
+    inset: 0;
   }
 }
 
