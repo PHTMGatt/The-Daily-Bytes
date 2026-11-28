@@ -408,9 +408,22 @@ const RETAIL_DISCOUNT = new RegExp(
   'i',
 );
 
+// Shopping-event product listings ("Alienware monitors are on sale for Black Friday", "Save $1,100 off
+// this TV for Black Friday") and bargain phrasing ("this laptop for just $1,300") carry no retailer or
+// "deal" label, so they need their own rule: a shopping event plus a price signal. Event coverage with
+// no price ("Steam isn't doing an official Black Friday fest") survives.
+// The price signal must be listing phrasing ("on sale", "$N off", "save up to $N", "are $N for",
+// "for just $N", "drops below $N for the first time"), never a bare dollar figure, so sales totals,
+// price hikes, wage strikes and price-cut reporting around the event survive.
+const SHOPPING_EVENT = /\b(black friday|cyber monday|prime (big deal )?days?|boxing day|thanksgiving)\b/i;
+const LISTING_PRICE =
+  /\bon sale\b(?!\s+date)|\b\d{1,2}%\s+off\b|\$[\d,.]+\s+off\b|\bsave\s+(?:up\s+to\s+)?\$\d|\b(?:drops?|dips?|falls?)\s+below\s+\$\d[\d,.]*\s+for\s+the\s+first\s+time\b|\bare\s+(?:just\s+|only\s+|now\s+)?\$\d[\d,.]*\s+(?:for|at|on|this|right)\b|\bfor\s+(?:just|only)\s+\$\d/i;
+const EVENT_REPORTING = /\b(billion|million|price\s+hike|hikes?|raises?|strikes?|hack\w*|breach\w*|record|spent|report\w*)\b/i;
+
 export const isRetailDealPost = (article: NewsQualityArticle) => {
   const title = String(article.title || '');
-  return (DEAL_LABEL.test(title) || RETAIL_DISCOUNT.test(title)) &&
+  return (DEAL_LABEL.test(title) || RETAIL_DISCOUNT.test(title) ||
+    (SHOPPING_EVENT.test(title) && LISTING_PRICE.test(title) && !EVENT_REPORTING.test(title))) &&
     !/\b(scam|fake|phishing|fraud|lawsuit|sues?|ftc|antitrust|acquir\w*)\b/i.test(title);
 };
 

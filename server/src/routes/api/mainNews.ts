@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { getNewsWindow } from '../../lib/newsPagination.js';
 import { getRankingQuery, rankAndDedupeArticles } from '../../lib/newsQuality.js';
-import { parseNewsCategory } from '../../lib/newsCategory.js';
+import { parseNewsCategory, resolveFeedKeywords } from '../../lib/newsCategory.js';
 import { buildProviderKeywords } from '../../lib/providerKeywords.js';
 import { InflightRequests } from '../../lib/inflightRequests.js';
 import { TimedCache } from '../../lib/timedCache.js';
@@ -55,9 +55,10 @@ router.get('/:category?', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Unknown news category.' });
     }
     const { category } = parsedCategory;
-    const keywords = typeof req.query.keywords === 'string'
-      ? req.query.keywords.trim().slice(0, 120)
-      : '';
+    const keywords = resolveFeedKeywords(
+      category,
+      typeof req.query.keywords === 'string' ? req.query.keywords.trim().slice(0, 120) : '',
+    );
     const providerKeywords = buildProviderKeywords(keywords);
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const pageSize = Math.min(24, Math.max(1, parseInt(req.query.pageSize as string, 10) || 12));

@@ -23,7 +23,7 @@ jobs:
     uses: ./.github/workflows/security-pipeline.yml
     with:
       level: "high"
-      node-version: "20"
+      node-version: "22"
       audit-dirs: ". client server"
       audit-omit-dev-dirs: "client"
       mongo: true
@@ -33,7 +33,7 @@ jobs:
       start-env: |
         MONGODB_URI=mongodb://127.0.0.1:27017
         MONGODB_DB=zap-ci
-        JWT_SECRET_KEY=ci-fake-secret-not-real
+        JWT_SECRET_KEY=ci-fake-secret-not-real-padded-to-40-chars
         PORT=3001
         NODE_ENV=production
       fuzz-get-paths: "/api/health /api/saved?x={}"

@@ -7,10 +7,8 @@
 
 .news-header {
   margin-bottom: 18px;
-  padding: 24px 26px;
-  background:
-    linear-gradient(135deg, rgba(255, 23, 60, 0.07), transparent 38%),
-    var(--db-panel);
+  padding: 18px 22px;
+  background: var(--db-panel);
   border: 1px solid var(--db-border);
   border-radius: 12px;
   box-shadow: var(--db-shadow);
@@ -20,7 +18,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--db-accent);
+  color: var(--db-muted);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -29,9 +27,9 @@
 .news-heading {
   margin: 8px 0 8px;
   color: var(--db-text);
-  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
   font-weight: 900;
-  line-height: 1.02;
+  line-height: 1.1;
   letter-spacing: -0.045em;
   text-align: left;
 }
@@ -49,136 +47,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-}
-
-.news-card {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: var(--db-panel);
-  border: 1px solid var(--db-border);
-  border-radius: 10px;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.news-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--db-border-strong);
-  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.22);
-}
-
-.news-card-media {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: #0c1b2a;
-}
-
-.news-card-media > img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  transition: transform 0.25s ease;
-}
-
-.news-card:hover .news-card-media > img {
-  transform: scale(1.025);
-}
-
-.news-image-fallback {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 23, 60, 0.12), transparent 55%),
-    radial-gradient(circle at 75% 25%, #143855, #071421 65%);
-  color: #6f879c;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-}
-
-.news-card-media > span {
-  position: absolute;
-  left: 10px;
-  bottom: 9px;
-  max-width: calc(100% - 20px);
-  padding: 5px 8px;
-  overflow: hidden;
-  border-radius: 5px;
-  background: var(--db-accent);
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.news-card-content {
-  flex: 1;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-}
-
-.news-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  color: var(--db-muted);
-  font-size: 0.72rem;
-}
-
-.news-title {
-  margin: 0 0 8px;
-  color: var(--db-text);
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.news-summary {
-  margin: 0 0 14px;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  color: var(--db-muted);
-  font-size: 0.86rem;
-  line-height: 1.5;
-}
-
-.news-card-actions {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.read-more {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--db-accent);
-  font-size: 0.83rem;
-  font-weight: 850;
-  text-decoration: none;
-}
-
-.read-more:hover {
-  color: var(--db-accent-hover);
-  text-decoration: none;
 }
 
 .news-state-card {
@@ -199,7 +67,7 @@
 
 .news-state-card > svg {
   margin-bottom: 4px;
-  color: var(--db-accent);
+  color: var(--db-text);
   font-size: 1.5rem;
 }
 
@@ -224,14 +92,14 @@
   padding: 10px 14px;
   border: 0;
   border-radius: 7px;
-  background: var(--db-accent);
-  color: #fff;
+  background: var(--db-text);
+  color: var(--db-panel);
   font-weight: 800;
   cursor: pointer;
 }
 
 .news-state-card button:hover {
-  background: var(--db-accent-hover);
+  opacity: 0.9;
 }
 
 .news-spin {
@@ -264,20 +132,13 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  border-color: var(--db-accent);
-  background: var(--db-accent-soft);
+  border-color: var(--db-border-strong);
+  background: var(--db-panel-raised);
 }
 
 .pagination button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-body.light .news-image-fallback {
-  background:
-    linear-gradient(135deg, rgba(255, 23, 60, 0.08), transparent 55%),
-    radial-gradient(circle at 75% 25%, #dce8f2, #f5f8fb 65%);
-  color: #74879a;
 }
 
 @media (max-width: 1080px) {
@@ -314,39 +175,71 @@ body.light .news-image-fallback {
   line-height: 1.5;
 }
 
-.news-save {
-  min-height: 36px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--db-border);
-  border-radius: 7px;
-  background: transparent;
-  color: var(--db-text);
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.news-save:hover:not(:disabled) {
-  border-color: var(--db-accent);
-  color: var(--db-accent);
-}
-
-.news-save.saved {
-  border-color: var(--db-accent);
-  background: var(--db-accent-soft);
-  color: var(--db-accent);
-}
-
-.news-save:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
 .news-save-notice {
   margin: 0 0 14px;
   color: var(--db-muted);
   font-size: 0.82rem;
+}
+
+/* Phones: compact rows stack flush (StoryCard draws the dividers). */
+@media (max-width: 760px), (max-height: 480px) {
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* Trending: one numbered column of compact rows. */
+.news-rank-list {
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+@media (max-width: 760px), (max-height: 480px) {
+  .news-rank-list {
+    gap: 0;
+  }
+}
+
+/* Phones: the page header is one line so the list starts on the first screen. */
+@media (max-width: 760px), (max-height: 480px) {
+  .news-header {
+    padding: 14px 16px;
+  }
+
+  .news-header p,
+  .news-kicker {
+    display: none;
+  }
+
+  .news-heading {
+    margin: 0;
+  }
+}
+
+/* Trending: one column (header matches it); two columns of six (1-6 | 7-12) at 1100px+. */
+.news-container:has(.news-rank-list) .news-header {
+  max-width: 760px;
+}
+
+@media (min-width: 1100px) and (min-height: 481px) {
+  .news-rank-list {
+    max-width: none;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(6, auto);
+    column-gap: 14px;
+  }
+
+  .news-container:has(.news-rank-list) .news-header {
+    max-width: none;
+  }
+}
+
+.pagination button {
+  min-height: 44px;
 }

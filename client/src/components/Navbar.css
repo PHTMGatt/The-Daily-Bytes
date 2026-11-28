@@ -6,6 +6,7 @@
   background: rgba(2, 8, 18, 0.96);
   border-bottom: 1px solid var(--db-border);
   backdrop-filter: blur(18px);
+  transition: transform 0.22s ease;
 }
 
 body.light .navbar {
@@ -80,6 +81,8 @@ body.light .nav-search {
 }
 
 .nav-search input {
+  /* Fill the field, so a tap anywhere on it (not just the line of text) focuses the input. */
+  align-self: stretch;
   width: 100%;
   min-width: 0;
   margin: 0;
@@ -96,19 +99,26 @@ body.light .nav-search {
 }
 
 .nav-search button {
-  align-self: stretch;
-  min-width: 112px;
-  padding: 0 24px;
+  width: 40px;
+  height: 40px;
+  margin-right: 5px;
+  display: grid;
+  place-items: center;
   border: 0;
-  background: var(--db-accent);
-  color: white;
-  font-weight: 800;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--db-text);
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: background 0.18s ease;
 }
 
 .nav-search button:hover {
-  background: var(--db-accent-hover);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+body.light .nav-search button {
+  background: #e6eef5;
 }
 
 .nav-actions {
@@ -132,7 +142,7 @@ body.light .nav-search {
 
 .theme-icon-button,
 .account-button {
-  height: 42px;
+  height: 44px;
   border: 1px solid var(--db-border);
   background: var(--db-panel);
   color: var(--db-text);
@@ -147,7 +157,7 @@ body.light .nav-search {
 }
 
 .theme-icon-button {
-  width: 42px;
+  width: 44px;
   padding: 0;
   font-size: 1.15rem;
 }
@@ -189,12 +199,12 @@ body.light .nav-search {
   }
 
   .account-button {
-    width: 42px;
+    width: 44px;
     padding: 0;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 480px) {
   .navbar {
     height: 132px;
   }
@@ -225,7 +235,64 @@ body.light .nav-search {
   }
 
   .nav-search button {
-    min-width: 82px;
-    padding: 0 14px;
+    width: 44px;
+    height: 44px;
+    margin-right: 2px;
+  }
+}
+
+/* Phones: hide while reading down, back on scroll up (Navbar.tsx toggles the class). */
+@media (max-width: 760px), (max-height: 480px) {
+  .navbar-hidden {
+    transform: translateY(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar {
+    transition: none;
+  }
+}
+
+/* Landscape phones: one 60px row (logo | search | actions) so news gets the height. */
+@media (max-height: 480px) and (min-width: 600px) {
+  .navbar {
+    height: 60px;
+  }
+
+  .navbar-inner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: 60px;
+    column-gap: 12px;
+    padding: 0 12px;
+  }
+
+  .brand-lockup,
+  .nav-search,
+  .nav-actions {
+    grid-row: 1;
+  }
+
+  .nav-search {
+    grid-column: 2;
+    height: 44px;
+  }
+
+  .nav-actions {
+    grid-column: 3;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+}
+
+/* Phones: the logo link is a full 44px tap target. */
+@media (max-width: 760px), (max-height: 480px) {
+  .brand-lockup {
+    min-height: 44px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
   }
 }

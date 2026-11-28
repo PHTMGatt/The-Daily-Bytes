@@ -1,8 +1,9 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
+import { FiArrowRight, FiBookmark, FiLogOut, FiMoon, FiSearch, FiSun, FiUser } from 'react-icons/fi';
 import auth from '../utils/auth';
-import { getNavigationSearchValue } from '../utils/navigationSearch';
+import { getNavigationSearchValue, getSearchTargetPath } from '../utils/navigationSearch';
+import { nextHeaderHidden } from '../utils/feedLayout.js';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -20,6 +21,30 @@ const Navbar = () => {
     setSearch(getNavigationSearchValue(location.search));
   }, [location.pathname, location.search]);
 
+  // Phones: the header slides away while reading down and comes back on any scroll up.
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setHidden((current) => nextHeaderHidden(lastY.current, y, current));
+        lastY.current = y;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    setHidden(false);
+  }, [location.pathname, location.search]);
+
   useEffect(() => {
     document.body.classList.toggle('dark', theme === 'dark');
     document.body.classList.toggle('light', theme === 'light');
@@ -30,11 +55,11 @@ const Navbar = () => {
     event.preventDefault();
     const query = search.trim();
     if (!query) return;
-    navigate(`/dailybyte?q=${encodeURIComponent(query)}`);
+    navigate(`${getSearchTargetPath(location.pathname)}?q=${encodeURIComponent(query)}`);
   };
 
   return (
-    <header className="navbar">
+    <header className={`navbar${hidden ? ' navbar-hidden' : ''}`} onFocusCapture={() => setHidden(false)}>
       <div className="navbar-inner">
         <Link className="brand-lockup" to="/" aria-label="Daily Bytes home">
           <span className="brand-name">Daily <strong>Bytes</strong></span>
@@ -49,7 +74,9 @@ const Navbar = () => {
             placeholder="Search games, GPUs, RAM, hardware..."
             aria-label="Search Daily Bytes"
           />
-          <button type="submit">Search</button>
+          <button type="submit" aria-label="Search">
+            <FiArrowRight aria-hidden="true" />
+          </button>
         </form>
 
         <div className="nav-actions">
@@ -58,7 +85,6 @@ const Navbar = () => {
               <FiBookmark /> Saved
             </Link>
           )}
-          <Link className="nav-text-link" to="/trending">Trending</Link>
           <button
             className="theme-icon-button"
             type="button"

@@ -1,0 +1,142 @@
+/* One-row filter strip. Active = filled light, not red (red is for nav, logo and live). */
+
+.chip-strip {
+  margin-bottom: 14px;
+}
+
+.chip-strip-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Snapping would pull a keyboard-focused chip back under the fade. */
+.chip-row:has(:focus-visible) {
+  scroll-snap-type: none;
+}
+
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-row.fade-end {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+
+.chip-row.fade-start {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px);
+  mask-image: linear-gradient(90deg, transparent, #000 24px);
+}
+
+.chip-row.fade-start.fade-end {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+
+.chip {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--db-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--db-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.chip:hover {
+  border-color: var(--db-border-strong);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.chip.active {
+  border-color: var(--db-text);
+  background: var(--db-text);
+  color: var(--db-panel);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--db-accent);
+  outline-offset: 2px;
+}
+
+.chip-topics {
+  position: relative;
+  color: var(--db-muted);
+}
+
+.chip-topics .flip {
+  transform: rotate(180deg);
+}
+
+.chip-topics-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--db-text);
+}
+
+.chip-extra {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Phones: Topics is a 44px icon so the row keeps room for chips. */
+@media (max-width: 760px), (max-height: 480px) {
+  .chip-topics {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .chip-topics-label,
+  .chip-topics-chevron {
+    display: none;
+  }
+}
+
+.chip-sheet {
+  margin-top: 10px;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--db-panel);
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  box-shadow: var(--db-shadow);
+}
+
+body.light .chip {
+  background: #fff;
+}
+
+body.light .chip.active {
+  background: var(--db-text);
+  color: #fff;
+}

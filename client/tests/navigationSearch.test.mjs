@@ -20,3 +20,13 @@ test('reflects navigation between different search queries', () => {
 test('treats an empty q value as empty search text', () => {
   assert.equal(getNavigationSearchValue('?q='), '');
 });
+
+test('header search stays in the current hub', async () => {
+  const { getSearchTargetPath } = await import('../src/utils/navigationSearch.js');
+  assert.equal(getSearchTargetPath('/tech'), '/tech');
+  assert.equal(getSearchTargetPath('/tech/'), '/tech');
+  assert.equal(getSearchTargetPath('/technology'), '/dailybyte');
+  assert.equal(getSearchTargetPath('/'), '/dailybyte');
+  assert.equal(getSearchTargetPath('/trending'), '/dailybyte');
+  assert.equal(getSearchTargetPath(undefined), '/dailybyte');
+});

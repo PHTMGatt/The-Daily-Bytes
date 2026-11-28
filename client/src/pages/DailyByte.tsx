@@ -1,162 +1,32 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowUpRight, FiBookmark, FiCheck, FiRefreshCw, FiSearch, FiZap } from 'react-icons/fi';
-import ArticleImage from '../components/ArticleImage';
+import { FiArrowRight, FiRefreshCw } from 'react-icons/fi';
+import ChipStrip from '../components/ChipStrip';
+import StoryCard, { StoryArticle, StoryVariant } from '../components/StoryCard';
+import { getArticleImage } from '../utils/articleImage';
+import { HUBS } from '../config/hubs';
 import { retrieveNews } from '../api/mainNewsAPI';
 import { getSavedArticles, removeSavedArticle, saveArticle } from '../api/savedArticlesAPI';
 import auth from '../utils/auth';
-import { formatPublishedLabel } from '../utils/articleTime';
 import { getArticleSource } from '../utils/articleSource.js';
 import { createLatestRequestGuard } from '../utils/latestRequest.js';
 import { isStaleFeed } from '../utils/newsViewState.js';
 import { hasMoreStories, mergeArticlePages } from '../utils/feedPaging.js';
+import { cleanSummary, matchStoryTag } from '../utils/storyText.js';
+import { feedVariant } from '../utils/feedLayout.js';
+import { buildFrontPage } from '../utils/frontPage.js';
+import { useIsPhone } from '../utils/useIsPhone';
 import './DailyByte.css';
 import './Bookmarks.css';
 
-interface SearchArticle {
-  source?: string | { name?: string };
-  author?: string | null;
-  title: string;
-  description?: string | null;
-  url: string;
-  image?: string | null;
-  urlToImage?: string | null;
-  published_at?: string;
-  publishedAt?: string;
-}
+type SearchArticle = StoryArticle;
+
+/** Height of the Top stories rail's bottom fade (DailyByte.css), plus a little air. */
+const RAIL_FADE = 44;
 
 const PAGE_SIZE = 12;
 
-type Chip = [label: string, query: string];
-
-interface HubConfig {
-  path: string;
-  kicker: string;
-  title: string;
-  intro: string;
-  placeholder: string;
-  searchLabel: string;
-  // The hub opens on one combined feed of everything in the "mine" row.
-  defaultTopic: string;
-  mineLabel: string;
-  allLabel: string;
-  mine: Chip[];
-  topics: Chip[];
-  priority: Array<{ label: string; query: string; copy: string }>;
-  note: string;
-}
-
-const HUBS: Record<'gaming' | 'tech', HubConfig> = {
-  gaming: {
-    path: '/dailybyte',
-    kicker: 'GAMING',
-    title: 'Your gaming pulse.',
-    intro: 'Every game you play in one feed. Tap a game to zoom in, or search anything.',
-    placeholder: 'Try Witcher 3, Crimson Desert, Apex...',
-    searchLabel: 'Search gaming news',
-    defaultTopic: 'my games',
-    mineLabel: 'My games',
-    allLabel: 'All my games',
-    // Bryen's own library: what he is playing now first, then the franchises he keeps coming back to.
-    mine: [
-      ['Witcher 3', 'The Witcher 3'],
-      ['AC Black Flag', 'Assassins Creed Black Flag'],
-      ['Crimson Desert', 'Crimson Desert'],
-      ['AC Shadows', 'Assassins Creed Shadows'],
-      ['Cyberpunk 2077', 'Cyberpunk 2077'],
-      ['Elden Ring', 'Elden Ring'],
-      ['Apex Legends', 'Apex Legends'],
-      ['Black Ops', 'Call of Duty Black Ops'],
-      ['Hitman', 'Hitman'],
-      ['Batman Arkham', 'Batman Arkham'],
-      ['Far Cry', 'Far Cry'],
-      ['GTA 6', 'GTA 6'],
-      ['ARK', 'ARK Survival'],
-      ['Rocket League', 'Rocket League'],
-      ['CS2', 'Counter Strike 2'],
-      ['DOOM', 'DOOM'],
-    ],
-    topics: [
-      ['Gaming', 'gaming'],
-      ['Game Releases', 'video game releases'],
-      ['Xbox', 'Xbox'],
-      ['PlayStation', 'PlayStation'],
-      ['Nintendo', 'Nintendo'],
-      ['Steam', 'Steam'],
-      ['Industry', 'game industry'],
-      ['Esports', 'esports'],
-    ],
-    priority: [
-      { label: 'Witcher 3', query: 'The Witcher 3', copy: 'CDPR updates, mods, visuals, and everything around the Continent.' },
-      { label: 'Crimson Desert', query: 'Crimson Desert', copy: 'Pearl Abyss updates, patches, and Pywel news.' },
-      { label: 'AC Black Flag', query: 'Assassins Creed Black Flag', copy: 'Black Flag Resynced, Kenway, and Ubisoft news.' },
-      { label: 'Apex Legends', query: 'Apex Legends', copy: 'Seasons, ranked, legends, and Respawn updates.' },
-      { label: 'Game Releases', query: 'video game releases', copy: 'What is launching and what just dropped.' },
-    ],
-    note: 'Your games load first. Pick one to focus, or tap All my games to see everything again.',
-  },
-  tech: {
-    path: '/tech',
-    kicker: 'TECH + PC HARDWARE',
-    title: 'Your gear and hardware pulse.',
-    intro: 'Everything in your setup in one feed. Tap a part to zoom in, or search anything.',
-    placeholder: 'Try RTX 5090, Dominator Titanium, Corsair...',
-    searchLabel: 'Search tech and hardware news',
-    defaultTopic: 'my gear',
-    mineLabel: 'My gear',
-    allLabel: 'All my gear',
-    // Bryen's build and desk: GPUs, CPU, memory, storage, brands and the gear around it.
-    mine: [
-      ['RTX 5090', 'RTX 5090'],
-      ['RTX 5080', 'RTX 5080'],
-      ['Ryzen 9950X3D', 'Ryzen 9 9950X3D'],
-      ['Dominator Ti', 'Corsair Dominator Titanium'],
-      ['RAM Prices', 'RAM prices'],
-      ['9100 Pro SSD', 'Samsung 9100 Pro'],
-      ['Corsair', 'Corsair'],
-      ['XENEON EDGE', 'Corsair XENEON EDGE'],
-      ['Razer', 'Razer'],
-      ['ASUS ROG', 'ASUS ROG'],
-      ['ROG OLED', 'ROG Swift OLED'],
-      ['EK Cooling', 'EK water cooling'],
-      ['Raspberry Pi', 'Raspberry Pi'],
-      ['Elgato', 'Elgato Stream Deck'],
-      ['NVIDIA Drivers', 'NVIDIA driver'],
-      ['Logitech G', 'Logitech G'],
-    ],
-    topics: [
-      ['NVIDIA', 'NVIDIA GPU'],
-      ['AMD', 'AMD GPU'],
-      ['Intel', 'Intel CPU'],
-      ['GPU Prices', 'GPU prices'],
-      ['RAM + SSD', 'RAM SSD prices'],
-      ['PC Hardware', 'PC hardware'],
-      ['CPUs', 'CPU'],
-      ['Monitors', 'gaming monitor'],
-      ['Handhelds', 'handheld PC'],
-      ['VR', 'VR'],
-      ['AI Chips', 'AI chips'],
-      ['Next-gen Consoles', 'next gen consoles'],
-    ],
-    priority: [
-      { label: 'NVIDIA', query: 'NVIDIA GPU', copy: 'GeForce launches, drivers, DLSS, RTX hardware, and GPU moves.' },
-      { label: 'GPU Prices', query: 'GPU prices', copy: 'Graphics card pricing, availability, market shifts, and new deals.' },
-      { label: 'RAM + SSD', query: 'RAM SSD prices', copy: 'Memory, storage, DDR5, SSD pricing, and component market changes.' },
-      { label: 'Corsair', query: 'Corsair', copy: 'Dominator, XENEON, cases, iCUE, and the rest of your build.' },
-      { label: 'PC Hardware', query: 'PC hardware', copy: 'CPUs, cooling, cases, displays, builds, and enthusiast hardware.' },
-    ],
-    note: 'Your gear loads first. Pick a part to focus, or tap All my gear to see everything again.',
-  },
-};
-
-const getImage = (article: SearchArticle) => article.image || article.urlToImage || '';
-
 const getPublishedAt = (article: SearchArticle) => article.published_at || article.publishedAt || '';
-
-const formatDate = (article: SearchArticle) => formatPublishedLabel(getPublishedAt(article));
-
-const articleSummary = (article: SearchArticle) =>
-  article.description?.trim() || 'Open the full story for the latest details.';
 
 export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof typeof HUBS }) {
   const hub = HUBS[hubKey];
@@ -164,7 +34,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   const location = useLocation();
   const navigate = useNavigate();
   const urlTopic = new URLSearchParams(location.search).get('q')?.trim() || DEFAULT_TOPIC;
-  const [topic, setTopic] = useState(urlTopic);
   const [activeTopic, setActiveTopic] = useState(urlTopic);
   const [articles, setArticles] = useState<SearchArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,6 +47,7 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState('');
   const requestGuard = useRef(createLatestRequestGuard()).current;
+  const isPhone = useIsPhone();
 
   const fetchTopic = async (query: string) => {
     const token = requestGuard.start();
@@ -231,7 +101,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
   };
 
   useEffect(() => {
-    setTopic(urlTopic);
     fetchTopic(urlTopic);
     return () => requestGuard.invalidate();
     // Intentionally keyed to the route only: fetchTopic is recreated each render and must not retrigger the load.
@@ -247,12 +116,6 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
 
   const openTopic = (query: string) => {
     navigate(`${hub.path}?q=${encodeURIComponent(query)}`);
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    const query = topic.trim();
-    if (query) openTopic(query);
   };
 
   const toggleSaved = async (article: SearchArticle) => {
@@ -277,8 +140,8 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
         const saved = await saveArticle({
           title: article.title,
           url: article.url,
-          description: articleSummary(article),
-          image: getImage(article),
+          description: cleanSummary(article.description),
+          image: getArticleImage(article),
           source: getArticleSource(article),
           publishedAt: getPublishedAt(article),
           topic: activeTopic,
@@ -293,212 +156,148 @@ export default function DailyByte({ hub: hubKey = 'gaming' }: { hub?: keyof type
     }
   };
 
-  const featured = articles[0];
-  const latest = articles.slice(1);
+  // Badge = the game/part/topic the story is actually about, falling back to the focused chip.
+  const chips = [...hub.mine, ...hub.topics];
+  const activeChip = chips.find(([, query]) => query.toLowerCase() === activeTopic.toLowerCase());
+  const tagFor = (article: SearchArticle) =>
+    matchStoryTag(article, chips, activeChip?.[0] || hub.fallbackTag);
+
+  const combinedFeed = activeTopic.toLowerCase() === DEFAULT_TOPIC;
+  // Lead, rail and cluster come from the first page only, so "Load more" never reshuffles
+  // stories above the reader; later pages append to Latest.
+  const firstPage = buildFrontPage(articles.slice(0, PAGE_SIZE), {
+    tagFor,
+    withRail: !isPhone,
+    withCluster: combinedFeed,
+    genericTags: [hub.fallbackTag, ...hub.topics.map(([label]) => label)],
+  });
+  const front = { ...firstPage, latest: [...firstPage.latest, ...articles.slice(PAGE_SIZE)] };
+  const featured = front.lead;
+
+  const card = (
+    article: SearchArticle,
+    variant: StoryVariant,
+    extra?: { rank?: number; showImage?: boolean; onToggleSave?: undefined },
+  ) => (
+    <StoryCard
+      key={article.url}
+      article={article}
+      variant={variant}
+      tag={tagFor(article)}
+      saved={savedUrls.has(article.url)}
+      saving={savingUrl === article.url}
+      onToggleSave={toggleSaved}
+      {...extra}
+    />
+  );
 
   return (
     <div className="dailybyte-page">
-      <section className="db-header-panel">
-        <div className="db-heading-copy">
-          <span className="db-kicker"><FiZap /> {hub.kicker}</span>
-          <h1>{hub.title}</h1>
-          <p>{hub.intro}</p>
+      <h1 className="sr-only">{hub.title}</h1>
+      <ChipStrip
+        label={hub.mineLabel}
+        allQuery={DEFAULT_TOPIC}
+        mine={hub.mine}
+        topics={hub.topics}
+        active={activeTopic}
+        onSelect={openTopic}
+      />
+      {stale && (
+        <div className="db-save-notice" role="status">
+          The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
         </div>
+      )}
+      {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
 
-        <form className="db-search" onSubmit={handleSubmit} role="search">
-          <FiSearch aria-hidden="true" />
-          <input
-            value={topic}
-            onChange={(event) => setTopic(event.target.value)}
-            placeholder={hub.placeholder}
-            aria-label={hub.searchLabel}
-          />
-          <button type="submit">Search</button>
-        </form>
-
-        <div className="db-chip-label-row">
-          <span className="db-chip-label" id="db-my-games-label">{hub.mineLabel}</span>
-          <button
-            type="button"
-            className={`db-all-games ${activeTopic.toLowerCase() === DEFAULT_TOPIC ? 'active' : ''}`}
-            aria-pressed={activeTopic.toLowerCase() === DEFAULT_TOPIC}
-            onClick={() => openTopic(DEFAULT_TOPIC)}
-          >
-            {hub.allLabel}
-          </button>
+      {loading && !featured ? (
+        <div className="db-loading-card">
+          <FiRefreshCw className="spin" />
+          <span>Loading the latest {activeTopic} stories...</span>
         </div>
-        <div className="db-topic-chips db-my-games" aria-labelledby="db-my-games-label">
-          {hub.mine.map(([label, query]) => (
-            <button
-              type="button"
-              key={label}
-              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
-              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
-              onClick={() => openTopic(query)}
-            >
-              {label}
-            </button>
-          ))}
+      ) : error ? (
+        <div className="db-state-card">
+          <h2>Feed unavailable</h2>
+          <p>{error}</p>
+          <button type="button" onClick={() => fetchTopic(activeTopic)}>Try again</button>
         </div>
-
-        <span className="db-chip-label" id="db-topics-label">Topics</span>
-        <div className="db-topic-chips" aria-labelledby="db-topics-label">
-          {hub.topics.map(([label, query]) => (
-            <button
-              type="button"
-              key={label}
-              className={activeTopic.toLowerCase() === query.toLowerCase() ? 'active' : ''}
-              aria-pressed={activeTopic.toLowerCase() === query.toLowerCase()}
-              onClick={() => openTopic(query)}
-            >
-              {label}
-            </button>
-          ))}
+      ) : !featured ? (
+        <div className="db-state-card">
+          <h2>No stories found</h2>
+          <p>Try another game or topic, or a broader search.</p>
+          <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to {hub.allLabel.toLowerCase()}</button>
         </div>
-        {stale && (
-          <div className="db-save-notice" role="status">
-            The news provider is unreachable, so these are recently saved stories. Try again shortly for the latest.
-          </div>
-        )}
-        {saveNotice && <div className="db-save-notice" role="status">{saveNotice}</div>}
-      </section>
-
-      <div className="db-dashboard">
-        <div className="db-feed">
-          {loading && !featured ? (
-            <div className="db-loading-card">
-              <FiRefreshCw className="spin" />
-              <span>Loading the latest {activeTopic} stories...</span>
-            </div>
-          ) : error ? (
-            <div className="db-state-card">
-              <h2>Feed unavailable</h2>
-              <p>{error}</p>
-              <button type="button" onClick={() => fetchTopic(activeTopic)}>Try again</button>
-            </div>
-          ) : !featured ? (
-            <div className="db-state-card">
-              <h2>No stories found</h2>
-              <p>Try another priority topic or a broader search.</p>
-              <button type="button" onClick={() => openTopic(DEFAULT_TOPIC)}>Back to {hub.allLabel.toLowerCase()}</button>
-            </div>
-          ) : (
-            <>
-              <article
-                className={`db-feature ${getImage(featured) ? 'has-image' : ''}`}
-                style={getImage(featured) ? { backgroundImage: `url("${getImage(featured)}")` } : undefined}
+      ) : (
+        <>
+          <div className={`db-front${front.rail.length ? ' has-rail' : ''}`}>
+            {card(featured, 'lead')}
+            {front.rail.length > 0 && (
+              <section
+                className="db-top-rail"
+                aria-labelledby="db-top-heading"
+                onFocus={(event) => {
+                  // Keyboard focus brings the whole story into view, clear of the bottom fade.
+                  const rail = event.currentTarget;
+                  const story = (event.target as HTMLElement).closest('.story');
+                  if (!story) return;
+                  const box = story.getBoundingClientRect();
+                  const frame = rail.getBoundingClientRect();
+                  const below = box.bottom + RAIL_FADE - frame.bottom;
+                  if (box.top < frame.top) rail.scrollTop -= frame.top - box.top;
+                  else if (below > 0) rail.scrollTop += below;
+                }}
               >
-                <div className="db-feature-overlay" />
-                <div className="db-feature-content">
-                  <span className="db-article-tag">{activeTopic}</span>
-                  <h2>{featured.title}</h2>
-                  <p>{articleSummary(featured)}</p>
-                  <div className="db-article-meta">
-                    <span>{getArticleSource(featured)}</span>
-                    <span>•</span>
-                    <span>{formatDate(featured)}</span>
-                  </div>
-                  <div className="db-feature-actions">
-                    <a href={featured.url} target="_blank" rel="noopener noreferrer">
-                      Read story <FiArrowUpRight />
-                    </a>
-                    <button
-                      type="button"
-                      className={savedUrls.has(featured.url) ? 'saved' : ''}
-                      disabled={savingUrl === featured.url}
-                      onClick={() => toggleSaved(featured)}
-                    >
-                      {savedUrls.has(featured.url) ? <FiCheck /> : <FiBookmark />}
-                      {savedUrls.has(featured.url) ? 'Saved' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              </article>
+                <h2 id="db-top-heading" className="db-rail-heading">
+                  {!stale && <span className="db-live-dot" aria-hidden="true" />}
+                  Top stories
+                </h2>
+                {front.rail.map((article, index) => card(article, 'compact', { rank: index + 1, showImage: false, onToggleSave: undefined }))}
+              </section>
+            )}
+          </div>
 
+          {front.cluster && (
+            <section className="db-cluster" aria-labelledby="db-cluster-heading">
               <div className="db-section-title">
-                <div>
-                  <span>LATEST NEWS</span>
-                  <h2>{activeTopic}</h2>
+                <h2 id="db-cluster-heading">{front.cluster.tag}</h2>
+                <button type="button" className="db-see-all" onClick={() => {
+                  const chip = chips.find(([label]) => label === front.cluster?.tag);
+                  if (chip) openTopic(chip[1]);
+                }}>
+                  More {front.cluster.tag} <FiArrowRight aria-hidden="true" />
+                </button>
+              </div>
+              <div className="db-cluster-body">
+                {card(front.cluster.items[0], 'standard')}
+                <div className="db-cluster-list">
+                  {front.cluster.items.slice(1).map((article) => card(article, 'compact'))}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {front.latest.length > 0 && (
+            <section aria-labelledby="db-latest-heading">
+              <div className="db-section-title">
+                <h2 id="db-latest-heading">{combinedFeed ? 'Latest' : activeChip?.[0] || activeTopic}</h2>
                 {loading && <FiRefreshCw className="spin" aria-label="Refreshing" />}
               </div>
-
               <div className="db-news-grid">
-                {latest.map((article) => (
-                  <article className="db-news-card" key={article.url}>
-                    <div className="db-card-media">
-                      <ArticleImage src={getImage(article)} fallbackLabel={getArticleSource(article) || 'Daily Bytes'} />
-                      <span>{activeTopic}</span>
-                    </div>
-                    <div className="db-card-body">
-                      <h3>{article.title}</h3>
-                      <p>{articleSummary(article)}</p>
-                      <div className="db-article-meta">
-                        <span>{getArticleSource(article)}</span>
-                        <span>•</span>
-                        <span>{formatDate(article)}</span>
-                      </div>
-                      <div className="db-card-actions">
-                        <a href={article.url} target="_blank" rel="noopener noreferrer">
-                          Open story <FiArrowUpRight />
-                        </a>
-                        <button
-                          type="button"
-                          className={savedUrls.has(article.url) ? 'saved' : ''}
-                          disabled={savingUrl === article.url}
-                          onClick={() => toggleSaved(article)}
-                          aria-label={`${savedUrls.has(article.url) ? 'Remove' : 'Save'} ${article.title}`}
-                        >
-                          {savedUrls.has(article.url) ? <FiCheck /> : <FiBookmark />}
-                          {savedUrls.has(article.url) ? 'Saved' : 'Save'}
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                {front.latest.map((article, index) => card(article, feedVariant(index, isPhone)))}
               </div>
-
-              {(hasMore || moreError) && (
-                <div className="db-load-more">
-                  {moreError && <p role="alert">{moreError}</p>}
-                  <button type="button" onClick={loadMore} disabled={loadingMore}>
-                    {loadingMore ? <FiRefreshCw className="spin" aria-hidden="true" /> : null}
-                    {loadingMore ? 'Loading...' : moreError ? 'Try again' : 'Load more stories'}
-                  </button>
-                </div>
-              )}
-            </>
+            </section>
           )}
-        </div>
 
-        <aside className="db-priority-panel">
-          <div className="db-priority-heading">
-            <FiZap />
-            <div>
-              <span>ONE TAP</span>
-              <h2>Jump to</h2>
-            </div>
-          </div>
-
-          <div className="db-priority-list">
-            {hub.priority.map((item, index) => (
-              <button type="button" key={item.label} onClick={() => openTopic(item.query)}>
-                <span className="db-priority-number">{index + 1}</span>
-                <span className="db-priority-copy">
-                  <strong>{item.label}</strong>
-                  <small>{item.copy}</small>
-                </span>
-                <FiArrowUpRight />
+          {(hasMore || moreError) && (
+            <div className="db-load-more">
+              {moreError && <p role="alert">{moreError}</p>}
+              <button type="button" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? <FiRefreshCw className="spin" aria-hidden="true" /> : null}
+                {loadingMore ? 'Loading...' : moreError ? 'Try again' : 'Load more stories'}
               </button>
-            ))}
-          </div>
-
-          <div className="db-priority-note">
-            <strong>Tap any row to filter the feed.</strong>
-            <p>{hub.note}</p>
-          </div>
-        </aside>
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

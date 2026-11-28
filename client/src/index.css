@@ -1725,3 +1725,43 @@ body.dark {
 body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
+
+/* Article image slot: skeleton while a publisher image downloads, then a short fade-in.
+   The parent media box is position: relative with a fixed aspect ratio, so nothing jumps. */
+.db-image-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, var(--db-panel) 30%, var(--db-border) 50%, var(--db-panel) 70%);
+  background-size: 200% 100%;
+  animation: db-image-shimmer 1.4s ease-in-out infinite;
+}
+
+body.light .db-image-skeleton {
+  background: linear-gradient(100deg, #e3e9f0 30%, #f3f6f9 50%, #e3e9f0 70%);
+  background-size: 200% 100%;
+}
+
+/* Kept mounted (absolutely, under the skeleton or fallback) so a slow download can still land. */
+img.db-image-pending {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+img.db-image-ready {
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+@keyframes db-image-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-image-skeleton { animation: none; }
+  img.db-image-ready { transition: none; }
+}

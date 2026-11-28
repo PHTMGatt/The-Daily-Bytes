@@ -871,3 +871,43 @@ test('"My gear" tech hub queries reuse their curated hardware profiles', () => {
   assert.equal(pick('EK water cooling', 'EKWB custom loop water block for RTX cards', 'Shares dip on quarterly forecast'), 'https://example.com/on');
   assert.equal(pick('Raspberry Pi', 'Raspberry Pi 5 gets new single board kit', 'Retail chain names new chairman'), 'https://example.com/on');
 });
+
+test('rankAndDedupeArticles drops shopping-event product listings but keeps event and price reporting', () => {
+  const results = rankAndDedupeArticles([
+    article({ title: "Alienware Makes Some of the Best OLED Gaming Monitors Around and They're All on Sale for Black Friday", url: 'https://example.com/ev-1' }),
+    article({ title: 'Save Up to $1,100 Off the 2026 65" Hisense UR8 RGB Mini-LED Gaming TVs for Black Friday', url: 'https://example.com/ev-2' }),
+    article({ title: 'Digital Nintendo Switch and Switch 2 Games Are $30 for Black Friday', url: 'https://example.com/ev-3' }),
+    article({ title: 'Forget the turkey, the best thing on your plate this Thanksgiving is this RTX 5070 laptop for just $1,300', url: 'https://example.com/ev-4' }),
+    article({ title: 'The Beats Studio Pro Headphones Drop Below $100 For the First Time for Cyber Monday', url: 'https://example.com/ev-5' }),
+    article({ title: "Steam isn't doing an official Black Friday fest, but it does have a discounts page", url: 'https://example.com/real-1' }),
+    article({ title: 'Nvidia RTX 5090 price drops to $1,999 at retailers', url: 'https://example.com/real-2' }),
+    article({ title: 'FTC warns of fake Black Friday deals selling GPUs for $99', url: 'https://example.com/real-3' }),
+  ], 'gaming');
+
+  assert.deepEqual(
+    results.map((a) => a.url).sort(),
+    ['https://example.com/real-1', 'https://example.com/real-2', 'https://example.com/real-3'],
+  );
+});
+
+test('shopping-event filter keeps sales, price and labour reporting (QA false positives)', () => {
+  const real = [
+    'Black Friday online sales hit $11.8 billion, a new record',
+    'Black Friday 2026: shoppers spent $44 billion over the weekend',
+    'Nvidia RTX 5070 price drops to $499 ahead of Black Friday',
+    'GPU prices fall below MSRP ahead of Black Friday',
+    'Valve raises Steam Deck price to $649 before Black Friday',
+    'Sony confirms PS5 price hike to $599 will not be reversed for Black Friday',
+    'Amazon workers strike on Black Friday over $25 wage demand',
+    'Cyber Monday hacks cost retailers $2M',
+    'Elden Ring on sale date announced for Cyber Monday',
+    'Black Friday RAM prices drop to record highs? No, they doubled',
+    'Microsoft will sell Game Pass for just $1 again, report says',
+    'The new indie hit is yours for just $5',
+    'Black Friday sales fell 5% this year',
+    'Steam Deck OLED drops to $399 permanently',
+    'GPU prices are $100 higher this Black Friday',
+  ].map((title, i) => article({ title, url: `https://example.com/keep-${i}` }));
+  const kept = rankAndDedupeArticles(real, '');
+  assert.equal(kept.length, real.length, `dropped: ${real.filter((a) => !kept.some((k) => k.url === a.url)).map((a) => a.title).join(' | ')}`);
+});
