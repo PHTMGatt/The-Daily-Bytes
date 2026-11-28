@@ -126,10 +126,10 @@ Requires **Node.js 22** (the version CI runs) and a MongoDB database (Atlas or l
 | --- | --- | --- |
 | `MONGODB_URI` | yes | Server exits with `MONGODB_URI is required` without it |
 | `MONGODB_DB` | no | Defaults to `daily-bytes` |
-| `JWT_SECRET_KEY` | yes | Signs reader sessions |
+| `JWT_SECRET_KEY` | yes | Signs reader sessions. At least 32 characters, or the server exits at startup |
 | `MEDIASTACK_API_KEY` | yes, for news | Without it `/api/news` answers `503 News service is not configured` (RSS is only a fallback when Mediastack fails) |
 | `API_NINJAS_KEY` | no | Without it `/api/horoscope` answers `503` |
-| `DEMO_PASSWORD` | no | Production generates a random one when unset; local dev uses a built-in default |
+| `DEMO_PASSWORD` | no | When unset, `NODE_ENV=production` generates a random one; otherwise a built-in local default is used |
 | `PORT` | no | Defaults to `3001` |
 
 Set `MONGODB_URI`, `MONGODB_DB` and `MEDIASTACK_API_KEY` as real environment variables (in your shell, or in the Render dashboard). The server reads those three while its modules load, before `dotenv` loads `server/.env`, so values for them in that file are ignored. `JWT_SECRET_KEY`, `API_NINJAS_KEY`, `DEMO_PASSWORD` and `PORT` can live in `server/.env`.
